@@ -2,6 +2,7 @@ package dev.ylp.notes.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import dev.ylp.shared.error.business.ErrorCategory;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,5 +22,6 @@ class NoteErrorReasonTest {
     assertThat(exception.reason()).isEqualTo(NoteErrorReason.NOTE_NOT_FOUND);
     assertThat(exception).hasMessage("Note not found: 00000000-0000-0000-0000-000000000001");
     assertThat(exception.hint()).isNotBlank();
+    assertThat(exception.reason().category()).isEqualTo(ErrorCategory.NOT_FOUND);
   }
 }

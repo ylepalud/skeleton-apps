@@ -11,4 +11,9 @@ public interface BusinessErrorReason {
 
   /** Returns a short, actionable message telling the caller what to do next. */
   String hint();
+
+  /** Returns what kind of failure this is; a broken business rule unless stated otherwise. */
+  default ErrorCategory category() {
+    return ErrorCategory.RULE_VIOLATION;
+  }
 }
