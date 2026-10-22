@@ -12,6 +12,7 @@ dependencies {
     implementation(libs.gradle.pitest)
     implementation(libs.gradle.node)
     implementation(libs.gradle.jib)
+    implementation(libs.gradle.openapi.generator)
 }
 
 // Functional tests run every convention plugin against throwaway projects,

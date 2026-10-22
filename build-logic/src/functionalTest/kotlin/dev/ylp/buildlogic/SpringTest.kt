@@ -37,7 +37,10 @@ class SpringTest {
         val integrationTests =
             fixture.build("dependencies", "--configuration", "integrationTestRuntimeClasspath").output
 
-        assertThat(runtime).doesNotContain("FAILED").contains("spring-boot-starter-webmvc")
+        assertThat(runtime)
+            .doesNotContain("FAILED")
+            .contains("spring-boot-starter-webmvc")
+            .contains("micrometer-registry-prometheus")
         assertThat(integrationTests)
             .doesNotContain("FAILED")
             .contains("spring-boot-starter-webmvc")

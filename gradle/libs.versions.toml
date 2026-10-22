@@ -10,6 +10,7 @@ jspecify = "1.0.1"
 pitest-plugin = "1.19.0"
 node-gradle = "7.1.0"
 jib = "3.5.4"
+openapi-generator = "7.26.0"
 junit = "6.1.3"
 assertj = "3.27.7"
 
@@ -21,6 +22,7 @@ gradle-errorprone = { module = "net.ltgt.gradle:gradle-errorprone-plugin", versi
 gradle-pitest = { module = "info.solidsoft.gradle.pitest:gradle-pitest-plugin", version.ref = "pitest-plugin" }
 gradle-node = { module = "com.github.node-gradle:gradle-node-plugin", version.ref = "node-gradle" }
 gradle-jib = { module = "com.google.cloud.tools:jib-gradle-plugin", version.ref = "jib" }
+gradle-openapi-generator = { module = "org.openapitools:openapi-generator-gradle-plugin", version.ref = "openapi-generator" }
 
 # Platforms imported by the spring convention.
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
