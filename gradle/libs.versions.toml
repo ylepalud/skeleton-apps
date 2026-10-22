@@ -1,0 +1,40 @@
+[versions]
+spring-boot = "4.1.1"
+spring-modulith = "2.1.1"
+jmolecules = "2025.0.2"
+spotless = "8.10.4"
+errorprone-plugin = "5.1.1"
+errorprone = "2.51.0"
+nullaway = "0.14.2"
+jspecify = "1.0.1"
+pitest-plugin = "1.19.0"
+node-gradle = "7.1.0"
+jib = "3.5.4"
+junit = "6.1.3"
+assertj = "3.27.7"
+
+[libraries]
+# Gradle plugins applied by the convention plugins in build-logic.
+gradle-spring-boot = { module = "org.springframework.boot:spring-boot-gradle-plugin", version.ref = "spring-boot" }
+gradle-spotless = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
+gradle-errorprone = { module = "net.ltgt.gradle:gradle-errorprone-plugin", version.ref = "errorprone-plugin" }
+gradle-pitest = { module = "info.solidsoft.gradle.pitest:gradle-pitest-plugin", version.ref = "pitest-plugin" }
+gradle-node = { module = "com.github.node-gradle:gradle-node-plugin", version.ref = "node-gradle" }
+gradle-jib = { module = "com.google.cloud.tools:jib-gradle-plugin", version.ref = "jib" }
+
+# Platforms imported by the spring convention.
+spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
+spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }
+jmolecules-bom = { module = "org.jmolecules:jmolecules-bom", version.ref = "jmolecules" }
+
+# Compiler checks applied by the java convention.
+errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }
+nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
+
+# Functional tests of build-logic.
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+
+[plugins]
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
