@@ -1,5 +1,21 @@
 import { expect, Page, test } from '@playwright/test';
 
+// Any console error fails the test: a content security policy violation surfaces this way.
+let consoleErrors: string[] = [];
+
+test.beforeEach(({ page }) => {
+  consoleErrors = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      consoleErrors.push(message.text());
+    }
+  });
+});
+
+test.afterEach(() => {
+  expect(consoleErrors).toEqual([]);
+});
+
 /** Signs in through the identity provider's login form; the username becomes the subject. */
 async function signIn(page: Page, username: string): Promise<void> {
   await page.goto('/');
