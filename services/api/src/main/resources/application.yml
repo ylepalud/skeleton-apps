@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: api
+  # The datasource comes from SPRING_DATASOURCE_* in the cluster, from Docker Compose
+  # under the local profile, and from Testcontainers in tests.
+  jpa:
+    open-in-view: false
+    hibernate:
+      # The schema belongs to Liquibase; Hibernate only checks that the mapping matches it.
+      ddl-auto: validate
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml

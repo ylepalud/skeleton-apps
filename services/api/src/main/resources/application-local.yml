@@ -1,0 +1,5 @@
+spring:
+  docker:
+    compose:
+      # Keep the database running between application restarts.
+      lifecycle-management: start-only
