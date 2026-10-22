@@ -13,6 +13,10 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  web:
+    # Error messages are part of the API: the same language whatever the caller or the host.
+    locale: en
+    locale-resolver: fixed
   security:
     oauth2:
       resourceserver:

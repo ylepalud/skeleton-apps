@@ -4,8 +4,11 @@ import dev.ylp.shared.error.business.BusinessException;
 import dev.ylp.shared.error.business.ErrorCategory;
 import dev.ylp.shared.error.technical.TechnicalException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
 import java.util.Locale;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +58,24 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
         request.getRequestURI());
   }
 
+  /**
+   * Answers a parameter that breaks a constraint of the contract with a 400. The generated API
+   * interfaces are {@code @Validated}, so their parameter constraints fail this way rather than
+   * through Spring MVC's own validation.
+   */
+  @ExceptionHandler(ConstraintViolationException.class)
+  public ResponseEntity<ProblemDetail> handleConstraintViolation(
+      ConstraintViolationException exception, HttpServletRequest request) {
+    String detail =
+        exception.getConstraintViolations().stream()
+            .map(ProblemDetailsExceptionHandler::describe)
+            .sorted()
+            .collect(Collectors.joining("; "));
+    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
+    problem.setInstance(URI.create(request.getRequestURI()));
+    return respond(HttpStatus.BAD_REQUEST, problem);
+  }
+
   /** Answers any unexpected error with a 500 that reveals nothing about the cause. */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ProblemDetail> handleUnexpected(
@@ -65,6 +86,12 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
             HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.");
     problem.setInstance(URI.create(request.getRequestURI()));
     return respond(HttpStatus.INTERNAL_SERVER_ERROR, problem);
+  }
+
+  // "listNotes.size" becomes "size": the method name is an implementation detail.
+  private static String describe(ConstraintViolation<?> violation) {
+    String path = violation.getPropertyPath().toString();
+    return path.substring(path.lastIndexOf('.') + 1) + " " + violation.getMessage();
   }
 
   static HttpStatus statusOf(ErrorCategory category) {
