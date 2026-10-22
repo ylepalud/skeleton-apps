@@ -46,6 +46,9 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/NoteRequest"
+            example:
+              title: Groceries
+              content: Milk, eggs, bread
       responses:
         "201":
           description: The note was created.
@@ -103,6 +106,9 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/NoteRequest"
+            example:
+              title: Groceries for the weekend
+              content: Milk, eggs, bread, coffee
       responses:
         "200":
           description: The updated note.
