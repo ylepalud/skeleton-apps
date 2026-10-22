@@ -1,0 +1,15 @@
+# Gradle
+.gradle/
+build/
+.kotlin/
+
+# Frontend
+node_modules/
+
+# IDE and OS
+.idea/
+*.iml
+.vscode/
+# Eclipse JDT output, written by the VS Code Java extension.
+bin/
+.DS_Store
