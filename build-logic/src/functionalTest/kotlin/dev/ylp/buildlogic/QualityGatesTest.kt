@@ -30,6 +30,27 @@ class QualityGatesTest {
     }
 
     @Test
+    fun `integration tests reuse unit test sources`() {
+        fixture.file("src/main/java/dev/ylp/sample/Greeter.java", JavaSources.GREETER)
+        fixture.file("src/test/java/dev/ylp/sample/GreeterTest.java", JavaSources.GREETER_TEST)
+        fixture.file(
+            "src/integrationTest/java/dev/ylp/sample/GreeterIntegrationTest.java",
+            """
+            package dev.ylp.sample;
+
+            class GreeterIntegrationTest extends GreeterTest {}
+            """.trimIndent() + "\n",
+        )
+
+        val result = fixture.build("integrationTest")
+
+        assertThat(result.task(":integrationTest")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        assertThat(
+            dir.resolve("build/test-results/integrationTest/TEST-dev.ylp.sample.GreeterIntegrationTest.xml"),
+        ).exists()
+    }
+
+    @Test
     fun `fully covered code passes the coverage gate`() {
         fixture.file("src/main/java/dev/ylp/sample/Greeter.java", JavaSources.GREETER)
         fixture.file("src/test/java/dev/ylp/sample/GreeterTest.java", JavaSources.GREETER_TEST)
