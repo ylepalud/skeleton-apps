@@ -12,7 +12,7 @@ plugins {
 
 testing {
     suites {
-        val test by getting(JvmTestSuite::class)
+        val test = named<JvmTestSuite>("test")
         register<JvmTestSuite>("integrationTest") {
             dependencies {
                 implementation(project())
