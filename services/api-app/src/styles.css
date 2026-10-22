@@ -1,0 +1,20 @@
+@import 'tailwindcss';
+
+@layer components {
+  .btn-primary {
+    @apply rounded-md bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-800
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800
+      hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2
+      focus-visible:outline-indigo-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-danger {
+    @apply rounded-md bg-red-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-800
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700;
+  }
+}

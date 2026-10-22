@@ -37,3 +37,4 @@ rootProject.name = "apps"
 
 include("services:api")
 include("contracts:api")
+include("services:api-app")
