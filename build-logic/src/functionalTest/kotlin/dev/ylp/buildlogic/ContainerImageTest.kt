@@ -56,6 +56,29 @@ class ContainerImageTest {
     }
 
     @Test
+    fun `a spring boot application ships its production classpath only`() {
+        fixture.file(
+            "build.gradle.kts",
+            """
+            plugins {
+                id("spring")
+                id("container-image")
+            }
+
+            val classpath = jib.configurationName
+
+            tasks.register("printClasspath") {
+                doLast { println("classpath=" + classpath.get()) }
+            }
+            """.trimIndent() + "\n",
+        )
+
+        val result = fixture.build("printClasspath", "--no-configuration-cache")
+
+        assertThat(result.output).contains("classpath=productionRuntimeClasspath")
+    }
+
+    @Test
     fun `jib tasks do not break a configuration-cached build`() {
         val result = fixture.build("jibDockerBuild", "--dry-run")
 
