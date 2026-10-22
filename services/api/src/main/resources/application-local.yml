@@ -1,7 +1,10 @@
 spring:
   docker:
     compose:
-      # Keep the database and the identity provider running between application restarts.
+      # The repository's compose file, relative to bootRun's working directory. Without the
+      # "app" profile it starts only postgres and the identity provider.
+      file: ../../compose.yaml
+      # Keep them running between application restarts.
       lifecycle-management: start-only
   security:
     oauth2:
