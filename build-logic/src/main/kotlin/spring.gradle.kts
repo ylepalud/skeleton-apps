@@ -32,6 +32,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation("org.jmolecules:jmolecules-ddd")
+    implementation("org.jmolecules:jmolecules-hexagonal-architecture")
 
     runtimeOnly("org.postgresql:postgresql")
 

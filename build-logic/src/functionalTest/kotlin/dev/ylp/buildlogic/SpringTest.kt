@@ -44,6 +44,7 @@ class SpringTest {
             .contains("spring-boot-starter-security-oauth2-resource-server")
             .contains("spring-modulith-starter-core")
             .contains("testcontainers-postgresql")
+            .contains("jmolecules-hexagonal-architecture")
             .contains("jmolecules-archunit")
     }
 
