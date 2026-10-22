@@ -26,11 +26,13 @@ Contexte, décisions et règles critiques : voir le CLAUDE.md du workspace paren
 - Migrations Liquibase, un changelog par module inclus par le master.
 
 ## API
-- Le contrat `contracts/api/openapi.yaml` est la source de vérité : on modifie le contrat d'abord, puis le code généré (openapi-generator `interfaceOnly`) impose sa forme. Un tag par module, fichiers `$ref` par module, préfixe `/api/v1`.
+- Le contrat `contracts/api/` est la source de vérité : on modifie le contrat d'abord. `openapi.yaml` est le point d'entrée, `common.yaml` porte `Problem` et les réponses partagées, un fichier par module (`notes.yaml`) avec son tag. Le projet Gradle `:contracts:api` (convention `openapi-server`) en génère les interfaces et les DTO (suffixe `Dto`) que les controllers implémentent : la compilation casse si le code s'écarte du contrat. Le préfixe `/api/v1` du `servers` est appliqué aux `@RestController` par `ApiPathConfiguration`.
+- Un deuxième module demandera une génération par tag (normalizer `FILTER`), pour que chaque module possède ses DTO.
 - Le client du front (hey-api) et la future CLI sont générés depuis ce même contrat.
 - Tout changement d'API se reflète dans la collection Bruno (`bruno/`) : requêtes régénérées par `generateBruno`, la CI échoue si la collection diffère. L'auth OAuth2 vit dans `collection.bru`, écrite à la main.
-- Spring Security en resource server, jetons JWT d'un fournisseur OIDC. Aucune route anonyme. Les ressources appartiennent au `sub` du jeton ; l'accès à celle d'un autre renvoie 404.
-- Erreurs en `ProblemDetail` (RFC 9457).
+- Spring Security en resource server, jetons JWT d'un fournisseur OIDC, vérifiés sur l'émetteur et l'audience `api`. Aucune route anonyme. Les ressources appartiennent au `sub` du jeton, lu uniquement par `CurrentOwner` ; l'accès à celle d'un autre renvoie 404.
+- Erreurs en `ProblemDetail` (RFC 9457), avec `errorCode` et `hint`. Une raison métier déclare sa `category()` (`NOT_FOUND`, `INVALID`, `CONFLICT`, `RULE_VIOLATION` par défaut), sans rien savoir de HTTP ; `ProblemDetailsExceptionHandler` la traduit en statut. Messages en anglais (locale fixe).
+- Corps de requête limité à 64 Kio (`RequestSizeLimitFilter`, 413).
 - Actuator sur le port de gestion 8081, seulement `health` (liveness, readiness), `info` et `prometheus`. Jamais routé par l'Ingress.
 - CORS strict, validation des entrées, limites de taille des requêtes.
 
@@ -54,7 +56,8 @@ Contexte, décisions et règles critiques : voir le CLAUDE.md du workspace paren
 
 ## Développement local
 - `compose.yaml` racine : postgres, mock-oauth2-server, image Jib de l'API, image nginx du front.
-- `bootRun` démarre postgres et le mock OIDC via spring-boot-docker-compose.
+- `bootRun` démarre postgres et le mock OIDC (`services/api/compose.yaml`) via spring-boot-docker-compose. Si un service de ce compose tourne déjà, Boot ne démarre pas les autres : après un changement du compose, `docker compose -f services/api/compose.yaml up -d --wait`.
+- Jeton local : `curl -X POST localhost:8090/default/token -d grant_type=client_credentials -d client_id=<user> -d client_secret=x` (le `sub` vaut le `client_id`).
 
 ## CLI (plus tard)
 - Si elle est en Java ou Kotlin, elle peut vivre ici. Autre langage : repo séparé.
