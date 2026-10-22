@@ -1,0 +1,60 @@
+# Building blocks shared by every module of the contract.
+components:
+  schemas:
+    Problem:
+      type: object
+      description: An error, as defined by RFC 9457.
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          description: Identifies the kind of problem.
+          example: urn:problem:note_not_found
+        title:
+          type: string
+          example: Not Found
+        status:
+          type: integer
+          format: int32
+          example: 404
+        detail:
+          type: string
+          example: "Note not found: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c"
+        instance:
+          type: string
+          example: /api/v1/notes/3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+        errorCode:
+          type: string
+          description: Stable, machine-readable code of a business or technical error.
+          example: NOTE_NOT_FOUND
+        hint:
+          type: string
+          description: What the caller can do about the error.
+          example: "Check the note id: it does not exist, or it belongs to another user."
+  responses:
+    BadRequest:
+      description: The request is malformed or violates a constraint.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Unauthorized:
+      description: The bearer token is missing, invalid or expired.
+    NotFound:
+      description: The resource does not exist or belongs to another user.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    PayloadTooLarge:
+      description: The request body exceeds the accepted size.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    InternalError:
+      description: An unexpected error occurred.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
