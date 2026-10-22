@@ -14,4 +14,9 @@ public enum InvalidRecordReason implements BusinessErrorReason {
   public String hint() {
     return hint;
   }
+
+  @Override
+  public ErrorCategory category() {
+    return ErrorCategory.INVALID;
+  }
 }
