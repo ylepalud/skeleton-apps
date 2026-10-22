@@ -1,0 +1,45 @@
+# Serves the web app and proxies /api to the API, so both share one origin: the browser needs
+# no CORS, and the token never leaves that origin. Placeholders are filled from the container
+# environment at startup:
+#   API_UPSTREAM    URL of the API, e.g. http://api:8080
+#   OIDC_AUTHORITY  issuer of the identity provider, e.g. https://id.example.com
+#   OIDC_CLIENT_ID  client id of this app at the identity provider
+#   OIDC_ORIGIN     origin of the identity provider, allowed by the content security policy
+server {
+    listen 8080;
+    server_name _;
+    server_tokens off;
+    root /usr/share/nginx/html;
+
+    # Set here only: a location with its own add_header would drop them.
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' ${OIDC_ORIGIN}; form-action 'self' ${OIDC_ORIGIN}; frame-ancestors 'none'; base-uri 'self'; object-src 'none'" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer" always;
+
+    location /api/ {
+        proxy_pass ${API_UPSTREAM};
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # Same limit as the API, enforced before the request leaves the edge.
+        client_max_body_size 64k;
+    }
+
+    # Runtime settings of the app: one image runs in every environment.
+    location = /config.json {
+        default_type application/json;
+        expires -1;
+        return 200 '{"authority":"${OIDC_AUTHORITY}","clientId":"${OIDC_CLIENT_ID}"}';
+    }
+
+    # Hashed bundles never change under the same name.
+    location ~* \.(?:js|css|woff2?)$ {
+        expires 1y;
+    }
+
+    # Any other path is a route of the app.
+    location / {
+        expires -1;
+        try_files $uri $uri/ /index.html;
+    }
+}
