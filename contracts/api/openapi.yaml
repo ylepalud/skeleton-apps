@@ -1,0 +1,25 @@
+openapi: 3.0.3
+info:
+  title: Platform API
+  version: 1.0.0
+  description: |
+    Public API of the platform. Every operation requires a bearer token issued by the
+    platform's OpenID Connect provider; each resource belongs to the token's subject.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: notes
+    description: Personal notes of the authenticated user.
+paths:
+  /notes:
+    $ref: "./notes.yaml#/paths/notes"
+  /notes/{noteId}:
+    $ref: "./notes.yaml#/paths/note"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -36,3 +36,4 @@ dependencyResolutionManagement {
 rootProject.name = "apps"
 
 include("services:api")
+include("contracts:api")

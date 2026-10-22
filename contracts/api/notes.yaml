@@ -1,0 +1,196 @@
+# The notes module: personal notes, each owned by the subject of the caller's token.
+paths:
+  notes:
+    get:
+      tags: [notes]
+      operationId: listNotes
+      summary: List the caller's notes, most recently updated first.
+      parameters:
+        - name: page
+          in: query
+          description: Page number, starting at 0.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: Number of notes per page.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: A page of notes.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotePage"
+        "400":
+          $ref: "./common.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "./common.yaml#/components/responses/Unauthorized"
+        "500":
+          $ref: "./common.yaml#/components/responses/InternalError"
+    post:
+      tags: [notes]
+      operationId: createNote
+      summary: Write a new note.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteRequest"
+      responses:
+        "201":
+          description: The note was created.
+          headers:
+            Location:
+              description: URL of the new note.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "400":
+          $ref: "./common.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "./common.yaml#/components/responses/Unauthorized"
+        "413":
+          $ref: "./common.yaml#/components/responses/PayloadTooLarge"
+        "500":
+          $ref: "./common.yaml#/components/responses/InternalError"
+  note:
+    parameters:
+      - name: noteId
+        in: path
+        required: true
+        description: Id of the note.
+        schema:
+          type: string
+          format: uuid
+        example: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+    get:
+      tags: [notes]
+      operationId: getNote
+      summary: Read one of the caller's notes.
+      responses:
+        "200":
+          description: The note.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "401":
+          $ref: "./common.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "./common.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./common.yaml#/components/responses/InternalError"
+    put:
+      tags: [notes]
+      operationId: updateNote
+      summary: Replace the title and content of one of the caller's notes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteRequest"
+      responses:
+        "200":
+          description: The updated note.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "400":
+          $ref: "./common.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "./common.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "./common.yaml#/components/responses/NotFound"
+        "413":
+          $ref: "./common.yaml#/components/responses/PayloadTooLarge"
+        "500":
+          $ref: "./common.yaml#/components/responses/InternalError"
+    delete:
+      tags: [notes]
+      operationId: deleteNote
+      summary: Delete one of the caller's notes.
+      responses:
+        "204":
+          description: The note was deleted.
+        "401":
+          $ref: "./common.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "./common.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./common.yaml#/components/responses/InternalError"
+components:
+  schemas:
+    NoteRequest:
+      type: object
+      description: The title and content of a note to write or replace.
+      required: [title, content]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: Groceries
+        content:
+          type: string
+          maxLength: 20000
+          example: Milk, eggs, bread
+    Note:
+      type: object
+      required: [id, title, content, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+        title:
+          type: string
+          example: Groceries
+        content:
+          type: string
+          example: Milk, eggs, bread
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-10-22T08:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-10-22T09:30:00Z"
+    NotePage:
+      type: object
+      required: [items, page, size, totalItems, hasNext]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Note"
+        page:
+          type: integer
+          format: int32
+          example: 0
+        size:
+          type: integer
+          format: int32
+          example: 20
+        totalItems:
+          type: integer
+          format: int64
+          example: 1
+        hasNext:
+          type: boolean
+          example: false
