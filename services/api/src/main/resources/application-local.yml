@@ -1,5 +1,11 @@
 spring:
   docker:
     compose:
-      # Keep the database running between application restarts.
+      # Keep the database and the identity provider running between application restarts.
       lifecycle-management: start-only
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # mock-oauth2-server from compose.yaml.
+          issuer-uri: http://localhost:8090/default
