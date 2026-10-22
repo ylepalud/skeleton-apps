@@ -9,9 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest
 @ImportTestcontainers(PostgresTestContainer.class)
-class ApiApplicationBootTest {
+class ApiApplicationBootTest implements MockOAuth2ServerContainer {
 
   @Autowired private CreateNoteUseCase createNoteUseCase;
 

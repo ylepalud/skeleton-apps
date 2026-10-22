@@ -10,3 +10,26 @@ spring:
       ddl-auto: validate
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+  mvc:
+    problemdetails:
+      enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # The issuer comes from SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI in the
+          # cluster; tokens must also be addressed to this API.
+          audiences: api
+
+# Actuator lives on its own port, reachable inside the cluster only.
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
