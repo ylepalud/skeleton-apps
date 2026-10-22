@@ -37,7 +37,7 @@ Contexte, décisions et règles critiques : voir le CLAUDE.md du workspace paren
 - Le contrat `contracts/api/` est la source de vérité : on modifie le contrat d'abord. `openapi.yaml` est le point d'entrée, `common.yaml` porte `Problem` et les réponses partagées, un fichier par module (`notes.yaml`) avec son tag. Le projet Gradle `:contracts:api` (convention `openapi-server`) en génère les interfaces et les DTO (suffixe `Dto`) que les controllers implémentent : la compilation casse si le code s'écarte du contrat. Le préfixe `/api/v1` du `servers` est appliqué aux `@RestController` par `ApiPathConfiguration`.
 - Un deuxième module demandera une génération par tag (normalizer `FILTER`), pour que chaque module possède ses DTO.
 - Le client du front (hey-api) et la future CLI sont générés depuis ce même contrat.
-- Tout changement d'API se reflète dans la collection Bruno (`bruno/`) : requêtes régénérées par `generateBruno`, la CI échoue si la collection diffère. L'auth OAuth2 vit dans `collection.bru`, écrite à la main.
+- Tout changement d'API se reflète dans la collection Bruno (`bruno/`, convention `bruno-collection`) : après une modification du contrat, `./gradlew :bruno:updateCollection` et commiter ; `check` échoue sinon (`verifyCollection`). Seuls les dossiers de requêtes (`notes/`, un par tag) sont générés ; `opencollection.yml` (auth OAuth2 `client_credentials`, test commun) et `environments/` (`Stack`, `BootRun`) sont écrits à la main. Donner des `example` aux corps de requête du contrat, sinon la requête générée part vide.
 - Spring Security en resource server, jetons JWT d'un fournisseur OIDC, vérifiés sur l'émetteur et l'audience `api`. Aucune route anonyme. Les ressources appartiennent au `sub` du jeton, lu uniquement par `CurrentOwner` ; l'accès à celle d'un autre renvoie 404.
 - Erreurs en `ProblemDetail` (RFC 9457), avec `errorCode` et `hint`. Une raison métier déclare sa `category()` (`NOT_FOUND`, `INVALID`, `CONFLICT`, `RULE_VIOLATION` par défaut), sans rien savoir de HTTP ; `ProblemDetailsExceptionHandler` la traduit en statut. Messages en anglais (locale fixe).
 - Corps de requête limité à 64 Kio (`RequestSizeLimitFilter`, 413).
@@ -63,9 +63,13 @@ Contexte, décisions et règles critiques : voir le CLAUDE.md du workspace paren
 - Pas de secret dans le code, les tests ni les fichiers de config commités.
 
 ## Développement local
-- `compose.yaml` racine : postgres, mock-oauth2-server, image Jib de l'API, image nginx du front.
-- `bootRun` démarre postgres et le mock OIDC (`services/api/compose.yaml`) via spring-boot-docker-compose. Si un service de ce compose tourne déjà, Boot ne démarre pas les autres : après un changement du compose, `docker compose -f services/api/compose.yaml up -d --wait`.
+- Un seul `compose.yaml` à la racine. Par défaut : postgres et mock-oauth2-server (8090). Profil `app` : l'API (image Jib `apps/api:local`, probes sur 8091) et le front (image nginx `apps/api-app:local`, http://localhost:8088, `/api` vers l'API).
+- `./gradlew startLocalStack` construit les deux images, démarre tout et attend la readiness ; relancer après un changement ne recrée que les conteneurs dont l'image a changé. `stopLocalStack` garde la base, `resetDatabase` la supprime.
+- `./gradlew :services:api:bootRun` démarre postgres et le mock à partir du même compose (sans le profil `app`). Ne pas lancer l'API en `bootRun` et en conteneur en même temps.
+- Dans le conteneur, l'API vérifie l'émetteur `http://localhost:8090/default` (celui des jetons du navigateur) mais lit les clés à `http://mock-oauth2-server:8080/default/jwks` : `localhost` n'y désigne pas l'hôte.
+- Bruno contre la stack : `cd bruno && npm run smoke`. E2E contre la stack : `E2E_BASE_URL=http://localhost:8088 ./gradlew :services:api-app:npmRunE2e -PrunE2e=true`.
 - Jeton local : `curl -X POST localhost:8090/default/token -d grant_type=client_credentials -d client_id=<user> -d client_secret=x` (le `sub` vaut le `client_id`).
+- Les tâches qui appellent docker le résolvent depuis le `PATH` de l'appelant (`dev.ylp.buildlogic.dockerExecutable`) : un daemon Gradle peut avoir un `PATH` minimal.
 
 ## CLI (plus tard)
 - Si elle est en Java ou Kotlin, elle peut vivre ici. Autre langage : repo séparé.
