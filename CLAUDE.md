@@ -18,7 +18,9 @@ Contexte, décisions et règles critiques : voir le CLAUDE.md du workspace paren
 
 ## Architecture
 - Spring Modulith obligatoire : un module applicatif = un package de premier niveau sous `dev.ylp`. `ApplicationModules.verify()` doit passer.
-- Dans un module, organisation par couche (`domain`, `application`, `infrastructure`, `presentation`), déclarée avec jMolecules dans `package-info.java` et vérifiée par `jmolecules-archunit`.
+- Dans un module, organisation hexagonale (skill `java-conventions`) : `domain` (modèle, ports), `application` (un cas d'usage par classe), `adapter/in/<tech>` et `adapter/out/<tech>`. Les rôles sont déclarés avec les annotations hexagonales et DDD de jMolecules (`@SecondaryPort`, `@SecondaryAdapter` sur `package-info.java`, `@AggregateRoot`) et vérifiés par `jmolecules-archunit`, plus une règle ArchUnit : `domain` et `application` ne dépendent ni de Spring (sauf `@Transactional`) ni des adapters.
+- Les cas d'usage sont déclarés dans la `@Configuration` du module, sans stéréotype Spring. Chaque port a un test de contrat abstrait dans `src/test`, étendu par chaque adapter dans `src/integrationTest`.
+- `shared` est un module Modulith ouvert (identifiants, `BusinessException`, `TechnicalException`) ; `config` porte le transverse (`Clock`, `UUIDGenerator`).
 - Le domaine ne dépend d'aucun framework.
 - Un schéma Postgres par module, aucune jointure entre schémas. Un module ne lit les données d'un autre que par son API Java ou ses événements.
 - Migrations Liquibase, un changelog par module inclus par le master.
