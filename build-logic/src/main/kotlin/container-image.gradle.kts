@@ -22,6 +22,12 @@ jib {
     }
 }
 
+// A Spring Boot application ships its production classpath only: developmentOnly
+// dependencies (Docker Compose support) stay out of the image, as in the boot jar.
+pluginManager.withPlugin("org.springframework.boot") {
+    jib.configurationName = "productionRuntimeClasspath"
+}
+
 // Jib's tasks read the project model at execution time.
 listOf("jib", "jibDockerBuild", "jibBuildTar").forEach { name ->
     tasks.named(name) {
