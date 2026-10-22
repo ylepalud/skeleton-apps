@@ -1,0 +1,127 @@
+info:
+  name: Write a new note
+  type: http
+  seq: 2
+  tags:
+    - notes
+
+http:
+  method: POST
+  url: "{{baseUrl}}/notes"
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Groceries",
+        "content": "Milk, eggs, bread"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+examples:
+  - name: 201 Response
+    description: The note was created.
+    request:
+      url: "{{baseUrl}}/notes"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries",
+            "content": "Milk, eggs, bread"
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": "3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "title": "Groceries",
+            "content": "Milk, eggs, bread",
+            "createdAt": "2026-10-22T08:00:00Z",
+            "updatedAt": "2026-10-22T09:30:00Z"
+          }
+  - name: 400 Response
+    request:
+      url: "{{baseUrl}}/notes"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries",
+            "content": "Milk, eggs, bread"
+          }
+    response:
+      status: 400
+      statusText: Bad Request
+      body:
+        type: text
+        data: ""
+  - name: 401 Response
+    request:
+      url: "{{baseUrl}}/notes"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries",
+            "content": "Milk, eggs, bread"
+          }
+    response:
+      status: 401
+      statusText: Unauthorized
+      body:
+        type: text
+        data: ""
+  - name: 413 Response
+    description: The request body exceeds the accepted size.
+    request:
+      url: "{{baseUrl}}/notes"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries",
+            "content": "Milk, eggs, bread"
+          }
+    response:
+      status: 413
+      statusText: Payload Too Large
+      headers:
+        - name: Content-Type
+          value: application/problem+json
+      body:
+        type: json
+        data: ""
+  - name: 500 Response
+    request:
+      url: "{{baseUrl}}/notes"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries",
+            "content": "Milk, eggs, bread"
+          }
+    response:
+      status: 500
+      statusText: Internal Server Error
+      body:
+        type: text
+        data: ""

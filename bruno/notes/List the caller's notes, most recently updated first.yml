@@ -1,0 +1,134 @@
+info:
+  name: List the caller's notes, most recently updated first
+  type: http
+  seq: 1
+  tags:
+    - notes
+
+http:
+  method: GET
+  url: "{{baseUrl}}/notes"
+  params:
+    - name: page
+      value: "0"
+      type: query
+      description: Page number, starting at 0.
+    - name: size
+      value: "20"
+      type: query
+      description: Number of notes per page.
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+examples:
+  - name: 200 Response
+    description: A page of notes.
+    request:
+      url: "{{baseUrl}}/notes"
+      method: GET
+      params:
+        - name: page
+          value: "0"
+          type: query
+          description: Page number, starting at 0.
+        - name: size
+          value: "20"
+          type: query
+          description: Number of notes per page.
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "items": [],
+            "page": 0,
+            "size": 20,
+            "totalItems": 1,
+            "hasNext": false
+          }
+  - name: 400 Response
+    description: The request is malformed or violates a constraint.
+    request:
+      url: "{{baseUrl}}/notes"
+      method: GET
+      params:
+        - name: page
+          value: "0"
+          type: query
+          description: Page number, starting at 0.
+        - name: size
+          value: "20"
+          type: query
+          description: Number of notes per page.
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/problem+json
+      body:
+        type: json
+        data: |-
+          {
+            "type": "urn:problem:note_not_found",
+            "title": "Not Found",
+            "status": 404,
+            "detail": "Note not found: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "instance": "/api/v1/notes/3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "errorCode": "NOTE_NOT_FOUND",
+            "hint": "Check the note id: it does not exist, or it belongs to another user."
+          }
+  - name: 401 Response
+    description: The bearer token is missing, invalid or expired.
+    request:
+      url: "{{baseUrl}}/notes"
+      method: GET
+      params:
+        - name: page
+          value: "0"
+          type: query
+          description: Page number, starting at 0.
+        - name: size
+          value: "20"
+          type: query
+          description: Number of notes per page.
+    response:
+      status: 401
+      statusText: Unauthorized
+      body:
+        type: text
+        data: ""
+  - name: 500 Response
+    description: An unexpected error occurred.
+    request:
+      url: "{{baseUrl}}/notes"
+      method: GET
+      params:
+        - name: page
+          value: "0"
+          type: query
+          description: Page number, starting at 0.
+        - name: size
+          value: "20"
+          type: query
+          description: Number of notes per page.
+    response:
+      status: 500
+      statusText: Internal Server Error
+      headers:
+        - name: Content-Type
+          value: application/problem+json
+      body:
+        type: json
+        data: ""

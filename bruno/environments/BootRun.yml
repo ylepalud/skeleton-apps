@@ -1,0 +1,11 @@
+# The API alone: ./gradlew :services:api:bootRun.
+name: BootRun
+variables:
+  - name: baseUrl
+    value: http://localhost:8080/api/v1
+  - name: issuer
+    value: http://localhost:8090/default
+  - name: user
+    value: alice
+  - name: clientSecret
+    value: unused-by-the-mock
