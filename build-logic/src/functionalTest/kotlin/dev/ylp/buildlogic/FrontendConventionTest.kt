@@ -29,6 +29,13 @@ class FrontendConventionTest {
     }
 
     @Test
+    fun `end-to-end tests can be scheduled with the configuration cache`() {
+        val result = fixture.build("npmRunE2e", "-PrunE2e=true", "--dry-run")
+
+        assertThat(result.output).contains(":npmRunE2e SKIPPED").contains("Configuration cache entry stored")
+    }
+
+    @Test
     fun `assemble builds the production bundle`() {
         val result = fixture.build("assemble", "--dry-run")
 

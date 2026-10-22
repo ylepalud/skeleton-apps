@@ -69,13 +69,13 @@ val npmRunBuild =
 
 // Browser end-to-end tests stay out of the default lifecycle and run with
 // -PrunE2e=true, as CI does.
-val runE2e = providers.gradleProperty("runE2e").map { it.toBoolean() }.orElse(false)
-
 tasks.register<NpmTask>("npmRunE2e") {
     group = "verification"
     description = "Runs the Playwright end-to-end suite (enabled with -PrunE2e=true)."
     dependsOn(npmInstall, npmRunBuild)
     args = listOf("run", "e2e")
+    // Task-local: the condition must not capture the build script.
+    val runE2e = providers.gradleProperty("runE2e").map { it.toBoolean() }.orElse(false)
     onlyIf("runE2e is set") { runE2e.get() }
 }
 
