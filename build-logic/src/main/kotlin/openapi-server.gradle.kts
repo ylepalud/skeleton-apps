@@ -50,8 +50,12 @@ val openApiGenerate =
         generatorName = "spring"
         inputSpec = openApiServer.contract
         outputDir = generatedDir
+        // Start from an empty folder, so a renamed or removed schema leaves no stale class behind.
+        cleanupOutput = true
         apiPackage.set(openApiServer.apiPackage)
         modelPackage.set(openApiServer.modelPackage)
+        // Models are transport objects, never mistaken for the domain types of the same name.
+        modelNameSuffix = "Dto"
         // Only the interfaces and models: no application, tests or documentation.
         generateApiTests = false
         generateModelTests = false
