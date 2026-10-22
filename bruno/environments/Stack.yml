@@ -1,0 +1,11 @@
+# The local stack: ./gradlew startLocalStack (web app and API behind nginx).
+name: Stack
+variables:
+  - name: baseUrl
+    value: http://localhost:8088/api/v1
+  - name: issuer
+    value: http://localhost:8090/default
+  - name: user
+    value: alice
+  - name: clientSecret
+    value: unused-by-the-mock

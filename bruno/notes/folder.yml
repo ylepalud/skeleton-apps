@@ -1,0 +1,10 @@
+info:
+  name: notes
+  type: folder
+
+request:
+  auth: inherit
+
+docs:
+  content: Personal notes of the authenticated user.
+  type: text/markdown

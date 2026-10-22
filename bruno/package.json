@@ -1,0 +1,25 @@
+{
+  "name": "api-collection",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "collection:check": "node scripts/collection.mjs check",
+    "collection:write": "node scripts/collection.mjs write",
+    "smoke": "bru run --env Stack"
+  },
+  "devDependencies": {
+    "@apidevtools/json-schema-ref-parser": "16.0.5",
+    "@usebruno/cli": "4.2.1"
+  },
+  "overrides": {
+    "@faker-js/faker": "^10.4.1",
+    "axios": "^1.19.1",
+    "form-data": "^4.0.6",
+    "@usebruno/cli": {
+      "js-yaml": "^4.3.2"
+    },
+    "@usebruno/converters": {
+      "js-yaml": "^4.3.2"
+    }
+  }
+}

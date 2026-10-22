@@ -1,0 +1,168 @@
+info:
+  name: Replace the title and content of one of the caller's notes
+  type: http
+  seq: 4
+  tags:
+    - notes
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/notes/:noteId"
+  params:
+    - name: noteId
+      value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+      type: path
+      description: Id of the note.
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Groceries for the weekend",
+        "content": "Milk, eggs, bread, coffee"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+examples:
+  - name: 200 Response
+    description: The updated note.
+    request:
+      url: "{{baseUrl}}/notes/:noteId"
+      method: PUT
+      params:
+        - name: noteId
+          value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+          type: path
+          description: Id of the note.
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries for the weekend",
+            "content": "Milk, eggs, bread, coffee"
+          }
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: ""
+  - name: 400 Response
+    request:
+      url: "{{baseUrl}}/notes/:noteId"
+      method: PUT
+      params:
+        - name: noteId
+          value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+          type: path
+          description: Id of the note.
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries for the weekend",
+            "content": "Milk, eggs, bread, coffee"
+          }
+    response:
+      status: 400
+      statusText: Bad Request
+      body:
+        type: text
+        data: ""
+  - name: 401 Response
+    request:
+      url: "{{baseUrl}}/notes/:noteId"
+      method: PUT
+      params:
+        - name: noteId
+          value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+          type: path
+          description: Id of the note.
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries for the weekend",
+            "content": "Milk, eggs, bread, coffee"
+          }
+    response:
+      status: 401
+      statusText: Unauthorized
+      body:
+        type: text
+        data: ""
+  - name: 404 Response
+    request:
+      url: "{{baseUrl}}/notes/:noteId"
+      method: PUT
+      params:
+        - name: noteId
+          value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+          type: path
+          description: Id of the note.
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries for the weekend",
+            "content": "Milk, eggs, bread, coffee"
+          }
+    response:
+      status: 404
+      statusText: Not Found
+      body:
+        type: text
+        data: ""
+  - name: 413 Response
+    request:
+      url: "{{baseUrl}}/notes/:noteId"
+      method: PUT
+      params:
+        - name: noteId
+          value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+          type: path
+          description: Id of the note.
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries for the weekend",
+            "content": "Milk, eggs, bread, coffee"
+          }
+    response:
+      status: 413
+      statusText: Payload Too Large
+      body:
+        type: text
+        data: ""
+  - name: 500 Response
+    request:
+      url: "{{baseUrl}}/notes/:noteId"
+      method: PUT
+      params:
+        - name: noteId
+          value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+          type: path
+          description: Id of the note.
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries for the weekend",
+            "content": "Milk, eggs, bread, coffee"
+          }
+    response:
+      status: 500
+      statusText: Internal Server Error
+      body:
+        type: text
+        data: ""

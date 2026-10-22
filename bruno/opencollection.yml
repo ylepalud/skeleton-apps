@@ -1,0 +1,45 @@
+opencollection: 1.0.0
+
+info:
+  name: Platform API
+  version: "1"
+
+# Written by hand. The request folders next to it are generated from contracts/api:
+# ./gradlew :bruno:updateCollection after any contract change (check fails otherwise).
+request:
+  # Every request inherits this: a client credentials token from the identity provider,
+  # whose subject is the client id, i.e. the {{user}} of the environment.
+  auth:
+    type: oauth2
+    flow: client_credentials
+    accessTokenUrl: "{{issuer}}/token"
+    credentials:
+      clientId: "{{user}}"
+      clientSecret: "{{clientSecret}}"
+      placement: body
+    tokenConfig:
+      placement:
+        header: Bearer
+      source: access_token
+    settings:
+      autoFetchToken: true
+      autoRefreshToken: true
+  scripts:
+    - type: tests
+      code: |-
+        test("the API answers without an authentication or server failure", function () {
+          expect(res.getStatus()).to.not.be.oneOf([401, 403]);
+          expect(res.getStatus()).to.be.below(500);
+        });
+
+docs:
+  content: |
+    The platform API. Requests run as {{user}} with a token from the local identity provider.
+  type: text/markdown
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - build
+      - scripts
