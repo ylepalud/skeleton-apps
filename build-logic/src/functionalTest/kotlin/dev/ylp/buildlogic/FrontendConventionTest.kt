@@ -36,6 +36,27 @@ class FrontendConventionTest {
     }
 
     @Test
+    fun `dependencies are installed from the lockfile`() {
+        fixture.file(
+            "build.gradle.kts",
+            """
+            plugins {
+                id("frontend-convention")
+            }
+
+            tasks.register("printInstallCommand") {
+                val command = node.npmInstallCommand
+                doLast { println("install: " + command.get()) }
+            }
+            """.trimIndent() + "\n",
+        )
+
+        val result = fixture.build("printInstallCommand")
+
+        assertThat(result.output).contains("install: ci")
+    }
+
+    @Test
     fun `the API contract location is configurable`() {
         fixture.file(
             "build.gradle.kts",
