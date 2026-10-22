@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: notes-001-create-schema
+      author: ylp
+      changes:
+        - sql:
+            sql: create schema if not exists notes
+  - changeSet:
+      id: notes-001-create-notes-table
+      author: ylp
+      changes:
+        - createTable:
+            schemaName: notes
+            tableName: notes
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: notes_pk
+              - column:
+                  name: owner_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            schemaName: notes
+            tableName: notes
+            indexName: notes_owner_updated_idx
+            columns:
+              - column:
+                  name: owner_id
+              - column:
+                  name: updated_at
+                  descending: true

@@ -1,0 +1,4 @@
+# One changelog per module, each owning its own schema.
+databaseChangeLog:
+  - include:
+      file: db/changelog/notes/001-create-notes.yaml
