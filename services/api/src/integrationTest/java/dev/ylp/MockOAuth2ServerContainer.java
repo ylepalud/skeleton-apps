@@ -26,7 +26,9 @@ public interface MockOAuth2ServerContainer {
       """
       {"tokenCallbacks": [{"issuerId": "default", "tokenExpiry": 3600, "requestMappings": [
         {"requestParam": "grant_type", "match": "client_credentials",
-         "claims": {"sub": "${clientId}", "aud": ["api"]}}]}]}
+         "claims": {"sub": "${clientId}", "aud": ["api"]}},
+        {"requestParam": "grant_type", "match": "*",
+         "claims": {"aud": ["api", "${clientId}"], "azp": "${clientId}"}}]}]}
       """;
 
   GenericContainer<?> OAUTH2 = startOAuth2();
