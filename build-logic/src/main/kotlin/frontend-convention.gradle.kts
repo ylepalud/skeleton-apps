@@ -37,8 +37,16 @@ val generateApi =
         description = "Generates the TypeScript API client from the OpenAPI contract."
         dependsOn(npmInstall)
         args = listOf("run", "generate:api")
-        // The contract may be split into $ref files next to its entry file.
-        inputs.dir(frontend.apiContract.map { it.asFile.parentFile })
+        // The contract may be split into $ref files next to its entry file. A file tree, not the
+        // whole folder, which may also hold a Gradle project's build output.
+        inputs.files(
+            frontend.apiContract.map { contract ->
+                fileTree(contract.asFile.parentFile) {
+                    include("**/*.yaml", "**/*.yml", "**/*.json")
+                    exclude("build")
+                }
+            },
+        )
         inputs.files("package.json", "package-lock.json").optional()
         outputs.dir("src/app/api/generated")
     }
