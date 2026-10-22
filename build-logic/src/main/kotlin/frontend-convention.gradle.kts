@@ -25,6 +25,8 @@ node {
     download = true
     workDir = layout.buildDirectory.dir("node")
     npmWorkDir = layout.buildDirectory.dir("npm")
+    // Install exactly what package-lock.json pins, failing if it is out of date.
+    npmInstallCommand = "ci"
 }
 
 val npmInstall = tasks.named("npmInstall")
