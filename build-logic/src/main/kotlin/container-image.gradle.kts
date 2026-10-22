@@ -3,6 +3,8 @@
  * The base image is distroless and pinned by digest; it runs as a non-root
  * user. CI passes the registry repository and the commit SHA as the tag.
  */
+import dev.ylp.buildlogic.dockerExecutable
+
 plugins {
     java
     id("com.google.cloud.tools.jib")
@@ -15,6 +17,9 @@ jib {
     to {
         image = providers.gradleProperty("imageRepository").getOrElse("apps/${project.name}")
         tags = setOf(providers.gradleProperty("imageTag").getOrElse("local"))
+    }
+    dockerClient {
+        executable = dockerExecutable().get()
     }
     container {
         ports = listOf("8080", "8081")

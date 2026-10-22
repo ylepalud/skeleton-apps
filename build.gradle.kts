@@ -45,11 +45,25 @@ abstract class WaitForReadiness : DefaultTask() {
     }
 }
 
+// The docker binary, resolved from the caller's PATH (as dev.ylp.buildlogic.dockerExecutable
+// in build-logic, which this script does not see): a long-lived Gradle daemon
+// may have been started with a PATH that does not include it.
+val docker: String =
+    providers
+        .environmentVariable("PATH")
+        .map { path ->
+            path
+                .split(File.pathSeparator)
+                .map { File(it, "docker") }
+                .firstOrNull { it.canExecute() }
+                ?.absolutePath ?: "docker"
+        }.getOrElse("docker")
+
 val composeUp =
     tasks.register<Exec>("composeUp") {
         description = "Starts the compose stack with the application images."
         dependsOn(":services:api:jibDockerBuild", ":services:api-app:dockerBuild")
-        commandLine("docker", "compose", "--profile", "app", "up", "--detach", "--wait")
+        commandLine(docker, "compose", "--profile", "app", "up", "--detach", "--wait")
     }
 
 tasks.register<WaitForReadiness>("startLocalStack") {
@@ -64,11 +78,11 @@ tasks.register<WaitForReadiness>("startLocalStack") {
 tasks.register<Exec>("stopLocalStack") {
     group = "local-dev"
     description = "Stops the stack; the database volume is kept."
-    commandLine("docker", "compose", "--profile", "app", "down")
+    commandLine(docker, "compose", "--profile", "app", "down")
 }
 
 tasks.register<Exec>("resetDatabase") {
     group = "local-dev"
     description = "Stops the stack and deletes its database; the next start migrates an empty one."
-    commandLine("docker", "compose", "--profile", "app", "down", "--volumes")
+    commandLine(docker, "compose", "--profile", "app", "down", "--volumes")
 }

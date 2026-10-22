@@ -79,6 +79,36 @@ class ContainerImageTest {
     }
 
     @Test
+    fun `jib finds docker on the caller's PATH, whatever the daemon's`() {
+        val bin = dir.resolve("tools/bin").apply { mkdirs() }
+        val docker = bin.resolve("docker").apply { writeText("#!/bin/sh\n") }
+        docker.setExecutable(true)
+        fixture.file(
+            "build.gradle.kts",
+            """
+            plugins {
+                id("container-image")
+            }
+
+            val executable = jib.dockerClient.executable
+
+            tasks.register("printDocker") {
+                doLast { println("docker=" + executable) }
+            }
+            """.trimIndent() + "\n",
+        )
+
+        val result =
+            fixture.build(
+                "printDocker",
+                "--no-configuration-cache",
+                environment = System.getenv() + ("PATH" to bin.absolutePath),
+            )
+
+        assertThat(result.output).contains("docker=" + docker.absolutePath)
+    }
+
+    @Test
     fun `jib tasks do not break a configuration-cached build`() {
         val result = fixture.build("jibDockerBuild", "--dry-run")
 
