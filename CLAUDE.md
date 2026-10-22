@@ -16,6 +16,14 @@ Contexte, décisions et règles critiques : voir le CLAUDE.md du workspace paren
 - `./gradlew pitest` : mutation testing, hors `check`.
 - Le daemon Gradle tourne sur Temurin 25 (`gradle/gradle-daemon-jvm.properties`), téléchargé par foojay si absent. Toute modification d'un convention plugin s'accompagne d'un test dans `build-logic/src/functionalTest`.
 
+## Front (`services/api-app`)
+- Angular 22 zoneless, Tailwind 4, ESLint `strict`, Vitest + Testing Library, Playwright. Construit par Gradle (`frontend-convention`, Node épinglé, `npm ci`) : `lint` et `test` dans `check`, `build` dans `assemble`.
+- Client HTTP généré depuis `contracts/api` (hey-api, `@hey-api/client-angular`) dans `src/app/api/generated`, non commité. Il passe par `HttpClient` : l'intercepteur OIDC ajoute le jeton, uniquement vers `/api/`.
+- Connexion Authorization Code + PKCE (angular-auth-oidc-client), renouvellement par refresh token. Réglages lus à l'exécution dans `/config.json` (`authority`, `clientId`) : `public/config.json` en dev, généré par nginx dans l'image.
+- Dev : `npm start` (`ng serve`, proxy `/api` vers `localhost:8080`) avec l'API en `bootRun`. E2E : `./gradlew :services:api-app:npmRunE2e -PrunE2e=true`, `E2E_BASE_URL` pour viser une autre stack ; toute erreur de console fait échouer un test.
+- Image : `./gradlew :services:api-app:dockerBuild` (`apps/api-app:local`), nginx-unprivileged sur 8080. Variables : `API_UPSTREAM`, `OIDC_AUTHORITY`, `OIDC_CLIENT_ID`, `OIDC_ORIGIN` (CSP).
+- `overrides` npm : js-yaml et vite forcés en versions corrigées ; à retirer quand Angular et hey-api les embarquent.
+
 ## Architecture
 - Spring Modulith obligatoire : un module applicatif = un package de premier niveau sous `dev.ylp`. `ApplicationModules.verify()` doit passer.
 - Dans un module, organisation hexagonale (skill `java-conventions`) : `domain` (modèle, ports), `application` (un cas d'usage par classe), `adapter/in/<tech>` et `adapter/out/<tech>`. Les rôles sont déclarés avec les annotations hexagonales et DDD de jMolecules (`@SecondaryPort`, `@SecondaryAdapter` sur `package-info.java`, `@AggregateRoot`) et vérifiés par `jmolecules-archunit`, plus une règle ArchUnit : `domain` et `application` ne dépendent ni de Spring (sauf `@Transactional`) ni des adapters.
