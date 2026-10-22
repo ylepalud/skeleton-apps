@@ -1,0 +1,80 @@
+# Local stack, the same images as in the cluster.
+#   ./gradlew startLocalStack   builds the images, starts everything (profile "app")
+#   ./gradlew :services:api:bootRun   starts only postgres and the identity provider
+# Web app and API: http://localhost:8088 · identity provider: http://localhost:8090
+name: apps
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: api
+      POSTGRES_USER: api
+      # Throwaway credentials of a local-only container, never used elsewhere.
+      POSTGRES_PASSWORD: local-only
+    ports:
+      - "5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U api -d api"]
+      interval: 2s
+      retries: 30
+
+  # Stand-in OpenID Connect provider. A client credentials token has the client id as
+  # subject; a token from the login form (web app) keeps the typed username as subject.
+  # Every token is addressed to the api audience, plus the client itself for the web app.
+  mock-oauth2-server:
+    image: ghcr.io/navikt/mock-oauth2-server:6.0.4@sha256:47374fe063995d9b6d39ebb6ea21eb5f765025bf0aa08b61b08b439eb91adaf0
+    environment:
+      JSON_CONFIG: >-
+        {"interactiveLogin": true, "tokenCallbacks": [{"issuerId": "default", "tokenExpiry": 3600,
+        "requestMappings": [{"requestParam": "grant_type", "match": "client_credentials",
+        "claims": {"sub": "$${clientId}", "aud": ["api"]}},
+        {"requestParam": "grant_type", "match": "*",
+        "claims": {"aud": ["api", "$${clientId}"], "azp": "$${clientId}"}}]}]}
+    ports:
+      - "8090:8080"
+    labels:
+      # Not a service Spring Boot knows how to connect to: started, never wired automatically.
+      org.springframework.boot.ignore: "true"
+
+  api:
+    profiles: [app]
+    image: apps/api:local
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mock-oauth2-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/api
+      SPRING_DATASOURCE_USERNAME: api
+      SPRING_DATASOURCE_PASSWORD: local-only
+      # Tokens are issued to browsers on localhost:8090, which this container cannot reach:
+      # the issuer is only checked, the keys come from the provider's internal address.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8090/default
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://mock-oauth2-server:8080/default/jwks
+    ports:
+      # Management port only (probes, metrics): the API itself is reached through the web app.
+      - "8091:8081"
+    labels:
+      org.springframework.boot.ignore: "true"
+
+  web:
+    profiles: [app]
+    image: apps/api-app:local
+    depends_on:
+      - api
+    environment:
+      API_UPSTREAM: http://api:8080
+      OIDC_AUTHORITY: http://localhost:8090/default
+      OIDC_CLIENT_ID: api-app
+      OIDC_ORIGIN: http://localhost:8090
+    ports:
+      - "8088:8080"
+    labels:
+      org.springframework.boot.ignore: "true"
+
+volumes:
+  postgres-data:
