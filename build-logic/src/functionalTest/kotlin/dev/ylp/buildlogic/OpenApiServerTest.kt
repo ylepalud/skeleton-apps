@@ -80,7 +80,7 @@ class OpenApiServerTest {
         assertThat(result.task(":openApiGenerate")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
         assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
         assertThat(dir.resolve("build/generated/openapi/src/main/java/dev/ylp/sample/api/GreetingsApi.java")).exists()
-        assertThat(dir.resolve("build/generated/openapi/src/main/java/dev/ylp/sample/model/Greeting.java")).exists()
+        assertThat(dir.resolve("build/generated/openapi/src/main/java/dev/ylp/sample/model/GreetingDto.java")).exists()
     }
 
     @Test
