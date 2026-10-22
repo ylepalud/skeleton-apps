@@ -70,6 +70,12 @@ class Fixture(
 
     fun build(vararg arguments: String): BuildResult = runner(*arguments).build()
 
+    /** Runs the build with the given environment, as a caller with that environment would. */
+    fun build(
+        vararg arguments: String,
+        environment: Map<String, String>,
+    ): BuildResult = runner(*arguments).withEnvironment(environment).build()
+
     fun fail(vararg arguments: String): BuildResult = runner(*arguments).buildAndFail()
 
     private fun runner(vararg arguments: String): GradleRunner =

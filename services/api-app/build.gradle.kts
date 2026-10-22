@@ -1,3 +1,5 @@
+import dev.ylp.buildlogic.dockerExecutable
+
 plugins {
     id("frontend-convention")
 }
@@ -10,5 +12,5 @@ tasks.register<Exec>("dockerBuild") {
     val tag = providers.gradleProperty("imageTag").orElse("local")
     inputs.files("Dockerfile", "nginx/default.conf.template")
     inputs.dir("dist/api-app/browser")
-    commandLine("docker", "build", "--tag", "apps/api-app:${tag.get()}", ".")
+    commandLine(dockerExecutable().get(), "build", "--tag", "apps/api-app:${tag.get()}", ".")
 }
