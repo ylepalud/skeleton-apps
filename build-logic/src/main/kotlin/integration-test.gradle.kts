@@ -16,6 +16,9 @@ testing {
         register<JvmTestSuite>("integrationTest") {
             dependencies {
                 implementation(project())
+                // Port contract tests and test data builders are written once in the unit
+                // tests and reused by the adapter tests.
+                implementation(files(sourceSets["test"].output))
             }
             targets.configureEach {
                 testTask.configure {
