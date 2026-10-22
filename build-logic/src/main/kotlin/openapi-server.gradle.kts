@@ -69,9 +69,20 @@ val openApiGenerate =
                 "openApiNullable" to "false",
                 "documentationProvider" to "none",
                 "annotationLibrary" to "none",
+                // Inclusion and null handling stay with the application's JSON mapper.
+                "generateJsonIncludeAnnotations" to "false",
+                "generateJsonSetterNullsAnnotations" to "false",
             )
-        // The entry file references sibling files: any change in the folder regenerates.
-        inputs.dir(openApiServer.contract.map { it.asFile.parentFile })
+        // The entry file references sibling files: any contract file change regenerates.
+        // A file tree, not the whole folder, which also holds this project's build output.
+        inputs.files(
+            openApiServer.contract.map { contract ->
+                fileTree(contract.asFile.parentFile) {
+                    include("**/*.yaml", "**/*.yml", "**/*.json")
+                    exclude("build")
+                }
+            },
+        )
     }
 
 sourceSets.named("main") {
