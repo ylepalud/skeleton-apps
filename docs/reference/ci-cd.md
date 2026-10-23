@@ -9,7 +9,7 @@ All workflows live in `.github/workflows`. Actions are pinned by commit SHA (Ren
 | `ci.yml` | pull requests to `develop` or `main`, push to `main`, called by `publish.yml` | `check` (`./gradlew check`), `e2e` (local stack, Playwright, Bruno smoke run), `trivy-fs` (dependencies including development ones, secrets and configuration; findings in the Security tab) |
 | `publish.yml` | push to `develop`, or manual with `all=true` | `ci.yml`, then one image job per image whose code changed: build and push, scan, SBOM, signature |
 | `nightly.yml` | every day at 03:00 UTC, or manual | `./gradlew pitest` on `develop` |
-| `release.yml` | push to `main` | release-please, then the release tag added to the published images |
+| `release.yml` | push to `main`, or manual with `tag=vX.Y.Z` to promote an existing release's images again | release-please, then the release tag added to the published images |
 
 <!-- template-only:start -->
 The template also runs `installer.yml` on pull requests to `develop` or `main`: its `installer` job runs the installer's tests, generates a project from the pull request and runs `./gradlew check` on it.
