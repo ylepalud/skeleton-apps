@@ -1,5 +1,5 @@
 [versions]
-spring-boot = "4.1.1"
+spring-boot = "4.1.2"
 spring-modulith = "2.1.1"
 jmolecules = "2025.0.2"
 spotless = "8.10.4"
