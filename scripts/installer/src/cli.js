@@ -65,6 +65,9 @@ function finish(index, outcome = 'done') {
   status[index] = outcome;
 }
 
+/** Ends the run with a message, after cleaning up. */
+class Stop extends Error {}
+
 /**
  * Stops on a cancelled prompt.
  * @template T
@@ -73,8 +76,7 @@ function finish(index, outcome = 'done') {
  */
 function answered(value) {
   if (p.isCancel(value)) {
-    p.cancel('Cancelled, nothing was written.');
-    process.exit(1);
+    throw new Stop('Cancelled, nothing was written.');
   }
   return /** @type {Exclude<T, symbol>} */ (value);
 }
@@ -123,151 +125,168 @@ Options:
   process.exit(0);
 }
 
-const interactive = !values.yes;
-console.log(BANNER);
-p.intro('Create a new project from the skeleton-apps template');
+async function main() {
+  const interactive = !values.yes;
+  console.log(BANNER);
+  p.intro('Create a new project from the skeleton-apps template');
 
-// 1. Prerequisites
-start(0);
-const prerequisites = checkPrerequisites();
-for (const item of prerequisites) {
-  const line = `${item.name}: ${item.detail}`;
-  if (item.ok) {
-    p.log.success(line);
-  } else if (item.required) {
-    p.log.error(line);
-  } else {
-    p.log.warn(line);
-  }
-}
-if (prerequisites.some((item) => item.required && !item.ok)) {
-  p.cancel('A required tool is missing.');
-  process.exit(1);
-}
-const canCheck = prerequisites.every((item) => item.ok);
-finish(0);
-
-// 2. Answers
-start(1);
-/**
- * @param {string} message
- * @param {string | undefined} given
- * @param {string} fallback
- * @param {(value: string) => string | undefined} validate
- * @returns {Promise<string>}
- */
-async function ask(message, given, fallback, validate) {
-  const value = given ?? fallback;
-  if (!interactive) {
-    const error = validate(value);
-    if (error) {
-      p.cancel(`${message} "${value}": ${error}`);
-      process.exit(1);
+  // 1. Prerequisites
+  start(0);
+  const prerequisites = checkPrerequisites();
+  for (const item of prerequisites) {
+    const line = `${item.name}: ${item.detail}`;
+    if (item.ok) {
+      p.log.success(line);
+    } else if (item.required) {
+      p.log.error(line);
+    } else {
+      p.log.warn(line);
     }
-    return value;
   }
-  return answered(
-    await p.text({
-      message,
-      initialValue: value,
-      validate: (input) => validate(input ?? ''),
-    }),
-  );
-}
-const name = await ask('Project name', values.name ?? positionals[0], '', validateName);
-const owner = await ask(
-  'GitHub owner of the new repository',
-  values.owner,
-  defaultOwner(gitConfig('github.user'), gitConfig('user.name')),
-  validateOwner,
-);
-const packageName = await ask('Base Java package', values.package, defaultPackage(owner, name), validatePackage);
-const clientId = await ask('OIDC client id of the web app', values['client-id'], defaultClientId(name), validateClientId);
-const destination = resolve(
-  await ask('Folder for the zip', values.dest, '.', (value) => (existsSync(value) ? undefined : 'This folder does not exist.')),
-);
-const zipPath = join(destination, `${name}.zip`);
-if (existsSync(zipPath)) {
-  p.cancel(`${zipPath} already exists.`);
-  process.exit(1);
-}
-finish(1);
+  if (prerequisites.some((item) => item.required && !item.ok)) {
+    throw new Stop('A required tool is missing.');
+  }
+  const canCheck = prerequisites.every((item) => item.ok);
+  finish(0);
 
-const workspace = mkdtempSync(join(tmpdir(), 'skeleton-apps-'));
+  // 2. Answers
+  start(1);
+  /**
+   * @param {string} message
+   * @param {string | undefined} given
+   * @param {string} fallback
+   * @param {(value: string) => string | undefined} validate
+   * @returns {Promise<string>}
+   */
+  async function ask(message, given, fallback, validate) {
+    const value = given ?? fallback;
+    if (!interactive) {
+      const error = validate(value);
+      if (error) {
+        throw new Stop(`${message} "${value}": ${error}`);
+      }
+      return value;
+    }
+    return answered(
+      await p.text({
+        message,
+        initialValue: value,
+        validate: (input) => validate(input ?? ''),
+      }),
+    );
+  }
+  const name = await ask('Project name', values.name ?? positionals[0], '', validateName);
+  const owner = await ask(
+    'GitHub owner of the new repository',
+    values.owner,
+    defaultOwner(gitConfig('github.user'), gitConfig('user.name')),
+    validateOwner,
+  );
+  const packageName = await ask('Base Java package', values.package, defaultPackage(owner, name), validatePackage);
+  const clientId = await ask('OIDC client id of the web app', values['client-id'], defaultClientId(name), validateClientId);
+  const destination = resolve(
+    await ask('Folder for the zip', values.dest, '.', (value) => (existsSync(value) ? undefined : 'This folder does not exist.')),
+  );
+  const zipPath = join(destination, `${name}.zip`);
+  if (existsSync(zipPath)) {
+    throw new Stop(`${zipPath} already exists.`);
+  }
+  finish(1);
+
+  const workspace = mkdtempSync(join(tmpdir(), 'skeleton-apps-'));
+  try {
+    // 3. Template
+    start(2);
+    const spinner = p.spinner();
+    spinner.start('Resolving the template version');
+    const templateDir = join(workspace, 'template');
+    let ref;
+    try {
+      ref = resolveRef(values.source, values.ref);
+      spinner.message(`Fetching ${ref}`);
+      mkdirSync(templateDir);
+      fetchTemplate(values.source, ref, templateDir);
+    } catch (error) {
+      spinner.error('Could not fetch the template');
+      throw error;
+    }
+    spinner.stop(`Template ${ref} fetched`);
+    finish(2);
+
+    // 4. Generate
+    start(3);
+    const answers = { name, owner, packageName, clientId };
+    const template = readTree(templateDir);
+    const generated = transformTree(template, answers);
+    const projectDir = join(workspace, name);
+    writeTree(projectDir, generated);
+    p.log.success(`${generated.size} files generated (${template.size - generated.size} template-only files left out)`);
+    finish(3);
+
+    // 5. Verify
+    start(4);
+    let verified = 'skipped';
+    const wantCheck = interactive
+      ? canCheck && answered(await p.confirm({ message: 'Run ./gradlew check now? (several minutes)', initialValue: false }))
+      : values.check;
+    if (wantCheck) {
+      if (!canCheck) {
+        throw new Stop('The check needs Java 17+ and Docker Compose v2+.');
+      }
+      execFileSync('./gradlew', ['check'], { cwd: projectDir, stdio: 'inherit' });
+      verified = 'passed';
+      finish(4);
+    } else {
+      finish(4, 'skipped');
+    }
+
+    // 6. Review
+    start(5);
+    p.note(
+      [
+        `Project          ${name}`,
+        `GitHub           ${owner}/${name}`,
+        `Base package     ${packageName}`,
+        `OIDC client id   ${clientId}`,
+        `Template         ${ref}`,
+        `Files            ${generated.size}`,
+        `Build check      ${verified}`,
+        `Archive          ${zipPath}`,
+      ].join('\n'),
+      'Review',
+    );
+    if (interactive && !answered(await p.confirm({ message: 'Create the repository and the archive?' }))) {
+      throw new Stop('Cancelled, nothing was written.');
+    }
+    finish(5);
+
+    // 7. Git
+    start(6);
+    initRepository(projectDir);
+    p.log.success('Repository created on develop, with one commit: Init');
+    finish(6);
+
+    // 8. Zip
+    start(7);
+    const count = createArchive(projectDir, zipPath, name);
+    finish(7);
+    p.note(board(), 'Done');
+    p.outro(`${zipPath} (${count} files). Unzip it, push it to github.com/${owner}/${name}, and apply the GitHub settings of docs/reference/ci-cd.md.`);
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+}
+
 try {
-  // 3. Template
-  start(2);
-  const spinner = p.spinner();
-  spinner.start('Resolving the template version');
-  const ref = resolveRef(values.source, values.ref);
-  spinner.message(`Fetching ${ref}`);
-  const templateDir = join(workspace, 'template');
-  mkdirSync(templateDir);
-  fetchTemplate(values.source, ref, templateDir);
-  spinner.stop(`Template ${ref} fetched`);
-  finish(2);
-
-  // 4. Generate
-  start(3);
-  const answers = { name, owner, packageName, clientId };
-  const template = readTree(templateDir);
-  const generated = transformTree(template, answers);
-  const projectDir = join(workspace, name);
-  writeTree(projectDir, generated);
-  p.log.success(`${generated.size} files generated (${template.size - generated.size} template-only files left out)`);
-  finish(3);
-
-  // 5. Verify
-  start(4);
-  let verified = 'skipped';
-  const wantCheck = interactive
-    ? canCheck && answered(await p.confirm({ message: 'Run ./gradlew check now? (several minutes)', initialValue: false }))
-    : values.check;
-  if (wantCheck) {
-    if (!canCheck) {
-      p.cancel('The check needs Java 17+ and Docker Compose v2.');
-      process.exit(1);
-    }
-    execFileSync('./gradlew', ['check'], { cwd: projectDir, stdio: 'inherit' });
-    verified = 'passed';
-    finish(4);
+  await main();
+} catch (error) {
+  if (error instanceof Stop) {
+    p.cancel(error.message);
   } else {
-    finish(4, 'skipped');
+    // A failed command: show what it said rather than a stack trace.
+    const stderr = /** @type {{ stderr?: unknown }} */ (error).stderr;
+    const detail = typeof stderr === 'string' || stderr instanceof Uint8Array ? String(stderr).trim() : '';
+    p.cancel(detail || (error instanceof Error ? error.message : String(error)));
   }
-
-  // 6. Review
-  start(5);
-  p.note(
-    [
-      `Project          ${name}`,
-      `GitHub           ${owner}/${name}`,
-      `Base package     ${packageName}`,
-      `OIDC client id   ${clientId}`,
-      `Template         ${ref}`,
-      `Files            ${generated.size}`,
-      `Build check      ${verified}`,
-      `Archive          ${zipPath}`,
-    ].join('\n'),
-    'Review',
-  );
-  if (interactive && !answered(await p.confirm({ message: 'Create the repository and the archive?' }))) {
-    p.cancel('Cancelled, nothing was written.');
-    process.exit(1);
-  }
-  finish(5);
-
-  // 7. Git
-  start(6);
-  initRepository(projectDir);
-  p.log.success('Repository created on develop, with one commit: Init');
-  finish(6);
-
-  // 8. Zip
-  start(7);
-  const count = createArchive(projectDir, zipPath, name);
-  finish(7);
-  p.note(board(), 'Done');
-  p.outro(`${zipPath} (${count} files). Unzip it, push it to github.com/${owner}/${name}, and apply the GitHub settings of docs/reference/ci-cd.md.`);
-} finally {
-  rmSync(workspace, { recursive: true, force: true });
+  process.exitCode = 1;
 }
