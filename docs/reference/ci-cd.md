@@ -11,6 +11,11 @@ All workflows live in `.github/workflows`. Actions are pinned by commit SHA (Ren
 | `nightly.yml` | every day at 03:00 UTC, or manual | `./gradlew pitest` on `develop` |
 | `release.yml` | push to `main` | release-please, then the release tag added to the published images |
 
+<!-- template-only:start -->
+The template also runs `installer.yml` on pull requests to `develop` or `main`: its `installer` job runs the installer's tests, generates a project from the pull request and runs `./gradlew check` on it.
+
+<!-- template-only:end -->
+
 ## Images
 
 | Image | Built by | Name |
@@ -40,7 +45,7 @@ cosign verify ghcr.io/ylepalud/skeleton-apps/api@<digest> \
 
 | Branch | Role | Merge method | Rules |
 | --- | --- | --- | --- |
-| `develop` | default branch, the only one deployed | squash | pull request required, `check`, `e2e` and `trivy-fs` required, linear history, no force push or deletion |
+| `develop` | default branch, the only one deployed | squash | pull request required, `check`, `e2e`<!-- template-only:start -->, `installer`<!-- template-only:end --> and `trivy-fs` required, linear history, no force push or deletion |
 | `main` | releases | merge commit | pull request required, the same checks, no force push or deletion |
 
 Repository administrators can bypass the rulesets; this is how release-please's pull requests get merged (see [Release](../how-to/release.md)).

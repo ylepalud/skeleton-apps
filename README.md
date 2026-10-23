@@ -19,9 +19,16 @@ You need Docker with Compose v2. Gradle downloads its own JDK (Temurin 25) and t
 
 Then open http://localhost:8088 and sign in with any username: locally, a mock identity provider accepts everyone. `./gradlew stopLocalStack` stops the stack.
 
+<!-- template-only:start -->
 ## Start a new project
 
-This repository is a GitHub template. See [Start a new project](docs/how-to/start-a-new-project.md).
+```bash
+npx github:ylepalud/skeleton-apps#v0.1.0 my-idea
+```
+
+The installer renames the project, the package and the images, and writes `my-idea.zip`: a ready Git repository with one `Init` commit. See [Start a new project](docs/how-to/start-a-new-project.md).
+
+<!-- template-only:end -->
 
 ## What is inside
 
@@ -62,4 +69,4 @@ Coding agents start with [AGENTS.md](AGENTS.md).
 
 ## Contributing
 
-Pull requests target `develop` and need the `check`, `e2e` and `trivy-fs` checks. Commits follow [Conventional Commits](https://www.conventionalcommits.org/), which drive the changelog and the version. Everything is written in English.
+Pull requests target `develop` and need the `check`, `e2e`<!-- template-only:start -->, `installer`<!-- template-only:end --> and `trivy-fs` checks. Commits follow [Conventional Commits](https://www.conventionalcommits.org/), which drive the changelog and the version. Everything is written in English.
