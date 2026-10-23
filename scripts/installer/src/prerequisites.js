@@ -1,5 +1,5 @@
 // What the installer needs, and what the optional build check needs. Detected, never configured.
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 
 /**
  * @typedef {object} Prerequisite
@@ -12,16 +12,11 @@ import { execFileSync } from 'node:child_process';
 /**
  * @param {string} command
  * @param {string[]} args
- * @returns {string | undefined} the combined output, or nothing if the command failed
+ * @returns {string | undefined} stdout and stderr together (`java -version` prints to stderr), or nothing if the command failed
  */
 function run(command, args) {
-  try {
-    return execFileSync(command, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-  } catch (error) {
-    // `java -version` prints to stderr; a failure leaves nothing usable.
-    const stderr = /** @type {{ stderr?: string }} */ (error).stderr;
-    return typeof stderr === 'string' && stderr.length > 0 ? stderr : undefined;
-  }
+  const result = spawnSync(command, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  return result.status === 0 ? `${result.stdout}${result.stderr}` : undefined;
 }
 
 /**
@@ -38,12 +33,23 @@ export function javaMajor(output) {
   return match[1] === '1' ? Number(match[2]) : Number(match[1]);
 }
 
+/**
+ * The Docker Compose major version in `docker compose version` output.
+ * @param {string} output
+ * @returns {number | undefined}
+ */
+export function composeMajor(output) {
+  const match = /version v?(\d+)\./.exec(output);
+  return match ? Number(match[1]) : undefined;
+}
+
 /** @returns {Prerequisite[]} */
 export function checkPrerequisites() {
   const git = run('git', ['--version']);
   const java = run('java', ['-version']);
   const major = java ? javaMajor(java) : undefined;
   const compose = run('docker', ['compose', 'version']);
+  const composeVersion = compose ? composeMajor(compose) : undefined;
   return [
     { name: 'git', ok: git !== undefined, detail: git?.trim() ?? 'not found', required: true },
     {
@@ -53,8 +59,8 @@ export function checkPrerequisites() {
       required: false,
     },
     {
-      name: 'Docker Compose v2',
-      ok: compose !== undefined && /v?2\./.test(compose),
+      name: 'Docker Compose v2+',
+      ok: composeVersion !== undefined && composeVersion >= 2,
       detail: compose?.trim() ?? 'not found (only needed to verify the build)',
       required: false,
     },

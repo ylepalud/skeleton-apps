@@ -18,6 +18,6 @@
 
    Issue #12 replaces this step with a GitHub App token.
 
-4. **The release workflow tags the images.** For each image, it walks back from the release commit to the newest commit with a published image and adds the `vX.Y.Z` tag to it, without rebuilding.
+4. **The release workflow tags the images.** For each image, it walks back from the release commit to the newest commit with a published image and adds the `vX.Y.Z` tag to it, without rebuilding. If this step fails, run it again once fixed: `gh workflow run release.yml --ref main -f tag=vX.Y.Z`.
 
 While the version is below 1.0.0, a `feat` commit bumps the minor version and a breaking change also bumps the minor version.

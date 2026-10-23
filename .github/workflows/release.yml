@@ -7,12 +7,19 @@ name: Release
 on:
   push:
     branches: [main]
+  # Promotes the images of an existing release again, e.g. after a failed promotion.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag (vX.Y.Z)
+        required: true
 
 permissions:
   contents: read
 
 jobs:
   release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -32,14 +39,16 @@ jobs:
 
   promote-images:
     needs: release-please
-    if: needs.release-please.outputs.created == 'true'
+    if: >-
+      always() && (needs.release-please.outputs.created == 'true'
+      || (github.event_name == 'workflow_dispatch' && needs.release-please.result == 'skipped'))
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
       packages: write
     env:
-      TAG: ${{ needs.release-please.outputs.tag }}
+      TAG: ${{ inputs.tag || needs.release-please.outputs.tag }}
       REPOSITORY: ghcr.io/${{ github.repository }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
