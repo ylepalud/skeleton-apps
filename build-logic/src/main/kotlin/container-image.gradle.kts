@@ -24,6 +24,10 @@ jib {
     container {
         ports = listOf("8080", "8081")
         jvmFlags = listOf("-XX:MaxRAMPercentage=75")
+        // CI passes the repository URL, which links the published image to it.
+        providers.gradleProperty("imageSource").orNull?.let {
+            labels = mapOf("org.opencontainers.image.source" to it)
+        }
     }
 }
 
