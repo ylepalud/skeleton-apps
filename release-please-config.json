@@ -3,7 +3,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "package-name": "skeletton-apps",
+      "package-name": "skeleton-apps",
       "changelog-path": "CHANGELOG.md",
       "include-v-in-tag": true,
       "initial-version": "0.1.0",
