@@ -1,0 +1,61 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests", ":semanticCommits"],
+  "baseBranchPatterns": ["develop"],
+  "minimumReleaseAge": "7 days",
+  "internalChecksFilter": "strict",
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Patch, minor and digest updates are merged automatically once CI passes",
+      "matchUpdateTypes": ["patch", "minor", "digest", "pin", "pinDigest"],
+      "automerge": true
+    },
+    {
+      "description": "The frameworks and the database the application runs on are always reviewed",
+      "matchPackageNames": [
+        "/^org\\.springframework\\./",
+        "/^@angular\\//",
+        "angular-auth-oidc-client",
+        "postgres"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "Majors are always reviewed",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    { "groupName": "spring", "matchPackageNames": ["/^org\\.springframework\\./"] },
+    { "groupName": "angular", "matchPackageNames": ["/^@angular\\//", "/^@angular-eslint\\//", "angular-eslint"] },
+    { "groupName": "github actions", "matchManagers": ["github-actions"] },
+    { "groupName": "bruno tooling", "matchFileNames": ["bruno/package.json"] }
+  ],
+  "customManagers": [
+    {
+      "description": "Versions annotated with a renovate: comment (gradle.properties)",
+      "customType": "regex",
+      "managerFilePatterns": ["/^gradle\\.properties$/"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(\\s+versioning=(?<versioning>\\S+))?\\n\\S+=(?<currentValue>\\S+)"
+      ]
+    },
+    {
+      "description": "Base image of the JVM application images",
+      "customType": "regex",
+      "managerFilePatterns": ["/^gradle\\.properties$/"],
+      "matchStrings": ["jibBaseImage=(?<depName>[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]+)"],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Images started by Testcontainers, kept in step with compose.yaml",
+      "customType": "regex",
+      "managerFilePatterns": ["/^services/api/src/integrationTest/.+\\.java$/"],
+      "matchStrings": [
+        "\"(?<depName>[a-z0-9./-]+):(?<currentValue>[A-Za-z0-9._-]+)\"\\s*\\+\\s*\"@(?<currentDigest>sha256:[a-f0-9]+)\"",
+        "Container\\(\"(?<depName>[a-z0-9./-]+):(?<currentValue>[A-Za-z0-9._-]+)\"\\)"
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ]
+}
