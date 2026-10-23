@@ -1,12 +1,45 @@
 # Start a new project
 
-This repository is a GitHub template. Until the installer exists (issue #10), starting a new project is manual:
+A new project is generated from a released version of this template by its installer. You need Node 22 or later and Git; Java 17+ and Docker Compose v2 are only needed to verify the build before archiving.
 
-1. On GitHub, **Use this template** and create the new repository, or copy the files without the `.git` folder.
-2. **Rename the project**: `rootProject.name` in `settings.gradle.kts`, the compose project (`name:` in `compose.yaml`) and its two image names, `package-name` in `release-please-config.json`, the title of `README.md` and `AGENTS.md`. Image names follow `rootProject.name` automatically.
-3. **Rename the base package** `dev.ylp`: the `group` in `build-logic/src/main/kotlin/java-convention.gradle.kts`, the source folders and `package` declarations under `services/api` and `build-logic`, the packages in `contracts/api/build.gradle.kts`, `NullAway:AnnotatedPackages` and the PIT targets.
-4. **Rename the web app's OIDC client id** (`api-app`) in `services/api-app/public/config.json` and in `compose.yaml`.
-5. **Reset the release history**: delete `CHANGELOG.md` if present and set `.release-please-manifest.json` to `{ ".": "0.0.0" }`.
-6. **Keep the `notes` module** as the living example until your first module exists, then delete it with its contract file, changelog, Bruno folder and web feature.
-7. **Verify**: `./gradlew check`, then `./gradlew startLocalStack`.
-8. **On GitHub**: default branch `develop`, the rulesets and settings described in [CI/CD](../reference/ci-cd.md), and the Renovate app.
+```bash
+npx github:ylepalud/skeleton-apps#v0.1.0 my-idea
+```
+
+Without `#<tag>`, npm takes the default branch's installer, which then fetches the latest release. The installer asks for the project name, the GitHub owner, the base Java package, the web app's OIDC client id and where to write the archive, shows a summary, and writes `<name>.zip` in the current folder. Inside: the generated project, already a Git repository on `develop` with a single `Init` commit.
+
+To change a version (Java, Spring, Angular, a tool), change it here first, release, then generate from the new tag. The installer never asks for versions.
+
+## Options
+
+`npx github:ylepalud/skeleton-apps#<tag> --help` lists them. With `--yes`, nothing is asked: the given options and the defaults apply.
+
+| Option | Default |
+| --- | --- |
+| `--name` (or the first argument) | none, required |
+| `--owner` | `git config github.user`, else `user.name` |
+| `--package` | `dev.<owner>.<name without dashes>` |
+| `--client-id` | `<name>-web` |
+| `--dest` | `.` |
+| `--ref` | the latest `vX.Y.Z` tag, else `develop` |
+| `--source` | this repository; a local path generates from its last commit |
+| `--check` | off: runs `./gradlew check` on the generated project before archiving |
+
+## What changes
+
+- `ylepalud/skeleton-apps` becomes `<owner>/<name>` (badges, image names, signature identity), then `skeleton-apps` becomes `<name>` (root project, compose project, local images, release-please, docs).
+- The base package `dev.ylp` becomes yours, in sources and build scripts, and the source folders move with it.
+- The web app's OIDC client id changes in `services/api-app/public/config.json` and `compose.yaml`. The web module keeps its name, `api-app`.
+- The release history restarts: no `CHANGELOG.md`, manifest at `0.0.0`.
+- Template-only material stays out: the installer, its workflow, this guide, references to this repository's issues.
+- The `notes` module stays as the living example. Delete it, with its contract file, changelog, Bruno folder and web feature, once your first module exists.
+
+## After unzipping
+
+1. Create the empty repository `<owner>/<name>` on GitHub and push `develop`.
+2. Apply the branches, rulesets and repository settings described in [CI/CD](../reference/ci-cd.md), and install the Renovate app.
+3. `./gradlew check`, then `./gradlew startLocalStack`.
+
+## Work on the installer
+
+It lives in `scripts/installer` (plain JavaScript checked by TypeScript) with the root `package.json`, and is never published to npm. `npm run installer:test` and `npm run installer:typecheck` run its checks; the `installer` workflow also generates a project from the pull request and builds it.
