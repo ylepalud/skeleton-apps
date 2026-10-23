@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.2](https://github.com/ylepalud/skeleton-apps/compare/v0.1.1...v0.1.2) (2026-10-23)
+
+
+### Bug Fixes
+
+* **installer:** keep a background git gc from failing the cleanup ([#35](https://github.com/ylepalud/skeleton-apps/issues/35)) ([70ee365](https://github.com/ylepalud/skeleton-apps/commit/70ee3650a4303c9b2efea49ccee301a23015f9b8))
+
+
+### Continuous Integration
+
+* **release:** open release pull requests with a GitHub App token ([#33](https://github.com/ylepalud/skeleton-apps/issues/33)) ([49b53dd](https://github.com/ylepalud/skeleton-apps/commit/49b53dddcb30df0f8f0774ee1ffe6c487e91a68f)), closes [#12](https://github.com/ylepalud/skeleton-apps/issues/12)
+
 ## [0.1.1](https://github.com/ylepalud/skeleton-apps/compare/v0.1.0...v0.1.1) (2026-10-23)
 
 
