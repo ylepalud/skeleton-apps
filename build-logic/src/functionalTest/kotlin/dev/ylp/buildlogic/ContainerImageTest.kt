@@ -24,9 +24,10 @@ class ContainerImageTest {
             val from = jib.from.image
             val to = jib.to.image
             val tags = jib.to.tags
+            val labels = jib.container.labels
 
             tasks.register("printImage") {
-                doLast { println("from=" + from + " to=" + to + " tags=" + tags) }
+                doLast { println("from=" + from + " to=" + to + " tags=" + tags + " labels=" + labels.get()) }
             }
             """.trimIndent() + "\n",
         )
@@ -50,9 +51,13 @@ class ContainerImageTest {
                 "--no-configuration-cache",
                 "-PimageRepository=ghcr.io/owner/api",
                 "-PimageTag=0123abc",
+                "-PimageSource=https://github.com/owner/repo",
             )
 
-        assertThat(result.output).contains("to=ghcr.io/owner/api").contains("tags=[0123abc]")
+        assertThat(result.output)
+            .contains("to=ghcr.io/owner/api")
+            .contains("tags=[0123abc]")
+            .contains("labels={org.opencontainers.image.source=https://github.com/owner/repo}")
     }
 
     @Test
