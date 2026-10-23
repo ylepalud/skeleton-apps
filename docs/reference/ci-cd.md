@@ -46,10 +46,25 @@ cosign verify ghcr.io/ylepalud/skeleton-apps/api@<digest> \
 | Branch | Role | Merge method | Rules |
 | --- | --- | --- | --- |
 | `develop` | default branch, the only one deployed | squash | pull request required, `check`, `e2e`<!-- template-only:start -->, `installer`<!-- template-only:end --> and `trivy-fs` required, linear history, no force push or deletion |
-| `main` | releases | merge commit | pull request required, the same checks, no force push or deletion |
+| `main` | releases | merge commit | pull request required, the same checks, no force push or deletion; the branch need not be up to date, since release-please's commits only exist on `main` |
 
-Repository administrators can bypass the rulesets; this is how release-please's pull requests get merged (see [Release](../how-to/release.md)).
+Repository administrators can bypass the rulesets. Without the release App, this is how release-please's pull requests get merged (see [Release](../how-to/release.md)).
 
 ## Repository settings
 
 Public template repository. Secret scanning with push protection, Dependabot alerts (updates come from Renovate), read-only `GITHUB_TOKEN` by default, workflows allowed to open pull requests (for release-please).
+
+## Release App
+
+A pull request opened with the workflow's own token starts no workflow, so release-please's pull requests would get no check. `release.yml` therefore opens them with a GitHub App token when the App is configured, and falls back to the workflow's token otherwise.
+
+- One App serves every repository of its owner: create it once (no webhook, only on this account) with the repository permissions **Contents** and **Pull requests** in read and write, then install it on each repository.
+- Repository variable `RELEASE_APP_CLIENT_ID`: the App's client id.
+- Repository secret `RELEASE_APP_PRIVATE_KEY`: a private key of the App. Store it straight from the downloaded file, then delete the file:
+
+  ```bash
+  gh variable set RELEASE_APP_CLIENT_ID --body <client id>
+  gh secret set RELEASE_APP_PRIVATE_KEY < <app>.private-key.pem
+  ```
+
+The token lasts one hour and only carries those two permissions.
