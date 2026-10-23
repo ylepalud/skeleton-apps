@@ -67,5 +67,5 @@ pitest {
     threads = 2
     outputFormats = listOf("HTML", "XML")
     timestampedReports = false
-    mutationThreshold = 70
+    mutationThreshold = 80
 }
