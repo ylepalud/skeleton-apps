@@ -13,7 +13,7 @@ Contexte, décisions et règles critiques : voir le CLAUDE.md du workspace paren
 - `./gradlew check` : vérification complète, y compris les tests TestKit des convention plugins (`build-logic`).
 - `./gradlew :build-logic:functionalTest` : seulement les tests des convention plugins.
 - `./gradlew :build-logic:spotlessApply` : formate le code Kotlin de `build-logic` (ktlint).
-- `./gradlew pitest` : mutation testing, hors `check`.
+- `./gradlew pitest` : mutation testing, hors `check`, seuil 80 % sur `domain` et `application` (lancé chaque nuit en CI).
 - Le daemon Gradle tourne sur Temurin 25 (`gradle/gradle-daemon-jvm.properties`), téléchargé par foojay si absent. Toute modification d'un convention plugin s'accompagne d'un test dans `build-logic/src/functionalTest`.
 
 ## Front (`services/api-app`)
@@ -47,19 +47,22 @@ Contexte, décisions et règles critiques : voir le CLAUDE.md du workspace paren
 ## Build et images
 - API : Jib, base distroless `nonroot` (sinon Temurin JRE non-root) épinglée par digest. Front : Dockerfile minimal `nginx-unprivileged`, seule exception à Jib.
 - Versions : bibliothèques dans `gradle/libs.versions.toml`, outils de build dans `gradle.properties`, bibliothèques gérées par le BOM Boot sans version.
-- CI GitHub Actions filtrée par chemin (API ou front), avec cache Gradle.
-- Étapes de la CI : `check`, e2e Playwright, scan Trivy, SBOM Syft, push sur GHCR, signature cosign keyless. PIT chaque nuit.
+- Dépôt public `github.com/ylepalud/skeletton-apps`, marqué *template* : point de départ des futurs projets (« Use this template »).
+- CI GitHub Actions (`.github/workflows`), actions épinglées par SHA de commit, permissions minimales :
+  - `ci.yml` (PR vers `develop`/`main`, push sur `main`) : jobs `check`, `e2e` (stack complète, Playwright, smoke Bruno) et `trivy-fs` (dépendances, dev comprises, secrets, configuration ; SARIF dans l'onglet Security). Ces trois checks sont exigés par les rulesets.
+  - `publish.yml` (push sur `develop`) : `ci.yml`, puis pour chaque image dont le code a changé, push `ghcr.io/ylepalud/skeletton-apps/<api|api-app>:<sha>`, scan Trivy, SBOM SPDX attesté et signature cosign keyless (`.github/actions/secure-image`). Signée seulement si le scan passe. `workflow_dispatch` republie tout.
+  - `nightly.yml` : PIT à 80 %. `release.yml` : release-please sur `main`, puis tag `vX.Y.Z` posé sur les images déjà publiées (pas de reconstruction).
 - Authentification de la CI à GHCR avec le jeton GitHub intégré, pas de secret longue durée.
 - Tags d'images immuables (SHA du commit). Pas de tag `latest` pour un déploiement.
 
 ## Branches et versions
 - `develop` est la branche par défaut et la seule déployée. Les PR ciblent `develop`.
-- `main` reçoit les releases ; release-please calcule les tags `vX.Y.Z` depuis les Conventional Commits.
+- `main` reçoit les releases : PR `develop` vers `main` fusionnée par *merge commit* (les PR vers `develop` sont en *squash*), puis release-please ouvre la PR de release qui pose le tag `vX.Y.Z`.
 
 ## Qualité
 - Tests obligatoires avant fusion. Domaine testé sans Spring. Tests Spring et slices JPA sur Testcontainers Postgres, jamais H2.
 - `check` inclut JaCoCo (80 %), Spotless, ErrorProne et NullAway, Modulith et jMolecules, lint et tests du front, check Bruno.
-- Dépendances mises à jour par Renovate.
+- Dépendances mises à jour par Renovate (`renovate.json`, application GitHub Mend Renovate à installer sur le dépôt) : 7 jours d'ancienneté minimum, fusion auto des patch, minor et digests si la CI passe, sauf Spring, Angular, PostgreSQL et les majeures. Les versions de `gradle.properties` portent un commentaire `# renovate:`.
 - Pas de secret dans le code, les tests ni les fichiers de config commités.
 
 ## Développement local
