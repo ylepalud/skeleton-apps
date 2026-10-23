@@ -9,14 +9,14 @@
    gh pr merge <number> --merge
    ```
 
-2. **release-please opens the release pull request** on `main` (`chore(main): release skeleton-apps X.Y.Z`) with the changelog and the version computed from the Conventional Commits since the last release.
-3. **Merge it with the admin bypass.** It was created with the workflow's token, so no CI runs on it and the ruleset blocks it; it only touches `CHANGELOG.md` and the version manifest:
+2. **release-please opens the release pull request** on `main` (`chore(main): release X.Y.Z`) with the changelog and the version computed from the Conventional Commits since the last release.
+3. **Merge it once its checks are green.** It only touches `CHANGELOG.md` and the version manifest:
 
    ```bash
-   gh pr merge <number> --merge --admin
+   gh pr merge <number> --merge
    ```
 
-   Issue #12 replaces this step with a GitHub App token.
+   This needs the release GitHub App (see [CI/CD](../reference/ci-cd.md#release-app)). Without it, the pull request is opened with the workflow's token, so no check runs, the ruleset blocks it, and it is merged with the admin bypass: `gh pr merge <number> --merge --admin`.
 
 4. **The release workflow tags the images.** For each image, it walks back from the release commit to the newest commit with a published image and adds the `vX.Y.Z` tag to it, without rebuilding. If this step fails, run it again once fixed: `gh workflow run release.yml --ref main -f tag=vX.Y.Z`.
 

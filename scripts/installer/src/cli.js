@@ -273,7 +273,12 @@ async function main() {
     p.note(board(), 'Done');
     p.outro(`${zipPath} (${count} files). Unzip it, push it to github.com/${owner}/${name}, and apply the GitHub settings of docs/reference/ci-cd.md.`);
   } finally {
-    rmSync(workspace, { recursive: true, force: true });
+    try {
+      rmSync(workspace, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    } catch {
+      // The archive is already written: a leftover temporary folder is not a failure.
+      p.log.warn(`Could not remove the temporary folder ${workspace}`);
+    }
   }
 }
 
