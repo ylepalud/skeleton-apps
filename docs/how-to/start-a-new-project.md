@@ -3,10 +3,10 @@
 A new project is generated from a released version of this template by its installer. You need Node 22 or later and Git; Java 17+ and Docker Compose v2 are only needed to verify the build before archiving.
 
 ```bash
-npx github:ylepalud/skeleton-apps#v0.1.0 my-idea
+npx github:ylepalud/skeleton-apps my-idea
 ```
 
-Without `#<tag>`, npm takes the default branch's installer, which then fetches the latest release. The installer asks for the project name, the GitHub owner, the base Java package, the web app's OIDC client id and where to write the archive, shows a summary, and writes `<name>.zip` in the current folder. Inside: the generated project, already a Git repository on `develop` with a single `Init` commit.
+The installer generates from the latest release. To pin a version, add it to the command: `npx github:ylepalud/skeleton-apps#vX.Y.Z my-idea`. The installer asks for the project name, the GitHub owner, the base Java package, the web app's OIDC client id and where to write the archive, shows a summary, and writes `<name>.zip` in the current folder. Inside: the generated project, already a Git repository on `develop` with a single `Init` commit.
 
 To change a version (Java, Spring, Angular, a tool), change it here first, release, then generate from the new tag. The installer never asks for versions.
 
@@ -38,7 +38,8 @@ To change a version (Java, Spring, Angular, a tool), change it here first, relea
 
 1. Create the empty repository `<owner>/<name>` on GitHub and push `develop`.
 2. Apply the branches, rulesets and repository settings described in [CI/CD](../reference/ci-cd.md), and install the Renovate app.
-3. `./gradlew check`, then `./gradlew startLocalStack`.
+3. Install the [release App](../reference/ci-cd.md#release-app) on the new repository, then set its variable and secret there, so that release pull requests run CI.
+4. `./gradlew check`, then `./gradlew startLocalStack`.
 
 ## Work on the installer
 
