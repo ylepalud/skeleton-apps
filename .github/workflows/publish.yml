@@ -1,0 +1,133 @@
+# Every push to develop publishes the images whose code changed, tagged with the
+# commit SHA, once the full check has passed. Each image is scanned, gets an SBOM,
+# and is signed only if the scan passes. The cluster deploys signed images only.
+name: Publish
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      all:
+        description: Publish every image, changed or not
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+      security-events: write
+
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      api: ${{ steps.filter.outputs.api == 'true' || inputs.all == true }}
+      web: ${{ steps.filter.outputs.web == 'true' || inputs.all == true }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            api:
+              - services/api/**
+              - contracts/**
+              - build-logic/**
+              - gradle/**
+              - gradle.properties
+              - settings.gradle.kts
+            web:
+              - services/api-app/**
+              - contracts/**
+              - build-logic/src/main/kotlin/frontend-convention.gradle.kts
+              - gradle.properties
+
+  api-image:
+    needs: [ci, changes]
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}/api
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@b9bee63ef481cc545e4517ec730544a4d8b1dfa0 # v6.4.0
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push with Jib
+        id: push
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew :services:api:jib \
+            -PimageRepository="$IMAGE" \
+            -PimageTag="$GITHUB_SHA" \
+            -PimageSource="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+            -Djib.to.auth.username="$REGISTRY_USER" \
+            -Djib.to.auth.password="$REGISTRY_PASSWORD"
+          echo "digest=$(cat services/api/build/jib-image.digest)" >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/secure-image
+        with:
+          image: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
+          name: api
+
+  web-image:
+    needs: [ci, changes]
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}/api-app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@b9bee63ef481cc545e4517ec730544a4d8b1dfa0 # v6.4.0
+      - name: Build the bundle
+        run: ./gradlew :services:api-app:npmRunBuild
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: services/api-app
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+      - uses: ./.github/actions/secure-image
+        with:
+          image: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
+          name: api-app
