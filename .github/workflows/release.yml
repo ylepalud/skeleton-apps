@@ -1,0 +1,70 @@
+# Releases come from main. release-please keeps a release pull request up to date
+# from the Conventional Commits; merging it tags vX.Y.Z. The images built from the
+# released code then get that tag too: the release promotes the exact images that
+# were tested and signed on develop, it never rebuilds them.
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      created: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  promote-images:
+    needs: release-please
+    if: needs.release-please.outputs.created == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    env:
+      TAG: ${{ needs.release-please.outputs.tag }}
+      REPOSITORY: ghcr.io/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Tag the newest published image of each component
+        run: |
+          # The release commit sits on main above the merge of develop: walk back to the
+          # newest commit that has a published image, and give that image the release tag.
+          for image in api api-app; do
+            found=""
+            for sha in $(git rev-list --max-count=50 "$TAG"); do
+              if docker buildx imagetools inspect "$REPOSITORY/$image:$sha" > /dev/null 2>&1; then
+                docker buildx imagetools create --tag "$REPOSITORY/$image:$TAG" "$REPOSITORY/$image:$sha"
+                echo "$image:$sha -> $image:$TAG"
+                found="yes"
+                break
+              fi
+            done
+            if [ -z "$found" ]; then
+              echo "::error::No published $image image in the last 50 commits of $TAG"
+              exit 1
+            fi
+          done
