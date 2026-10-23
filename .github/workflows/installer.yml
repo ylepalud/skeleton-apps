@@ -1,0 +1,58 @@
+# The project installer (scripts/installer): unit tests, type checking, then a
+# real generation from this commit, whose result must build on its own. Runs on
+# every pull request, without path filter, because the develop ruleset requires
+# it. This workflow belongs to the template and is left out of generated projects.
+name: Installer
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: installer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  installer:
+    name: installer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run installer:typecheck
+      - run: npm run installer:test
+      - name: Generate a project from this commit
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          node scripts/installer/src/cli.js --source . --ref HEAD --name demo-app \
+            --package dev.example.demo --owner example --dest "$RUNNER_TEMP/out" --yes
+          unzip -q "$RUNNER_TEMP/out/demo-app.zip" -d "$RUNNER_TEMP/out"
+      - name: Inspect the generated project
+        working-directory: ${{ runner.temp }}/out/demo-app
+        run: |
+          test "$(git rev-list --count HEAD)" = 1
+          test "$(git log --format=%s)" = Init
+          test "$(git branch --show-current)" = develop
+          test -z "$(git status --porcelain)"
+          test -x gradlew
+          test ! -e package.json && test ! -e scripts/installer && test ! -e .github/workflows/installer.yml
+          if grep -rIn --exclude-dir=.git -e skeleton-apps -e ylepalud -e 'dev\.ylp' -e 'dev/ylp' .; then
+            echo "::error::Template names left in the generated project"
+            exit 1
+          fi
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@b9bee63ef481cc545e4517ec730544a4d8b1dfa0 # v6.4.0
+      - name: Build the generated project
+        working-directory: ${{ runner.temp }}/out/demo-app
+        run: ./gradlew check

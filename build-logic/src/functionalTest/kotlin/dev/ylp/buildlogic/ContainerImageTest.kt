@@ -39,7 +39,7 @@ class ContainerImageTest {
 
         assertThat(result.output)
             .containsPattern("from=gcr.io/distroless/java25-debian13:nonroot@sha256:[0-9a-f]{64}")
-            .contains("to=apps/fixture")
+            .contains("to=fixture/fixture")
             .contains("tags=[local]")
     }
 
