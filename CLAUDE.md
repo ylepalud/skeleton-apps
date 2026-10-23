@@ -58,6 +58,8 @@ Contexte, décisions et règles critiques : voir le CLAUDE.md du workspace paren
 ## Branches et versions
 - `develop` est la branche par défaut et la seule déployée. Les PR ciblent `develop`.
 - `main` reçoit les releases : PR `develop` vers `main` fusionnée par *merge commit* (les PR vers `develop` sont en *squash*), puis release-please ouvre la PR de release qui pose le tag `vX.Y.Z`.
+- La PR de release de release-please est créée avec le `GITHUB_TOKEN` : elle ne déclenche aucun workflow, donc aucun check, et le ruleset de `main` la bloque. Elle ne touche que `CHANGELOG.md` et le manifeste : la fusionner en contournement admin, `gh pr merge <n> --merge --admin`. Évolution possible : un jeton de GitHub App pour release-please, qui ferait passer la CI sur ses PR.
+- Une PR qui ne touche que `.github/` ou la config ne publie aucune image (filtre par chemin) : `gh workflow run publish.yml --ref develop -f all=true` republie tout.
 
 ## Qualité
 - Tests obligatoires avant fusion. Domaine testé sans Spring. Tests Spring et slices JPA sur Testcontainers Postgres, jamais H2.
