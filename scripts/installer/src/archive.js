@@ -30,7 +30,14 @@ export function initRepository(directory) {
   };
   const name = config('user.name') || 'Project installer';
   const email = config('user.email') || 'installer@example.invalid';
-  git(directory, ['-c', `user.name=${name}`, '-c', `user.email=${email}`, 'commit', '--quiet', '-m', 'Init']);
+  // No automatic gc or maintenance: a detached one would still write into .git while it is zipped and removed.
+  git(directory, [
+    '-c', `user.name=${name}`,
+    '-c', `user.email=${email}`,
+    '-c', 'gc.auto=0',
+    '-c', 'maintenance.auto=false',
+    'commit', '--quiet', '-m', 'Init',
+  ]);
 }
 
 /**
