@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1](https://github.com/ylepalud/skeleton-apps/compare/v0.1.0...v0.1.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **installer:** detect Java and Compose versions, report failures cleanly ([#30](https://github.com/ylepalud/skeleton-apps/issues/30)) ([996b7fd](https://github.com/ylepalud/skeleton-apps/commit/996b7fd70fa38c5806ed890a6faaa97c4922fb1d))
+* **release:** tag releases vX.Y.Z without the component name ([#29](https://github.com/ylepalud/skeleton-apps/issues/29)) ([b6450c2](https://github.com/ylepalud/skeleton-apps/commit/b6450c2fe2ee81495d0ddc07cc8624d7fcf0d0b3))
+
 ## 0.1.0 (2026-10-23)
 
 
