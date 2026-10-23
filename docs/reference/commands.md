@@ -37,6 +37,17 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 | `./gradlew :services:api-app:dockerBuild` | Builds the web app image `skeleton-apps/api-app:local` |
 | `./gradlew :services:api-app:npmRunE2e -PrunE2e=true` | Runs the Playwright tests; set `E2E_BASE_URL=http://localhost:8088` to target the local stack |
 
+<!-- template-only:start -->
+## Installer
+
+| Command | What it does |
+| --- | --- |
+| `npm ci` | Installs the installer's dependencies (root `package.json`) |
+| `npm run installer:test` | Its unit tests (Vitest) |
+| `npm run installer:typecheck` | Type checks its JavaScript |
+| `node scripts/installer/src/cli.js --source . my-idea` | Generates a project from the last local commit |
+
+<!-- template-only:end -->
 ## GitHub
 
 | Command | What it does |

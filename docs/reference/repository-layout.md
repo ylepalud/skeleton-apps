@@ -48,4 +48,8 @@ skeleton-apps/
     └── actions/secure-image/    scan, SBOM and signature of an image
 ```
 
+<!-- template-only:start -->
+Template only, left out of generated projects: `scripts/installer/` (the project installer), the root `package.json` and `package-lock.json` (its dependencies), `.github/workflows/installer.yml` and `docs/how-to/start-a-new-project.md`.
+
+<!-- template-only:end -->
 Generated and ignored: `services/api-app/src/app/api/generated` (web client), `contracts/api/build/generated` (server code), every `build/` and `node_modules/`.
