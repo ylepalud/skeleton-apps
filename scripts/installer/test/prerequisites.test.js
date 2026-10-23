@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { javaMajor } from '../src/prerequisites.js';
+import { composeMajor, javaMajor } from '../src/prerequisites.js';
 
 describe('javaMajor', () => {
   it('reads a modern version', () => {
@@ -16,5 +16,19 @@ describe('javaMajor', () => {
 
   it('finds nothing in unrelated output', () => {
     expect(javaMajor('command not found')).toBeUndefined();
+  });
+});
+
+describe('composeMajor', () => {
+  it.each([
+    ['Docker Compose version v2.29.7', 2],
+    ['Docker Compose version v5.3.1', 5],
+    ['Docker Compose version 2.40.0', 2],
+  ])('reads %s', (output, major) => {
+    expect(composeMajor(output)).toBe(major);
+  });
+
+  it('finds nothing in unrelated output', () => {
+    expect(composeMajor("docker: 'compose' is not a docker command.")).toBeUndefined();
   });
 });
