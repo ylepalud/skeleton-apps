@@ -23,7 +23,7 @@ Then open http://localhost:8088 and sign in with any username: locally, a mock i
 ## Start a new project
 
 ```bash
-npx github:ylepalud/skeleton-apps#v0.1.0 my-idea
+npx github:ylepalud/skeleton-apps my-idea
 ```
 
 The installer renames the project, the package and the images, and writes `my-idea.zip`: a ready Git repository with one `Init` commit. See [Start a new project](docs/how-to/start-a-new-project.md).
