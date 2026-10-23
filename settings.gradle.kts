@@ -33,7 +33,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "apps"
+rootProject.name = "skeleton-apps"
 
 include("services:api")
 include("contracts:api")

@@ -2,7 +2,7 @@
 #   ./gradlew startLocalStack   builds the images, starts everything (profile "app")
 #   ./gradlew :services:api:bootRun   starts only postgres and the identity provider
 # Web app and API: http://localhost:8088 · identity provider: http://localhost:8090
-name: apps
+name: skeleton-apps
 
 services:
   postgres:
@@ -41,7 +41,7 @@ services:
 
   api:
     profiles: [app]
-    image: apps/api:local
+    image: skeleton-apps/api:local
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,7 +63,7 @@ services:
 
   web:
     profiles: [app]
-    image: apps/api-app:local
+    image: skeleton-apps/api-app:local
     depends_on:
       - api
     environment:
