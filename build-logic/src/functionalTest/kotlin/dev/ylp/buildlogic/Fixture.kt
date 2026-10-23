@@ -18,11 +18,13 @@ class Fixture(
 
     init {
         conventionsRoot.resolve("gradle.properties").copyTo(dir.resolve("gradle.properties"))
+        // Copied where Gradle imports it by convention as the `libs` catalog: referencing it by
+        // absolute path would break the fixture's own Spotless check on a long checkout path.
+        conventionsRoot.resolve("gradle/libs.versions.toml").copyTo(dir.resolve("gradle/libs.versions.toml"))
         settings()
     }
 
     fun settings(vararg includes: String) {
-        val catalog = conventionsRoot.resolve("gradle/libs.versions.toml").invariantSeparatorsPath
         file(
             "settings.gradle.kts",
             """
@@ -42,11 +44,6 @@ class Fixture(
                             }
                         }
                         filter { includeModule("org.nodejs", "node") }
-                    }
-                }
-                versionCatalogs {
-                    create("libs") {
-                        from(files("$catalog"))
                     }
                 }
             }

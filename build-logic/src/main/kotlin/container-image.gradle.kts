@@ -15,7 +15,7 @@ jib {
         image = providers.gradleProperty("jibBaseImage").get()
     }
     to {
-        image = providers.gradleProperty("imageRepository").getOrElse("apps/${project.name}")
+        image = providers.gradleProperty("imageRepository").getOrElse("${rootProject.name}/${project.name}")
         tags = setOf(providers.gradleProperty("imageTag").getOrElse("local"))
     }
     dockerClient {

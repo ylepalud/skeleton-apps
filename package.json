@@ -1,0 +1,31 @@
+{
+  "//": "Only the project installer lives here (scripts/installer), so that `npx github:ylepalud/skeleton-apps#<ref>` can run it. Never published to npm, and left out of generated projects.",
+  "name": "create-skeleton-apps",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Creates a new project from the skeleton-apps template",
+  "license": "UNLICENSED",
+  "type": "module",
+  "bin": {
+    "create-skeleton-apps": "scripts/installer/src/cli.js"
+  },
+  "files": [
+    "scripts/installer/src"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "installer:test": "vitest run --root scripts/installer",
+    "installer:typecheck": "tsc --project scripts/installer/tsconfig.json"
+  },
+  "dependencies": {
+    "@clack/prompts": "1.8.1",
+    "fflate": "0.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}
