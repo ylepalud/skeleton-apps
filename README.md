@@ -17,7 +17,7 @@ You need Docker with Compose v2. Gradle downloads its own JDK (Temurin 25) and t
 ./gradlew startLocalStack  # run the full stack locally
 ```
 
-Then open http://localhost:8088 and sign in with any username: locally, a mock identity provider accepts everyone. `./gradlew stopLocalStack` stops the stack.
+Then open <http://localhost:8088> and sign in with any username: locally, a mock identity provider accepts everyone. `./gradlew stopLocalStack` stops the stack.
 
 <!-- template-only:start -->
 ## Start a new project

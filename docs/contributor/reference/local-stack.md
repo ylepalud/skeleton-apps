@@ -13,12 +13,12 @@ One `compose.yaml` at the root, compose project `skeleton-apps`. Services withou
 
 | URL | What |
 | --- | --- |
-| http://localhost:8088 | The web app, and the API under `/api/v1` |
-| http://localhost:8090/default/.well-known/openid-configuration | The identity provider's discovery document |
-| http://localhost:8091/actuator/health/readiness | Readiness of the API container |
-| http://localhost:8080/api/v1 | The API in `bootRun` |
-| http://localhost:8081/actuator | Actuator of the API in `bootRun` |
-| http://localhost:4200 | The web app's development server |
+| <http://localhost:8088> | The web app, and the API under `/api/v1` |
+| <http://localhost:8090/default/.well-known/openid-configuration> | The identity provider's discovery document |
+| <http://localhost:8091/actuator/health/readiness> | Readiness of the API container |
+| <http://localhost:8080/api/v1> | The API in `bootRun` |
+| <http://localhost:8081/actuator> | Actuator of the API in `bootRun` |
+| <http://localhost:4200> | The web app's development server |
 
 ## Test accounts
 

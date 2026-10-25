@@ -1,6 +1,6 @@
 # Repository layout
 
-```
+```text
 skeleton-apps/
 ├── AGENTS.md                    instructions for coding agents (CLAUDE.md imports it)
 ├── build-logic/                 Gradle convention plugins, an included build

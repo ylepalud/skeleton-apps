@@ -11,7 +11,7 @@ flowchart LR
   browser -.->|sign-in, PKCE| idp[OpenID Connect provider]
   api -.->|signing keys| idp
   probes[Kubelet, Prometheus] -->|8081| api
-```
+```text
 
 The web app and the API share one origin: nginx serves the bundle and proxies `/api/` to the API, so the browser needs no CORS. The API listens on 8080 for the application and on 8081 for Actuator, a port no ingress routes.
 
