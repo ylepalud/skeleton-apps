@@ -66,7 +66,7 @@ One section per reader; [docs/README.md](docs/README.md) lists them.
 | [Template](docs/template/README.md) | the template this code base comes from<!-- template-only:start -->, and how to start a new project from it<!-- template-only:end --> |
 | [Contributor](docs/contributor/README.md) | changing the code: [Add your first feature](docs/contributor/tutorials/first-feature.md), how-to guides, reference |
 | [Operations](docs/operations/README.md) | keeping it delivering: CI/CD, releases, dependencies, a red build |
-| [Architecture](docs/architecture/README.md) | understanding the design, and the [decisions](docs/architecture/decisions.md) behind it |
+| [Architecture](docs/architecture/README.md) | understanding the design, and the [decision records](docs/architecture/decisions.md) behind it |
 
 Coding agents start with [AGENTS.md](AGENTS.md).
 
