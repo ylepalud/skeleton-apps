@@ -30,3 +30,5 @@ Copy the last record, number it after it, and add its line below. A decision tha
 | [0018](decisions/0018-bruno-collection-generated-and-checked.md) | Bruno collection generated from the contract and checked in `check` | The collection cannot drift from the API |
 | [0019](decisions/0019-everything-in-english.md) | Everything written in English | The repository is public and a template |
 | [0020](decisions/0020-cli-location-follows-its-toolchain.md) | A future CLI in Java or Kotlin lives here; in another language, in its own repository | It is generated from the same contract either way; only the toolchain decides where it lives |
+| [0021](decisions/0021-documentation-by-audience.md) | Documentation organised by audience | Each reader finds the pages written for them |
+| [0022](decisions/0022-documentation-site-with-zensical.md) | Documentation site built by Zensical, published to GitHub Pages from `main` | The Markdown stays the source; a strict build catches broken links in the pull request |
