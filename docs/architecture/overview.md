@@ -1,4 +1,4 @@
-# Architecture
+# Architecture overview
 
 ## Runtime
 
@@ -11,7 +11,7 @@ flowchart LR
   browser -.->|sign-in, PKCE| idp[OpenID Connect provider]
   api -.->|signing keys| idp
   probes[Kubelet, Prometheus] -->|8081| api
-```text
+```
 
 The web app and the API share one origin: nginx serves the bundle and proxies `/api/` to the API, so the browser needs no CORS. The API listens on 8080 for the application and on 8081 for Actuator, a port no ingress routes.
 
@@ -31,7 +31,7 @@ Each module owns its **database schema** (`notes.notes`) and its Liquibase chang
 
 ## Hexagonal inside a module
 
-```
+```text
 notes/
 ├── domain/        Note (aggregate), value objects, NoteRepository (port), NoteErrorReason
 ├── application/   one use case per class: CreateNoteUseCase, ListNotesUseCase...
