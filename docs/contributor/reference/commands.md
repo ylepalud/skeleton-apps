@@ -55,4 +55,4 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 | `gh workflow run publish.yml --ref develop -f all=true` | Republishes every image, whatever changed |
 | `gh workflow run release.yml --ref main -f tag=vX.Y.Z` | Gives the images of an existing release its tag again |
 | `gh workflow run nightly.yml --ref develop` | Runs mutation testing now |
-| `gh pr merge <number> --merge --admin` | Merges release-please's release pull request when the release App is not configured (see [Release](../how-to/release.md)) |
+| `gh pr merge <number> --merge --admin` | Merges release-please's release pull request when the release App is not configured (see [Release](../../operations/release.md)) |

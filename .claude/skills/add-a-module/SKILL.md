@@ -3,7 +3,7 @@ name: add-a-module
 description: Add a business module to the skeleton-apps API. Use when a new capability needs its own package, database schema and contract tag rather than a change to an existing module.
 ---
 
-Follow [docs/how-to/add-a-module.md](../../../docs/how-to/add-a-module.md), copying the shape of the `notes` module. Background on boundaries and layers: [docs/explanation/architecture.md](../../../docs/explanation/architecture.md).
+Follow [docs/contributor/how-to/add-a-module.md](../../../docs/contributor/how-to/add-a-module.md), copying the shape of the `notes` module. Background on boundaries and layers: [docs/architecture/overview.md](../../../docs/architecture/overview.md).
 
 Done when:
 - the module has its package with `@ApplicationModule`, its own schema and changelog, its contract file and tag;

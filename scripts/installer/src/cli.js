@@ -271,7 +271,7 @@ async function main() {
     const count = createArchive(projectDir, zipPath, name);
     finish(7);
     p.note(board(), 'Done');
-    p.outro(`${zipPath} (${count} files). Unzip it, push it to github.com/${owner}/${name}, and apply the GitHub settings of docs/reference/ci-cd.md.`);
+    p.outro(`${zipPath} (${count} files). Unzip it, push it to github.com/${owner}/${name}, and apply the GitHub settings of docs/operations/ci-cd.md.`);
   } finally {
     try {
       rmSync(workspace, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });

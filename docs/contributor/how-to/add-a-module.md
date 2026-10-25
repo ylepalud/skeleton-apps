@@ -1,6 +1,6 @@
 # Add a module
 
-A module is a business capability with its own package, schema and tag in the contract. Copy the shape of `notes`; background in [Architecture](../explanation/architecture.md).
+A module is a business capability with its own package, schema and tag in the contract. Copy the shape of `notes`; background in [Architecture](../../architecture/overview.md).
 
 1. **Package**: create `services/api/src/main/java/dev/ylp/<module>/` with a `package-info.java` annotated `@ApplicationModule(displayName = "...")`, and the sub-packages `domain`, `application`, `adapter/in/rest`, `adapter/out/postgres`.
 2. **Hexagonal roles**: annotate the ports with `@SecondaryPort`, and add `package-info.java` files on `adapter/in` (`@PrimaryAdapter`) and `adapter/out` (`@SecondaryAdapter`), as in `notes`.

@@ -26,7 +26,7 @@ const EXCLUDED = [
   /^node_modules\//,
   /^\.github\/workflows\/installer\.yml$/,
   /^CHANGELOG\.md$/,
-  /^docs\/how-to\/start-a-new-project\.md$/,
+  /^docs\/template\/start-a-new-project\.md$/,
 ];
 
 /**

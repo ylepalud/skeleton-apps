@@ -24,4 +24,4 @@ The OpenAPI contract in `contracts/api` is written before the code and is the si
 
 ## The rule
 
-Change the contract first, then regenerate the collection (`./gradlew :bruno:updateCollection`), then implement. `check` fails when the collection drifts. See [Change the API contract](../how-to/change-the-api-contract.md).
+Change the contract first, then regenerate the collection (`./gradlew :bruno:updateCollection`), then implement. `check` fails when the collection drifts. See [Change the API contract](../contributor/how-to/change-the-api-contract.md).

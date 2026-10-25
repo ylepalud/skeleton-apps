@@ -14,7 +14,7 @@ describe('isExcluded', () => {
     'node_modules/fflate/package.json',
     '.github/workflows/installer.yml',
     'CHANGELOG.md',
-    'docs/how-to/start-a-new-project.md',
+    'docs/template/start-a-new-project.md',
   ])('leaves out %s', (path) => {
     expect(isExcluded(path)).toBe(true);
   });

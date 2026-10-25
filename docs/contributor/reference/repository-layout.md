@@ -49,7 +49,7 @@ skeleton-apps/
 ```
 
 <!-- template-only:start -->
-Template only, left out of generated projects: `scripts/installer/` (the project installer), the root `package.json` and `package-lock.json` (its dependencies), `.github/workflows/installer.yml` and `docs/how-to/start-a-new-project.md`.
+Template only, left out of generated projects: `scripts/installer/` (the project installer), the root `package.json` and `package-lock.json` (its dependencies), `.github/workflows/installer.yml` and `docs/template/`, which the installer replaces with a page naming the template version.
 
 <!-- template-only:end -->
 Generated and ignored: `services/api-app/src/app/api/generated` (web client), `contracts/api/build/generated` (server code), every `build/` and `node_modules/`.

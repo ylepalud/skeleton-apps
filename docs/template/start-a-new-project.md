@@ -31,14 +31,14 @@ To change a version (Java, Spring, Angular, a tool), change it here first, relea
 - The base package `dev.ylp` becomes yours, in sources and build scripts, and the source folders move with it.
 - The web app's OIDC client id changes in `services/api-app/public/config.json` and `compose.yaml`. The web module keeps its name, `api-app`.
 - The release history restarts: no `CHANGELOG.md`, manifest at `0.0.0`.
-- Template-only material stays out: the installer, its workflow, this guide, references to this repository's issues.
+- Template-only material stays out: the installer, its workflow, references to this repository's issues, and this section of the docs, replaced by a page naming the template version the project came from.
 - The `notes` module stays as the living example. Delete it, with its contract file, changelog, Bruno folder and web feature, once your first module exists.
 
 ## After unzipping
 
 1. Create the empty repository `<owner>/<name>` on GitHub and push `develop`.
-2. Apply the branches, rulesets and repository settings described in [CI/CD](../reference/ci-cd.md), and install the Renovate app.
-3. Install the [release App](../reference/ci-cd.md#release-app) on the new repository, then set its variable and secret there, so that release pull requests run CI.
+2. Apply the branches, rulesets and repository settings described in [CI/CD](../operations/ci-cd.md), and install the Renovate app.
+3. Install the [release App](../operations/ci-cd.md#release-app) on the new repository, then set its variable and secret there, so that release pull requests run CI.
 4. `./gradlew check`, then `./gradlew startLocalStack`.
 
 ## Work on the installer
