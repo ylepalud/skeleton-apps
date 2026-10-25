@@ -26,8 +26,25 @@ const EXCLUDED = [
   /^node_modules\//,
   /^\.github\/workflows\/installer\.yml$/,
   /^CHANGELOG\.md$/,
-  /^docs\/template\/start-a-new-project\.md$/,
+  /^docs\/template\//,
 ];
+
+/** Where a generated project records the template it came from, in place of the template's own guide. */
+export const PROVENANCE_PATH = 'docs/template/README.md';
+
+/**
+ * The page that replaces the template section in a generated project.
+ * @param {string} ref the template version the project was generated from
+ */
+export function provenancePage(ref) {
+  const repository = `https://github.com/${TEMPLATE.owner}/${TEMPLATE.name}`;
+  return `# Template
+
+This project was generated from [${TEMPLATE.name}](${repository}) at \`${ref}\`.
+
+The template's [releases](${repository}/releases) list what changed since; port what you want by hand.
+`;
+}
 
 /**
  * Whether a template path stays out of the generated project.

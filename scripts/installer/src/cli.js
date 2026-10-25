@@ -20,7 +20,7 @@ import { createArchive, initRepository } from './archive.js';
 import { readTree, writeTree } from './files.js';
 import { checkPrerequisites } from './prerequisites.js';
 import { TEMPLATE_REPOSITORY, fetchTemplate, resolveRef } from './template.js';
-import { transformTree } from './transform.js';
+import { PROVENANCE_PATH, provenancePage, transformTree } from './transform.js';
 
 const BANNER = String.raw`
      _        _      _
@@ -218,6 +218,7 @@ async function main() {
     const answers = { name, owner, packageName, clientId };
     const template = readTree(templateDir);
     const generated = transformTree(template, answers);
+    generated.set(PROVENANCE_PATH, { content: new TextEncoder().encode(provenancePage(ref)), mode: 0o644 });
     const projectDir = join(workspace, name);
     writeTree(projectDir, generated);
     p.log.success(`${generated.size} files generated (${template.size - generated.size} template-only files left out)`);
