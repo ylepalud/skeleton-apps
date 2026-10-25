@@ -97,7 +97,9 @@ export function transformText(path, text, answers) {
   }
   let result = text;
   if (path.endsWith('.md')) {
-    result = TEMPLATE_ONLY.reduce((current, pattern) => current.replace(pattern, ''), result);
+    const stripped = TEMPLATE_ONLY.reduce((current, pattern) => current.replace(pattern, ''), result);
+    // A removed block leaves the blank lines around it: keep one.
+    result = stripped === result ? result : stripped.replace(/\n{3,}/g, '\n\n');
   }
   result = result
     .replaceAll(`${TEMPLATE.owner}/${TEMPLATE.name}`, `${answers.owner}/${answers.name}`)

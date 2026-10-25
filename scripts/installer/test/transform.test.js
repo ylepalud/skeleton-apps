@@ -107,6 +107,11 @@ describe('transformText', () => {
     expect(transformText('notes.yaml', 'see (issue #20)', answers)).toBe('see (issue #20)');
   });
 
+  it('leaves no double blank line where a template-only block was', () => {
+    const text = ['Intro.', '', '<!-- template-only:start -->', '## Start', '', '<!-- template-only:end -->', '', 'Next.'].join('\n');
+    expect(transformText('README.md', text, answers)).toBe('Intro.\n\nNext.');
+  });
+
   it('resets the release history', () => {
     expect(JSON.parse(transformText('.release-please-manifest.json', '{ ".": "0.4.2" }', answers))).toEqual({
       '.': '0.0.0',
