@@ -1,6 +1,6 @@
 # The web app, served by an unprivileged nginx (port 8080) that also proxies /api to the API.
 # Built from the bundle that `./gradlew :services:api-app:assemble` produces.
-FROM nginxinc/nginx-unprivileged:1.31.6-alpine@sha256:884e0b7f42f303641b0f4e78755aea647521dca0b89ca3be7992ad78b5c07434
+FROM nginxinc/nginx-unprivileged:1.31.7-alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
 
 # The base image is rebuilt upstream only for nginx releases: pull the Alpine security
 # fixes published since, so the image scan does not fail on an already fixed package.
