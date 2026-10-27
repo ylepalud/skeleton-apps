@@ -45,7 +45,6 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-postgresql")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
-    testImplementation("org.springframework.modulith:spring-modulith-docs")
     testImplementation("org.jmolecules.integrations:jmolecules-archunit")
 
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
