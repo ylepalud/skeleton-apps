@@ -6,7 +6,7 @@ All workflows live in `.github/workflows`. Actions are pinned by commit SHA (Ren
 
 | Workflow | Trigger | Jobs |
 | --- | --- | --- |
-| `ci.yml` | pull requests to `develop` or `main`, push to `main`, called by `publish.yml` | `check` (`./gradlew check`), `e2e` (local stack, Playwright, Bruno smoke run), `trivy-fs` (dependencies including development ones, secrets and configuration; findings in the Security tab), `docs` (no em dash, `./gradlew docsLint docsBuild`: Markdown lint and a strict build of the site, which fails on a broken link or anchor) |
+| `ci.yml` | pull requests to `develop` or `main`, push to `main`, called by `publish.yml` | `check` (`./gradlew check`), `e2e` (local stack, Playwright, Bruno smoke run, Trivy scan of the two images the stack runs), `trivy-fs` (dependencies including development ones, secrets and configuration; findings in the Security tab), `docs` (no em dash, `./gradlew docsLint docsBuild`: Markdown lint and a strict build of the site, which fails on a broken link or anchor) |
 | `docs.yml` | push to `main`, or manual; only when the variable `DOCS_PAGES` is `true` | builds the documentation site and deploys it to GitHub Pages (see [Documentation site](#documentation-site)) |
 | `publish.yml` | push to `develop`, or manual with `all=true` | `ci.yml`, then one image job per image whose code changed: build and push, scan, SBOM, signature |
 | `nightly.yml` | every day at 03:00 UTC, or manual | `./gradlew pitest` on `develop` |
