@@ -32,3 +32,4 @@ Copy the last record, number it after it, and add its line below. A decision tha
 | [0020](decisions/0020-cli-location-follows-its-toolchain.md) | A future CLI in Java or Kotlin lives here; in another language, in its own repository | It is generated from the same contract either way; only the toolchain decides where it lives |
 | [0021](decisions/0021-documentation-by-audience.md) | Documentation organised by audience | Each reader finds the pages written for them |
 | [0022](decisions/0022-documentation-site-with-zensical.md) | Documentation site built by Zensical, published to GitHub Pages from `main` | The Markdown stays the source; a strict build catches broken links in the pull request |
+| [0023](decisions/0023-domain-model-page-from-jmolecules.md) | Domain model page generated in Mermaid by `ModularityTest` from the module model and the jMolecules annotations | The diagrams cannot drift from the code, and the site renders them without another tool |
