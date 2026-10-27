@@ -28,7 +28,7 @@ jobs:
       security-events: write
 
   changes:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     outputs:
       api: ${{ steps.filter.outputs.api == 'true' || inputs.all == true }}
@@ -55,7 +55,7 @@ jobs:
   api-image:
     needs: [ci, changes]
     if: needs.changes.outputs.api == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     permissions:
       contents: read
@@ -96,7 +96,7 @@ jobs:
   web-image:
     needs: [ci, changes]
     if: needs.changes.outputs.web == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     permissions:
       contents: read
