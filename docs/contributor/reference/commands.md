@@ -37,6 +37,17 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 | `./gradlew :services:api-app:dockerBuild` | Builds the web app image `skeleton-apps/api-app:local` |
 | `./gradlew :services:api-app:npmRunE2e -PrunE2e=true` | Runs the Playwright tests; set `E2E_BASE_URL=http://localhost:8088` to target the local stack |
 
+## Documentation
+
+The tools run in containers pinned in `gradle.properties`: Docker is the only prerequisite. None of these tasks is part of `check`; the `docs` job of CI runs them.
+
+| Command | What it does |
+| --- | --- |
+| `./gradlew docsServe` | Serves the site on <http://localhost:8000>, rebuilt on every change |
+| `./gradlew docsBuild` | Builds the site into `build/docs/site`; a broken link or anchor fails it |
+| `./gradlew docsLint` | Lints the Markdown of the README and `docs/` (`.markdownlint-cli2.jsonc`) |
+| `./gradlew docsApiReference` | Renders the API reference from the contract (`docs/product/api-reference.html`, not committed) |
+
 <!-- template-only:start -->
 ## Installer
 
@@ -55,4 +66,5 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 | `gh workflow run publish.yml --ref develop -f all=true` | Republishes every image, whatever changed |
 | `gh workflow run release.yml --ref main -f tag=vX.Y.Z` | Gives the images of an existing release its tag again |
 | `gh workflow run nightly.yml --ref develop` | Runs mutation testing now |
+| `gh workflow run docs.yml --ref main` | Publishes the documentation site now |
 | `gh pr merge <number> --merge --admin` | Merges release-please's release pull request when the release App is not configured (see [Release](../../operations/release.md)) |

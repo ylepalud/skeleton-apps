@@ -39,7 +39,8 @@ To change a version (Java, Spring, Angular, a tool), change it here first, relea
 1. Create the empty repository `<owner>/<name>` on GitHub and push `develop`.
 2. Apply the branches, rulesets and repository settings described in [CI/CD](../operations/ci-cd.md), and install the Renovate app.
 3. Install the [release App](../operations/ci-cd.md#release-app) on the new repository, then set its variable and secret there, so that release pull requests run CI.
-4. `./gradlew check`, then `./gradlew startLocalStack`.
+4. Optionally, publish the documentation site: [Documentation site](../operations/ci-cd.md#documentation-site).
+5. `./gradlew check`, then `./gradlew startLocalStack`.
 
 ## Work on the installer
 

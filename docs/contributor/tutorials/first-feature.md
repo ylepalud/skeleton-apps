@@ -196,7 +196,7 @@ The in-memory `FakeNotesClient` (`notes-client.fake.ts`) used by the tests must 
 ./gradlew startLocalStack
 ```
 
-Open http://localhost:8088, write two notes, pin the older one: it moves to the top. Then run the end-to-end tests and replay the collection:
+Open <http://localhost:8088>, write two notes, pin the older one: it moves to the top. Then run the end-to-end tests and replay the collection:
 
 ```bash
 E2E_BASE_URL=http://localhost:8088 ./gradlew :services:api-app:npmRunE2e -PrunE2e=true

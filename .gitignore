@@ -3,6 +3,10 @@
 build/
 .kotlin/
 
+# Documentation: generated API reference, Zensical cache
+docs/product/api-reference.html
+.cache/
+
 # Frontend
 node_modules/
 
