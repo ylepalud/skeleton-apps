@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { isBinary, isExcluded, transformPath, transformText, transformTree } from '../src/transform.js';
+import {
+  PROVENANCE_PATH,
+  isBinary,
+  isExcluded,
+  provenancePage,
+  transformPath,
+  transformText,
+  transformTree,
+} from '../src/transform.js';
 
 const answers = { name: 'demo-app', owner: 'example', packageName: 'dev.example.demo', clientId: 'demo-app-web' };
 const encoder = new TextEncoder();
@@ -14,7 +22,8 @@ describe('isExcluded', () => {
     'node_modules/fflate/package.json',
     '.github/workflows/installer.yml',
     'CHANGELOG.md',
-    'docs/how-to/start-a-new-project.md',
+    'docs/template/start-a-new-project.md',
+    'docs/template/README.md',
   ])('leaves out %s', (path) => {
     expect(isExcluded(path)).toBe(true);
   });
@@ -98,6 +107,11 @@ describe('transformText', () => {
     expect(transformText('notes.yaml', 'see (issue #20)', answers)).toBe('see (issue #20)');
   });
 
+  it('leaves no double blank line where a template-only block was', () => {
+    const text = ['Intro.', '', '<!-- template-only:start -->', '## Start', '', '<!-- template-only:end -->', '', 'Next.'].join('\n');
+    expect(transformText('README.md', text, answers)).toBe('Intro.\n\nNext.');
+  });
+
   it('resets the release history', () => {
     expect(JSON.parse(transformText('.release-please-manifest.json', '{ ".": "0.4.2" }', answers))).toEqual({
       '.': '0.0.0',
@@ -128,5 +142,12 @@ describe('transformTree', () => {
     expect(decoder.decode(result.get('services/api/src/main/java/dev/example/demo/App.java')?.content)).toBe(
       'package dev.example.demo;',
     );
+  });
+});
+
+describe('provenancePage', () => {
+  it('names the template version, under the excluded template section', () => {
+    expect(isExcluded(PROVENANCE_PATH)).toBe(true);
+    expect(provenancePage('v0.2.0')).toContain('generated from [skeleton-apps](https://github.com/ylepalud/skeleton-apps) at `v0.2.0`');
   });
 });

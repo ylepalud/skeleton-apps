@@ -48,7 +48,7 @@ cosign verify ghcr.io/ylepalud/skeleton-apps/api@<digest> \
 | `develop` | default branch, the only one deployed | squash | pull request required, `check`, `e2e`<!-- template-only:start -->, `installer`<!-- template-only:end --> and `trivy-fs` required, linear history, no force push or deletion |
 | `main` | releases | merge commit | pull request required, the same checks, no force push or deletion; the branch need not be up to date, since release-please's commits only exist on `main` |
 
-Repository administrators can bypass the rulesets. Without the release App, this is how release-please's pull requests get merged (see [Release](../how-to/release.md)).
+Repository administrators can bypass the rulesets. Without the release App, this is how release-please's pull requests get merged (see [Release](release.md)).
 
 ## Repository settings
 

@@ -1,6 +1,6 @@
 # Release
 
-`develop` is deployed continuously; a release marks a version on `main` and tags the images already published. Background: [Supply chain](../explanation/supply-chain.md).
+`develop` is deployed continuously; a release marks a version on `main` and tags the images already published. Background: [Supply chain](../architecture/supply-chain.md).
 
 1. **Bring `main` up to date** with a pull request from `develop` to `main`, merged with a **merge commit** (the `main` ruleset only allows that method):
 
@@ -16,7 +16,7 @@
    gh pr merge <number> --merge
    ```
 
-   This needs the release GitHub App (see [CI/CD](../reference/ci-cd.md#release-app)). Without it, the pull request is opened with the workflow's token, so no check runs, the ruleset blocks it, and it is merged with the admin bypass: `gh pr merge <number> --merge --admin`.
+   This needs the release GitHub App (see [CI/CD](ci-cd.md#release-app)). Without it, the pull request is opened with the workflow's token, so no check runs, the ruleset blocks it, and it is merged with the admin bypass: `gh pr merge <number> --merge --admin`.
 
 4. **The release workflow tags the images.** For each image, it walks back from the release commit to the newest commit with a published image and adds the `vX.Y.Z` tag to it, without rebuilding. If this step fails, run it again once fixed: `gh workflow run release.yml --ref main -f tag=vX.Y.Z`.
 
