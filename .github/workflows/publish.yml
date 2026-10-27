@@ -28,7 +28,7 @@ jobs:
       security-events: write
 
   changes:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     outputs:
       api: ${{ steps.filter.outputs.api == 'true' || inputs.all == true }}
@@ -55,7 +55,7 @@ jobs:
   api-image:
     needs: [ci, changes]
     if: needs.changes.outputs.api == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     permissions:
       contents: read
@@ -69,7 +69,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
-      - uses: gradle/actions/setup-gradle@b9bee63ef481cc545e4517ec730544a4d8b1dfa0 # v6.4.0
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
@@ -96,7 +96,7 @@ jobs:
   web-image:
     needs: [ci, changes]
     if: needs.changes.outputs.web == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     permissions:
       contents: read
@@ -110,7 +110,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
-      - uses: gradle/actions/setup-gradle@b9bee63ef481cc545e4517ec730544a4d8b1dfa0 # v6.4.0
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       - name: Build the bundle
         run: ./gradlew :services:api-app:npmRunBuild
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0

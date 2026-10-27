@@ -20,7 +20,7 @@ import { createArchive, initRepository } from './archive.js';
 import { readTree, writeTree } from './files.js';
 import { checkPrerequisites } from './prerequisites.js';
 import { TEMPLATE_REPOSITORY, fetchTemplate, resolveRef } from './template.js';
-import { transformTree } from './transform.js';
+import { PROVENANCE_PATH, provenancePage, transformTree } from './transform.js';
 
 const BANNER = String.raw`
      _        _      _
@@ -218,6 +218,7 @@ async function main() {
     const answers = { name, owner, packageName, clientId };
     const template = readTree(templateDir);
     const generated = transformTree(template, answers);
+    generated.set(PROVENANCE_PATH, { content: new TextEncoder().encode(provenancePage(ref)), mode: 0o644 });
     const projectDir = join(workspace, name);
     writeTree(projectDir, generated);
     p.log.success(`${generated.size} files generated (${template.size - generated.size} template-only files left out)`);
@@ -271,7 +272,7 @@ async function main() {
     const count = createArchive(projectDir, zipPath, name);
     finish(7);
     p.note(board(), 'Done');
-    p.outro(`${zipPath} (${count} files). Unzip it, push it to github.com/${owner}/${name}, and apply the GitHub settings of docs/reference/ci-cd.md.`);
+    p.outro(`${zipPath} (${count} files). Unzip it, push it to github.com/${owner}/${name}, and apply the GitHub settings of docs/operations/ci-cd.md.`);
   } finally {
     try {
       rmSync(workspace, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });

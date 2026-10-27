@@ -1,0 +1,16 @@
+// Markdown lint of the documentation (./gradlew docsLint).
+{
+  "config": {
+    // One paragraph per line: line length is not a rule here.
+    "MD013": false
+  },
+  "globs": ["*.md", "docs/**/*.md"],
+  "ignores": [
+    // Written by release-please.
+    "CHANGELOG.md",
+    // Imports AGENTS.md, has no heading of its own.
+    "CLAUDE.md",
+    // Only a snippet line: the content comes from CHANGELOG.md.
+    "docs/changelog.md"
+  ]
+}

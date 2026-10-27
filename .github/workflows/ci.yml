@@ -1,7 +1,9 @@
 # Every pull request, and every change reaching main, passes the whole check:
 # build, tests (including Testcontainers and the convention plugins' TestKit),
 # coverage, static analysis, the web app, the Bruno collection, end-to-end tests
-# against the full stack, and a dependency and configuration scan.
+# against the full stack, a scan of the images that stack runs, a dependency
+# and configuration scan, and the documentation: Markdown lint and a strict
+# build of the site.
 name: CI
 
 on:
@@ -21,7 +23,7 @@ concurrency:
 jobs:
   check:
     name: check
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -29,7 +31,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
-      - uses: gradle/actions/setup-gradle@b9bee63ef481cc545e4517ec730544a4d8b1dfa0 # v6.4.0
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       - run: ./gradlew check
       - name: Keep the reports
         if: failure()
@@ -43,7 +45,7 @@ jobs:
 
   e2e:
     name: e2e
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -51,8 +53,9 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
-      - uses: gradle/actions/setup-gradle@b9bee63ef481cc545e4517ec730544a4d8b1dfa0 # v6.4.0
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       - name: Start the stack (images built from this commit)
+        id: stack
         run: ./gradlew startLocalStack :bruno:npmInstall
       - name: Install the browser
         working-directory: services/api-app
@@ -65,6 +68,25 @@ jobs:
       - name: Replay the API collection
         working-directory: bruno
         run: npm run smoke
+      # The images Publish would push, scanned before merge: a base image or OS
+      # package with a fixable vulnerability fails here rather than after merge.
+      - name: Scan the API image
+        if: ${{ !cancelled() && steps.stack.outcome == 'success' }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: skeleton-apps/api:local
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Scan the web image
+        if: ${{ !cancelled() && steps.stack.outcome == 'success' }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: skeleton-apps/api-app:local
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+          skip-setup-trivy: true
       - name: Show the stack logs
         if: failure()
         run: docker compose --profile app logs --no-color
@@ -80,7 +102,7 @@ jobs:
 
   trivy-fs:
     name: trivy-fs
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
       contents: read
@@ -88,7 +110,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Scan dependencies, secrets and configuration
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
           # Build tooling runs in CI with a token: its vulnerabilities count too.
           TRIVY_INCLUDE_DEV_DEPS: "true"
@@ -108,3 +130,23 @@ jobs:
         with:
           sarif_file: trivy.sarif
           category: trivy-fs
+
+  docs:
+    name: docs
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: No em dash in the documentation
+        run: |
+          if grep -rn --include='*.md' $'—' README.md AGENTS.md docs; then
+            echo "::error::Em dash found: use a colon, a comma or parentheses instead."
+            exit 1
+          fi
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - name: Lint the Markdown and build the site, failing on a broken link
+        run: ./gradlew docsLint docsBuild

@@ -3,7 +3,7 @@ name: change-api-contract
 description: Change the API contract of skeleton-apps. Use when adding or changing an endpoint, a request or response field, a validation constraint or an error of the API.
 ---
 
-Follow [docs/how-to/change-the-api-contract.md](../../../docs/how-to/change-the-api-contract.md) step by step: contract, collection, server, web app, tests.
+Follow [docs/contributor/how-to/change-the-api-contract.md](../../../docs/contributor/how-to/change-the-api-contract.md) step by step: contract, collection, server, web app, tests.
 
 Done when:
 - the change is in `contracts/api`, every request body has an `example`;
