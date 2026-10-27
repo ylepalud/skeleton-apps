@@ -2,8 +2,10 @@ package dev.ylp.notes.domain;
 
 import dev.ylp.shared.error.business.BusinessException;
 import dev.ylp.shared.error.business.InvalidRecordReason;
+import org.jmolecules.ddd.annotation.ValueObject;
 
 /** The user owning a note: the subject of the identity provider's token. */
+@ValueObject
 public record OwnerId(String value) {
 
   /** Longest subject accepted, matching the persisted column. */
