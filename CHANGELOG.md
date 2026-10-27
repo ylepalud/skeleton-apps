@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.3](https://github.com/ylepalud/skeleton-apps/compare/v0.1.2...v0.1.3) (2026-10-27)
+
+
+### Bug Fixes
+
+* **api:** move the API base image to a digest with the brotli fix ([#57](https://github.com/ylepalud/skeleton-apps/issues/57)) ([0073469](https://github.com/ylepalud/skeleton-apps/commit/0073469a9118320bceb2d19ac77d769b9fa837a1))
+* **deps:** override vulnerable transitive packages of the Bruno CLI ([#50](https://github.com/ylepalud/skeleton-apps/issues/50)) ([de3acaf](https://github.com/ylepalud/skeleton-apps/commit/de3acaf33326230046f8e08a37de7f259e578bb4))
+* **web:** apply Alpine security updates to the web image ([#48](https://github.com/ylepalud/skeleton-apps/issues/48)) ([887b6cf](https://github.com/ylepalud/skeleton-apps/commit/887b6cf0aa5cc2a6632d840810a8c6c5d103148a))
+
 ## [0.1.2](https://github.com/ylepalud/skeleton-apps/compare/v0.1.1...v0.1.2) (2026-10-23)
 
 
