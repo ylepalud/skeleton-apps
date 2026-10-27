@@ -1,6 +1,6 @@
 # Repository layout
 
-```
+```text
 skeleton-apps/
 ├── AGENTS.md                    instructions for coding agents (CLAUDE.md imports it)
 ├── build-logic/                 Gradle convention plugins, an included build
@@ -9,9 +9,9 @@ skeleton-apps/
 ├── gradle/
 │   ├── libs.versions.toml       version catalog: every library and Gradle plugin
 │   └── gradle-daemon-jvm.properties   JDK of the Gradle daemon (Temurin 25)
-├── gradle.properties            build tool versions (JaCoCo, PIT, Node, base image...)
+├── gradle.properties            build tool versions (JaCoCo, PIT, Node, images...)
 ├── settings.gradle.kts          repositories and the list of projects
-├── build.gradle.kts             local stack tasks (startLocalStack...)
+├── build.gradle.kts             local stack and documentation tasks
 ├── contracts/api/               OpenAPI contract and the :contracts:api project
 │   ├── openapi.yaml             entry point: info, servers, security, paths
 │   ├── common.yaml              Problem schema and shared responses
@@ -40,11 +40,13 @@ skeleton-apps/
 │   ├── notes/                   generated from the contract
 │   └── scripts/collection.mjs   generation and drift check
 ├── compose.yaml                 local stack
-├── docs/                        this documentation
+├── docs/                        this documentation, one folder per reader
+├── mkdocs.yml                   documentation site (Zensical)
+├── .markdownlint-cli2.jsonc     Markdown lint rules
 ├── renovate.json                dependency updates
 ├── release-please-config.json   release configuration
 └── .github/
-    ├── workflows/               ci, publish, nightly, release
+    ├── workflows/               ci, publish, nightly, release, docs
     └── actions/secure-image/    scan, SBOM and signature of an image
 ```
 

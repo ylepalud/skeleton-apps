@@ -46,10 +46,10 @@
       ]
     },
     {
-      "description": "Base image of the JVM application images",
+      "description": "Images pinned in gradle.properties: the JVM base image, the documentation tooling",
       "customType": "regex",
       "managerFilePatterns": ["/^gradle\\.properties$/"],
-      "matchStrings": ["jibBaseImage=(?<depName>[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]+)"],
+      "matchStrings": ["\\w+Image=(?<depName>[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]+)"],
       "datasourceTemplate": "docker"
     },
     {

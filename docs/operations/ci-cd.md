@@ -6,7 +6,8 @@ All workflows live in `.github/workflows`. Actions are pinned by commit SHA (Ren
 
 | Workflow | Trigger | Jobs |
 | --- | --- | --- |
-| `ci.yml` | pull requests to `develop` or `main`, push to `main`, called by `publish.yml` | `check` (`./gradlew check`), `e2e` (local stack, Playwright, Bruno smoke run, Trivy scan of the two images the stack runs), `trivy-fs` (dependencies including development ones, secrets and configuration; findings in the Security tab) |
+| `ci.yml` | pull requests to `develop` or `main`, push to `main`, called by `publish.yml` | `check` (`./gradlew check`), `e2e` (local stack, Playwright, Bruno smoke run, Trivy scan of the two images the stack runs), `trivy-fs` (dependencies including development ones, secrets and configuration; findings in the Security tab), `docs` (no em dash, `./gradlew docsLint docsBuild`: Markdown lint and a strict build of the site, which fails on a broken link or anchor) |
+| `docs.yml` | push to `main`, or manual; only when the variable `DOCS_PAGES` is `true` | builds the documentation site and deploys it to GitHub Pages (see [Documentation site](#documentation-site)) |
 | `publish.yml` | push to `develop`, or manual with `all=true` | `ci.yml`, then one image job per image whose code changed: build and push, scan, SBOM, signature |
 | `nightly.yml` | every day at 03:00 UTC, or manual | `./gradlew pitest` on `develop` |
 | `release.yml` | push to `main`, or manual with `tag=vX.Y.Z` to promote an existing release's images again | release-please, then the release tag added to the published images |
@@ -45,7 +46,7 @@ cosign verify ghcr.io/ylepalud/skeleton-apps/api@<digest> \
 
 | Branch | Role | Merge method | Rules |
 | --- | --- | --- | --- |
-| `develop` | default branch, the only one deployed | squash | pull request required, `check`, `e2e`<!-- template-only:start -->, `installer`<!-- template-only:end --> and `trivy-fs` required, linear history, no force push or deletion |
+| `develop` | default branch, the only one deployed | squash | pull request required, `check`, `e2e`<!-- template-only:start -->, `installer`<!-- template-only:end -->, `trivy-fs` and `docs` required, linear history, no force push or deletion |
 | `main` | releases | merge commit | pull request required, the same checks, no force push or deletion; the branch need not be up to date, since release-please's commits only exist on `main` |
 
 Repository administrators can bypass the rulesets. Without the release App, this is how release-please's pull requests get merged (see [Release](release.md)).
@@ -53,6 +54,22 @@ Repository administrators can bypass the rulesets. Without the release App, this
 ## Repository settings
 
 Public template repository. Secret scanning with push protection, Dependabot alerts (updates come from Renovate), read-only `GITHUB_TOKEN` by default, workflows allowed to open pull requests (for release-please).
+
+## Documentation site
+
+`docs/` is published as a site built by Zensical (`mkdocs.yml`), with an API reference rendered from the contract by Redocly. Pull requests only build it, in the `docs` job of `ci.yml`; `docs.yml` publishes it from `main`, so the site describes the latest release. Locally: `./gradlew docsServe`, then <http://localhost:8000>.
+
+Publishing is opt-in, because GitHub Pages must be enabled per repository and a private repository on a free plan has none. To turn it on:
+
+```bash
+gh api -X POST repos/<owner>/<name>/pages -f build_type=workflow
+gh api -X PUT repos/<owner>/<name>/environments/github-pages \
+  --input - <<< '{"deployment_branch_policy": {"protected_branches": false, "custom_branch_policies": true}}'
+gh api -X POST repos/<owner>/<name>/environments/github-pages/deployment-branch-policies -f name=main -f type=branch
+gh variable set DOCS_PAGES --body true
+```
+
+The first command enables Pages with GitHub Actions as its source; the next two let `main` deploy to the `github-pages` environment; the last one turns the workflow on. Enabling Pages may also have allowed the default branch: `gh api repos/<owner>/<name>/environments/github-pages/deployment-branch-policies` lists the rules, and `gh api -X DELETE` on a rule's URL removes it, so that only `main` deploys. The site is then served at `https://<owner>.github.io/<name>/`.
 
 ## Release App
 
