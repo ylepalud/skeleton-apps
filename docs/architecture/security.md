@@ -4,7 +4,7 @@ The API is meant to be public. Security therefore means exposing everything prop
 
 ## Identity
 
-- **An OpenID Connect provider issues the tokens.** Locally it is `mock-oauth2-server`; in production a real provider (Zitadel is planned). Switching only changes configuration: see [Switch the identity provider](../how-to/switch-identity-provider.md).
+- **An OpenID Connect provider issues the tokens.** Locally it is `mock-oauth2-server`; in production a real provider (Zitadel is planned). Switching only changes configuration: see [Switch the identity provider](../contributor/how-to/switch-identity-provider.md).
 - **The web app signs in with Authorization Code and PKCE** (angular-auth-oidc-client), and renews with refresh tokens rather than a hidden iframe, so the content security policy never allows framing the provider. Its interceptor attaches the token to `/api/` requests only.
 - **The API is a pure resource server.** It checks the token's signature, issuer and audience (`api`) on every request and keeps no session, so there is no cookie and nothing for CSRF to abuse. A backend-for-frontend is a possible evolution (issue #20).
 

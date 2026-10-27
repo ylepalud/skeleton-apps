@@ -44,7 +44,10 @@ jobs:
           test -z "$(git status --porcelain)"
           test -x gradlew
           test ! -e package.json && test ! -e scripts/installer && test ! -e .github/workflows/installer.yml
-          if grep -rIn --exclude-dir=.git -e skeleton-apps -e ylepalud -e 'dev\.ylp' -e 'dev/ylp' .; then
+          test ! -e docs/template/start-a-new-project.md
+          grep -q 'generated from \[skeleton-apps\]' docs/template/README.md
+          # The provenance page names the template on purpose.
+          if grep -rIn --exclude-dir=.git -e skeleton-apps -e ylepalud -e 'dev\.ylp' -e 'dev/ylp' . | grep -v '^\./docs/template/README\.md:'; then
             echo "::error::Template names left in the generated project"
             exit 1
           fi

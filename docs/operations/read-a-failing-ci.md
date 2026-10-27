@@ -10,4 +10,4 @@
 
 An image whose scan fails is pushed but never signed: the cluster only deploys signed images, so a failed scan blocks the deployment, not the build.
 
-Reproduce locally before fixing: the same commands run in CI ([Commands](../reference/commands.md)).
+Reproduce locally before fixing: the same commands run in CI ([Commands](../contributor/reference/commands.md)).
