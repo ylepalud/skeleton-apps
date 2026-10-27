@@ -1,4 +1,4 @@
-# Architecture
+# Architecture overview
 
 ## Runtime
 
@@ -31,7 +31,7 @@ Each module owns its **database schema** (`notes.notes`) and its Liquibase chang
 
 ## Hexagonal inside a module
 
-```
+```text
 notes/
 ├── domain/        Note (aggregate), value objects, NoteRepository (port), NoteErrorReason
 ├── application/   one use case per class: CreateNoteUseCase, ListNotesUseCase...

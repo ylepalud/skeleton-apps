@@ -8,7 +8,7 @@ Three ways, from the most faithful to the fastest to iterate with. All of them u
 ./gradlew startLocalStack
 ```
 
-It builds the API image (Jib) and the web app image (nginx), starts everything from `compose.yaml` and waits until the API is ready. Open http://localhost:8088 and sign in with any username.
+It builds the API image (Jib) and the web app image (nginx), starts everything from `compose.yaml` and waits until the API is ready. Open <http://localhost:8088> and sign in with any username.
 
 After a change, run it again: only the containers whose image changed are recreated. `./gradlew stopLocalStack` stops everything and keeps the data; `./gradlew resetDatabase` also deletes the database.
 
@@ -18,7 +18,7 @@ After a change, run it again: only the containers whose image changed are recrea
 ./gradlew :services:api:bootRun
 ```
 
-The `local` profile starts PostgreSQL and the identity provider through Docker Compose and keeps them running between restarts. The API listens on http://localhost:8080/api/v1. Get a token and call it:
+The `local` profile starts PostgreSQL and the identity provider through Docker Compose and keeps them running between restarts. The API listens on <http://localhost:8080/api/v1>. Get a token and call it:
 
 ```bash
 TOKEN=$(curl -s -X POST localhost:8090/default/token \
@@ -41,7 +41,7 @@ npm run generate:api
 npm start
 ```
 
-Open http://localhost:4200. The development server proxies `/api` to `localhost:8080` and reads `public/config.json`, which points to the local identity provider.
+Open <http://localhost:4200>. The development server proxies `/api` to `localhost:8080` and reads `public/config.json`, which points to the local identity provider.
 
 ## Check it works end to end
 
