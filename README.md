@@ -17,7 +17,7 @@ You need Docker with Compose v2. Gradle downloads its own JDK (Temurin 25) and t
 ./gradlew startLocalStack  # run the full stack locally
 ```
 
-Then open http://localhost:8088 and sign in with any username: locally, a mock identity provider accepts everyone. `./gradlew stopLocalStack` stops the stack.
+Then open <http://localhost:8088> and sign in with any username: locally, a mock identity provider accepts everyone. `./gradlew stopLocalStack` stops the stack.
 
 <!-- template-only:start -->
 ## Start a new project
@@ -26,7 +26,7 @@ Then open http://localhost:8088 and sign in with any username: locally, a mock i
 npx github:ylepalud/skeleton-apps my-idea
 ```
 
-The installer renames the project, the package and the images, and writes `my-idea.zip`: a ready Git repository with one `Init` commit. See [Start a new project](docs/how-to/start-a-new-project.md).
+The installer renames the project, the package and the images, and writes `my-idea.zip`: a ready Git repository with one `Init` commit. See [Start a new project](docs/template/start-a-new-project.md).
 
 <!-- template-only:end -->
 
@@ -42,28 +42,31 @@ The installer renames the project, the package and the images, and writes `my-id
 | `compose.yaml` | Local stack: Postgres, a mock identity provider, the API and the web app |
 | `.github` | CI, image publication, nightly mutation testing, releases |
 
-Details: [Repository layout](docs/reference/repository-layout.md).
+Details: [Repository layout](docs/contributor/reference/repository-layout.md).
 
 ## How it works
 
-**Contract first.** The OpenAPI contract in `contracts/api` is the source of truth. The API implements interfaces generated from it, so the build breaks when code and contract disagree; the web app's client and the Bruno collection are generated from the same contract. [Why](docs/explanation/contract-first.md).
+**Contract first.** The OpenAPI contract in `contracts/api` is the source of truth. The API implements interfaces generated from it, so the build breaks when code and contract disagree; the web app's client and the Bruno collection are generated from the same contract. [Why](docs/architecture/contract-first.md).
 
-**Modules, hexagonal inside.** The API is a Spring Modulith: each business module is a top-level package with its own database schema. Inside a module, the domain and the use cases depend on no framework; adapters plug them into HTTP and PostgreSQL. Both rules are checked by tests. [Architecture](docs/explanation/architecture.md).
+**Modules, hexagonal inside.** The API is a Spring Modulith: each business module is a top-level package with its own database schema. Inside a module, the domain and the use cases depend on no framework; adapters plug them into HTTP and PostgreSQL. Both rules are checked by tests. [Architecture](docs/architecture/overview.md).
 
-**Secure by default.** Every API route requires a token from an OpenID Connect provider; each note belongs to the token's subject, and someone else's note does not exist for you. The web app signs in with Authorization Code and PKCE, and shares its origin with the API. [Security](docs/explanation/security.md).
+**Secure by default.** Every API route requires a token from an OpenID Connect provider; each note belongs to the token's subject, and someone else's note does not exist for you. The web app signs in with Authorization Code and PKCE, and shares its origin with the API. [Security](docs/architecture/security.md).
 
-**Tested at every level.** The domain is tested without Spring, adapters against a real PostgreSQL, the whole chain end to end with real tokens, the web app with Vitest and Playwright, and even the build conventions with Gradle TestKit. [Testing strategy](docs/explanation/testing-strategy.md).
+**Tested at every level.** The domain is tested without Spring, adapters against a real PostgreSQL, the whole chain end to end with real tokens, the web app with Vitest and Playwright, and even the build conventions with Gradle TestKit. [Testing strategy](docs/architecture/testing-strategy.md).
 
-**Delivered as signed images.** A push to `develop` publishes the changed images to GitHub Container Registry, scanned, with an attested SBOM, and signed with cosign. A release adds its version tag to those exact images. [Supply chain](docs/explanation/supply-chain.md).
+**Delivered as signed images.** A push to `develop` publishes the changed images to GitHub Container Registry, scanned, with an attested SBOM, and signed with cosign. A release adds its version tag to those exact images. [Supply chain](docs/architecture/supply-chain.md).
 
 ## Documentation
 
-| Section | For when you want to |
+One section per reader; [docs/README.md](docs/README.md) lists them. The same pages, with an API reference, can be published as a [site](docs/operations/ci-cd.md#documentation-site)<!-- template-only:start -->; this repository's is <https://ylepalud.github.io/skeleton-apps/><!-- template-only:end -->.
+
+| Section | For |
 | --- | --- |
-| [Tutorials](docs/tutorials/) | learn by building: [Add your first feature](docs/tutorials/first-feature.md) |
-| [How-to guides](docs/how-to/) | get a task done: run locally, change the contract, add a module, release, troubleshoot |
-| [Reference](docs/reference/) | look something up: commands, conventions, CI/CD, local stack, configuration, errors |
-| [Explanation](docs/explanation/) | understand the design and the decisions behind it |
+| [Product](docs/product/README.md) | using the web app and the API: sign-in, notes, errors |
+| [Template](docs/template/README.md) | the template this code base comes from<!-- template-only:start -->, and how to start a new project from it<!-- template-only:end --> |
+| [Contributor](docs/contributor/README.md) | changing the code: [Add your first feature](docs/contributor/tutorials/first-feature.md), how-to guides, reference |
+| [Operations](docs/operations/README.md) | keeping it delivering: CI/CD, releases, dependencies, a red build |
+| [Architecture](docs/architecture/README.md) | understanding the design, and the [decision records](docs/architecture/decisions.md) behind it |
 
 Coding agents start with [AGENTS.md](AGENTS.md).
 

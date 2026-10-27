@@ -18,13 +18,13 @@ concurrency:
 jobs:
   installer:
     name: installer
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "22"
+          node-version: "24"
           cache: npm
       - run: npm ci
       - run: npm run installer:typecheck
@@ -44,7 +44,10 @@ jobs:
           test -z "$(git status --porcelain)"
           test -x gradlew
           test ! -e package.json && test ! -e scripts/installer && test ! -e .github/workflows/installer.yml
-          if grep -rIn --exclude-dir=.git -e skeleton-apps -e ylepalud -e 'dev\.ylp' -e 'dev/ylp' .; then
+          test ! -e docs/template/start-a-new-project.md
+          grep -q 'generated from \[skeleton-apps\]' docs/template/README.md
+          # The provenance page names the template on purpose.
+          if grep -rIn --exclude-dir=.git -e skeleton-apps -e ylepalud -e 'dev\.ylp' -e 'dev/ylp' . | grep -v '^\./docs/template/README\.md:'; then
             echo "::error::Template names left in the generated project"
             exit 1
           fi
@@ -52,7 +55,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
-      - uses: gradle/actions/setup-gradle@b9bee63ef481cc545e4517ec730544a4d8b1dfa0 # v6.4.0
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       - name: Build the generated project
         working-directory: ${{ runner.temp }}/out/demo-app
         run: ./gradlew check

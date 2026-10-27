@@ -16,15 +16,15 @@ Gradle monorepo: a Spring Boot API organised as a Spring Modulith (`services/api
 
 | …do this | read |
 | --- | --- |
-| build, test or run anything | [docs/reference/commands.md](docs/reference/commands.md) |
-| change an endpoint, a payload or an error | [docs/how-to/change-the-api-contract.md](docs/how-to/change-the-api-contract.md) |
-| add a feature across layers | [docs/tutorials/first-feature.md](docs/tutorials/first-feature.md) |
-| add a module | [docs/how-to/add-a-module.md](docs/how-to/add-a-module.md) |
-| touch domain, use cases or adapters | [docs/explanation/architecture.md](docs/explanation/architecture.md) |
-| write or fix tests | [docs/explanation/testing-strategy.md](docs/explanation/testing-strategy.md) |
-| touch security, tokens or limits | [docs/explanation/security.md](docs/explanation/security.md) |
-| change a convention plugin or the build | [docs/reference/gradle-conventions.md](docs/reference/gradle-conventions.md) |
-| change CI, images or releases | [docs/reference/ci-cd.md](docs/reference/ci-cd.md) |
-| update a dependency | [docs/how-to/update-dependencies.md](docs/how-to/update-dependencies.md) |
-| debug a red CI | [docs/how-to/read-a-failing-ci.md](docs/how-to/read-a-failing-ci.md) |
-| debug the local build or stack | [docs/how-to/troubleshoot.md](docs/how-to/troubleshoot.md) |
+| build, test or run anything | [docs/contributor/reference/commands.md](docs/contributor/reference/commands.md) |
+| change an endpoint, a payload or an error | [docs/contributor/how-to/change-the-api-contract.md](docs/contributor/how-to/change-the-api-contract.md) |
+| add a feature across layers | [docs/contributor/tutorials/first-feature.md](docs/contributor/tutorials/first-feature.md) |
+| add a module | [docs/contributor/how-to/add-a-module.md](docs/contributor/how-to/add-a-module.md) |
+| touch domain, use cases or adapters | [docs/architecture/overview.md](docs/architecture/overview.md) |
+| write or fix tests | [docs/architecture/testing-strategy.md](docs/architecture/testing-strategy.md) |
+| touch security, tokens or limits | [docs/architecture/security.md](docs/architecture/security.md) |
+| change a convention plugin or the build | [docs/contributor/reference/gradle-conventions.md](docs/contributor/reference/gradle-conventions.md) |
+| change CI, images or releases | [docs/operations/ci-cd.md](docs/operations/ci-cd.md) |
+| update a dependency | [docs/operations/update-dependencies.md](docs/operations/update-dependencies.md) |
+| debug a red CI | [docs/operations/read-a-failing-ci.md](docs/operations/read-a-failing-ci.md) |
+| debug the local build or stack | [docs/operations/troubleshoot.md](docs/operations/troubleshoot.md) |

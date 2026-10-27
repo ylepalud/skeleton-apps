@@ -26,6 +26,11 @@
       "matchUpdateTypes": ["major"],
       "automerge": false
     },
+    {
+      "description": "google-java-format 1.37 breaks Spotless 8.10.4: hold it until a Spotless release supports it",
+      "matchPackageNames": ["com.google.googlejavaformat:google-java-format"],
+      "allowedVersions": "<1.37.0"
+    },
     { "groupName": "spring", "matchPackageNames": ["/^org\\.springframework\\./"] },
     { "groupName": "angular", "matchPackageNames": ["/^@angular\\//", "/^@angular-eslint\\//", "angular-eslint"] },
     { "groupName": "github actions", "matchManagers": ["github-actions"] },
@@ -41,10 +46,10 @@
       ]
     },
     {
-      "description": "Base image of the JVM application images",
+      "description": "Images pinned in gradle.properties: the JVM base image, the documentation tooling",
       "customType": "regex",
       "managerFilePatterns": ["/^gradle\\.properties$/"],
-      "matchStrings": ["jibBaseImage=(?<depName>[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]+)"],
+      "matchStrings": ["\\w+Image=(?<depName>[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]+)"],
       "datasourceTemplate": "docker"
     },
     {
