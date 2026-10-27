@@ -17,7 +17,7 @@
     "form-data": "^4.0.6",
     "@azure/msal-node": "^7.1.0",
     "csv-parse": "^7.0.2",
-    "uuid": "^11.1.1",
+    "uuid": "^14.0.0",
     "yaml": "^2.8.3",
     "@usebruno/cli": {
       "js-yaml": "^4.3.2"
