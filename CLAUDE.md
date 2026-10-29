@@ -2,4 +2,4 @@
 
 ## Project skills
 
-`.claude/skills` holds `change-api-contract`, `add-a-module` and `add-a-feature`; each points to the matching page of `docs/`.
+`.claude/skills` holds `change-api-contract`, `add-a-module`, `add-a-feature` and `track-an-epic`; each points to the matching page of `docs/`.

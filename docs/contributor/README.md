@@ -13,6 +13,7 @@ Everything needed to change the code, sorted by what you are trying to do.
 - [Change the API contract](how-to/change-the-api-contract.md)
 - [Add a module](how-to/add-a-module.md)
 - [Switch the identity provider](how-to/switch-identity-provider.md)
+- [Track an epic](how-to/track-an-epic.md)
 
 ## Reference: look something up
 
