@@ -44,7 +44,9 @@ notes/
 - **A use case** is a concrete class with an `execute` method taking a command record. Its only Spring dependency is `@Transactional`; it is declared in the module's `@Configuration` rather than annotated as a component.
 - **Adapters** implement ports (`adapter/out`) or drive use cases (`adapter/in`). They are the only place where Spring MVC, JPA or Spring Data appear.
 
-These rules are executable. jMolecules annotations declare the roles (`@AggregateRoot`, `@SecondaryPort`, `@PrimaryAdapter` and `@SecondaryAdapter` on `package-info.java`), and `HexagonalArchitectureTest` checks them with `jmolecules-archunit`, plus one rule: `domain` and `application` depend neither on Spring (except `@Transactional`) nor on adapters.
+These rules are executable. jMolecules annotations declare the roles (`@AggregateRoot` and `@ValueObject` in the domain, `@SecondaryPort` on ports, `@PrimaryPort` on `application` and `@PrimaryAdapter` and `@SecondaryAdapter` on the adapters' `package-info.java`), and `HexagonalArchitectureTest` checks them with `jmolecules-archunit`, plus one rule: `domain` and `application` depend neither on Spring (except `@Transactional`) nor on adapters.
+
+The same annotations draw the [domain model](domain-model.md) page: `ModularityTest` generates it from the module model, with each module's dependencies, model and request flow.
 
 ## Domain modelling
 

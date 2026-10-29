@@ -15,6 +15,7 @@ You need Docker with Compose v2. Gradle downloads its own JDK (Temurin 25) and t
 ```bash
 ./gradlew check            # build and verify everything
 ./gradlew startLocalStack  # run the full stack locally
+./gradlew docsServe        # preview the documentation site on http://localhost:8000
 ```
 
 Then open <http://localhost:8088> and sign in with any username: locally, a mock identity provider accepts everyone. `./gradlew stopLocalStack` stops the stack.
@@ -58,7 +59,7 @@ Details: [Repository layout](docs/contributor/reference/repository-layout.md).
 
 ## Documentation
 
-One section per reader; [docs/README.md](docs/README.md) lists them. The same pages, with an API reference, can be published as a [site](docs/operations/ci-cd.md#documentation-site)<!-- template-only:start -->; this repository's is <https://ylepalud.github.io/skeleton-apps/><!-- template-only:end -->.
+One section per reader; [docs/README.md](docs/README.md) lists them. The same pages, with an API reference, can be published as a [site](docs/operations/ci-cd.md#documentation-site)<!-- template-only:start -->; this repository's is <https://ylepalud.github.io/skeleton-apps/><!-- template-only:end -->. Locally, `./gradlew docsServe` serves it on <http://localhost:8000>, rebuilt on every change to `docs/`.
 
 | Section | For |
 | --- | --- |

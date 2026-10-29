@@ -2,8 +2,10 @@ package dev.ylp.notes.domain;
 
 import dev.ylp.shared.error.business.BusinessException;
 import dev.ylp.shared.error.business.InvalidRecordReason;
+import org.jmolecules.ddd.annotation.ValueObject;
 
 /** The title of a note. */
+@ValueObject
 public record Title(String value) {
 
   /** Longest title accepted. */

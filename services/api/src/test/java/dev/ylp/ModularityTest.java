@@ -1,9 +1,11 @@
 package dev.ylp;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.nio.file.Path;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.modulith.core.ApplicationModules;
-import org.springframework.modulith.docs.Documenter;
 
 class ModularityTest {
 
@@ -17,9 +19,25 @@ class ModularityTest {
   }
 
   @Test
-  @DisplayName("The module documentation is generated")
-  void moduleDocumentationIsGenerated() {
-    // When / Then: C4 component diagrams and module canvases under build/spring-modulith-docs
-    new Documenter(modules).writeDocumentation();
+  @DisplayName("The domain model page shows each module's model and request flow")
+  void domainModelPageShowsEachModulesModelAndRequestFlow() {
+    // Given: docsDomainModel points the page at the documentation site
+    Path file =
+        Path.of(System.getProperty("domainModel.page", "build/domain-model/domain-model.md"));
+
+    // When
+    new DomainModelPage(modules, Path.of("src/main/java")).writeTo(file);
+
+    // Then
+    assertThat(file)
+        .content()
+        .contains("notes --> shared")
+        .contains("<<aggregate root>>", "<<value object>>", "<<secondary port>>")
+        .contains("Note *-- Title : title", "Note *-- NoteId : id", "NoteRepository ..> Note")
+        .contains("NotesController --> CreateNoteUseCase", "CreateNoteUseCase --> NoteRepository")
+        .contains("PostgresNoteRepository -. implements .-> NoteRepository")
+        .containsSubsequence("## Business modules", "### Notes", "## Cross-cutting modules")
+        .containsSubsequence("## Cross-cutting modules", "### Config", "### Shared")
+        .contains("Used by: Config, Notes.");
   }
 }

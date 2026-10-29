@@ -2,8 +2,10 @@ package dev.ylp.notes.domain;
 
 import dev.ylp.shared.error.business.BusinessException;
 import dev.ylp.shared.error.business.InvalidRecordReason;
+import org.jmolecules.ddd.annotation.ValueObject;
 
 /** The body of a note, possibly empty. */
+@ValueObject
 public record Content(String value) {
 
   /** Longest content accepted. */

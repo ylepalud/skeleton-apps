@@ -39,13 +39,14 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 
 ## Documentation
 
-The tools run in containers pinned in `gradle.properties`: Docker is the only prerequisite. None of these tasks is part of `check`; the `docs` job of CI runs them.
+The tools run in containers pinned in `gradle.properties`: Docker is the only prerequisite besides the JDK, which generates the domain model page. None of these tasks is part of `check`; the `docs` job of CI runs them.
 
 | Command | What it does |
 | --- | --- |
 | `./gradlew docsServe` | Serves the site on <http://localhost:8000>, rebuilt on every change |
 | `./gradlew docsBuild` | Builds the site into `build/docs/site`; a broken link or anchor fails it |
 | `./gradlew docsLint` | Lints the Markdown of the README and `docs/` (`.markdownlint-cli2.jsonc`) |
+| `./gradlew :services:api:docsDomainModel` | Generates the domain model page from the modules and their jMolecules annotations (`docs/architecture/domain-model.md`, not committed) |
 | `./gradlew docsApiReference` | Renders the API reference from the contract (`docs/product/api-reference.html`, not committed) |
 
 <!-- template-only:start -->
