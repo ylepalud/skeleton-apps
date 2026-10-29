@@ -12,6 +12,14 @@ dependencyResolutionManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
+        // The Android Gradle Plugin is published on Google's repository only.
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
     }
     versionCatalogs {
         create("libs") {

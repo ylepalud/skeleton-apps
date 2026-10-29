@@ -11,6 +11,15 @@ pitest-plugin = "1.19.0"
 node-gradle = "7.1.0"
 jib = "3.5.4"
 openapi-generator = "7.26.0"
+kotlin = "2.4.21"
+android-gradle-plugin = "9.5.0"
+kover = "0.9.11"
+ktor = "3.6.0"
+kotlinx-coroutines = "1.11.0"
+kotlinx-serialization = "1.12.0"
+konsist = "0.18.1"
+kotlincrypto-hash = "0.8.0"
+kotlincrypto-random = "0.6.0"
 junit = "6.1.3"
 assertj = "3.27.7"
 
@@ -23,6 +32,10 @@ gradle-pitest = { module = "info.solidsoft.gradle.pitest:gradle-pitest-plugin", 
 gradle-node = { module = "com.github.node-gradle:gradle-node-plugin", version.ref = "node-gradle" }
 gradle-jib = { module = "com.google.cloud.tools:jib-gradle-plugin", version.ref = "jib" }
 gradle-openapi-generator = { module = "org.openapitools:openapi-generator-gradle-plugin", version.ref = "openapi-generator" }
+gradle-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+gradle-kotlin-serialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
+gradle-android = { module = "com.android.tools.build:gradle", version.ref = "android-gradle-plugin" }
+gradle-kover = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version.ref = "kover" }
 
 # Platforms imported by the spring convention.
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
@@ -33,6 +46,22 @@ jmolecules-bom = { module = "org.jmolecules:jmolecules-bom", version.ref = "jmol
 errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }
 nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
+
+# Kotlin Multiplatform clients: HTTP, JSON and coroutines, added by the
+# kotlin-multiplatform convention and the generated API client.
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlincrypto-sha2 = { module = "org.kotlincrypto.hash:sha2", version.ref = "kotlincrypto-hash" }
+kotlincrypto-random = { module = "org.kotlincrypto.random:crypto-rand", version.ref = "kotlincrypto-random" }
+konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 
 # Functional tests of build-logic.
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
