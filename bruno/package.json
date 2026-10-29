@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@apidevtools/json-schema-ref-parser": "16.0.5",
-    "@usebruno/cli": "4.2.1"
+    "@usebruno/cli": "4.3.0"
   },
   "overrides": {
     "@faker-js/faker": "^10.4.1",
