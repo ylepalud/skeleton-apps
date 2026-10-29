@@ -20,6 +20,15 @@ You need Docker with Compose v2 and the Android SDK (`ANDROID_HOME` set; the com
 
 Then open <http://localhost:8088> and sign in with any username: locally, a mock identity provider accepts everyone. `./gradlew stopLocalStack` stops the stack.
 
+To run the Android app against that stack, start an emulator, then:
+
+```bash
+adb reverse tcp:8088 tcp:8088 && adb reverse tcp:8090 tcp:8090  # the emulator's localhost is your machine's
+./gradlew :clients:android:installDebug
+```
+
+Open **Notes** on the emulator and sign in the same way. Creating the emulator once, and why `adb reverse`: [Run the Android app](docs/contributor/how-to/run-the-android-app.md).
+
 <!-- template-only:start -->
 ## Start a new project
 

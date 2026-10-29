@@ -1,6 +1,6 @@
 # Run locally
 
-Three ways, from the most faithful to the fastest to iterate with. All of them use Docker for PostgreSQL and the mock identity provider; see [Local stack](../reference/local-stack.md) for ports and accounts.
+Three ways to run the API and the web app, from the most faithful to the fastest to iterate with, then the Android app on top of the full stack. All of them use Docker for PostgreSQL and the mock identity provider; see [Local stack](../reference/local-stack.md) for ports and accounts.
 
 ## The full stack, as in production
 
@@ -49,3 +49,15 @@ Open <http://localhost:4200>. The development server proxies `/api` to `localhos
 E2E_BASE_URL=http://localhost:8088 ./gradlew :services:api-app:npmRunE2e -PrunE2e=true
 cd bruno && npm ci && npm run smoke
 ```
+
+## The Android app on an emulator
+
+With the full stack running:
+
+```bash
+adb reverse tcp:8088 tcp:8088
+adb reverse tcp:8090 tcp:8090
+./gradlew :clients:android:installDebug
+```
+
+The emulator, the reason for `adb reverse` and how to target another environment: [Run the Android app](run-the-android-app.md).
