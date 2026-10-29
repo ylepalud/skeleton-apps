@@ -58,6 +58,7 @@ nav:
           - contributor/how-to/change-the-api-contract.md
           - contributor/how-to/add-a-module.md
           - contributor/how-to/switch-identity-provider.md
+          - contributor/how-to/track-an-epic.md
       - Reference:
           - contributor/reference/commands.md
           - contributor/reference/repository-layout.md
