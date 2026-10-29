@@ -17,6 +17,7 @@ dependencies {
     implementation(libs.gradle.kotlin.serialization)
     implementation(libs.gradle.android)
     implementation(libs.gradle.kover)
+    implementation(libs.gradle.compose.compiler)
 }
 
 // Functional tests run every convention plugin against throwaway projects,

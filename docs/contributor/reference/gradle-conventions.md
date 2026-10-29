@@ -8,7 +8,7 @@ The build is a Kotlin DSL monorepo. Every project applies one or more convention
 | --- | --- |
 | Libraries and Gradle plugins | `gradle/libs.versions.toml` |
 | Build tools (JaCoCo, google-java-format, PIT, Node, Jib base image) | `gradle.properties`, each with a `# renovate:` comment |
-| Android SDK levels (`androidCompileSdk`, `androidMinSdk`) | `gradle.properties` |
+| Android SDK levels (`androidCompileSdk`, `androidMinSdk`, `androidTargetSdk`) | `gradle.properties` |
 | Libraries managed by the Spring Boot BOM | declared without a version |
 | JDK of the Gradle daemon | `gradle/gradle-daemon-jvm.properties` (Temurin 25) |
 
@@ -26,6 +26,7 @@ The build is a Kotlin DSL monorepo. Every project applies one or more convention
 | `frontend-convention` | the web app | Pinned Node downloaded by the build, `npm ci`, API client generation from the contract, `lint` and `test` in `check`, `build` in `assemble`, Playwright behind `-PrunE2e=true` |
 | `kotlin-multiplatform-convention` | `clients/shared` | Kotlin Multiplatform with the `android`, `iosArm64`, `iosSimulatorArm64` and `jvm` targets, the common tests run on each (the JVM target ships nowhere: it carries the architecture tests and the coverage), warnings as errors, kotlinx.serialization, ktlint, Kover at 80% of lines and branches in `check` |
 | `openapi-kotlin-client` | `clients/shared` | Generates an internal Ktor client and models from the contract into `commonMain` (`openApiClient { contract; packageName }`), with one HTTP engine per platform; the generated package is out of coverage |
+| `android-app-convention` | `clients/android` | Android application with Compose (AGP 9, built-in Kotlin), SDK levels from `gradle.properties`, lint warnings as errors in `check`, JVM tests on the JUnit platform (Jupiter, and Vintage for the JUnit 4 API Robolectric needs) on the debug variant only, Kover at 80% |
 | `bruno-collection` | `bruno` | Regenerates the requests from the contract (`updateCollection`) and fails `check` when they drift (`verifyCollection`) |
 
 ## Rules worth knowing
