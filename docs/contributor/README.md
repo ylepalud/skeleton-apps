@@ -9,6 +9,7 @@ Everything needed to change the code, sorted by what you are trying to do.
 ## How-to guides: get a task done
 
 - [Run locally](how-to/run-locally.md)
+- [Run the Android app](how-to/run-the-android-app.md)
 - [Change the API contract](how-to/change-the-api-contract.md)
 - [Add a module](how-to/add-a-module.md)
 - [Switch the identity provider](how-to/switch-identity-provider.md)

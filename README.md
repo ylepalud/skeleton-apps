@@ -20,6 +20,15 @@ You need Docker with Compose v2 and the Android SDK (`ANDROID_HOME` set; the com
 
 Then open <http://localhost:8088> and sign in with any username: locally, a mock identity provider accepts everyone. `./gradlew stopLocalStack` stops the stack.
 
+To run the Android app against that stack, start an emulator, then:
+
+```bash
+adb reverse tcp:8088 tcp:8088 && adb reverse tcp:8090 tcp:8090  # the emulator's localhost is your machine's
+./gradlew :clients:android:installDebug
+```
+
+Open **Notes** on the emulator and sign in the same way. Creating the emulator once, and why `adb reverse`: [Run the Android app](docs/contributor/how-to/run-the-android-app.md).
+
 <!-- template-only:start -->
 ## Start a new project
 
@@ -38,6 +47,7 @@ The installer renames the project, the package and the images, and writes `my-id
 | `services/api` | Spring Boot API, one Spring Modulith application with the `notes` module |
 | `services/api-app` | Angular web app, served by nginx in its image |
 | `contracts/api` | OpenAPI contract, and the server interfaces generated from it |
+| `clients/android` | Android app on the shared library: Compose screens, Custom Tabs sign-in, Keystore session |
 | `clients/shared` | Kotlin Multiplatform library of the native clients: generated API client, sign-in, use cases |
 | `bruno` | API collection generated from the contract |
 | `build-logic` | Gradle convention plugins shared by every project |
