@@ -36,6 +36,13 @@ class Fixture(
                 repositoriesMode = RepositoriesMode.PREFER_SETTINGS
                 repositories {
                     mavenCentral()
+                    google {
+                        content {
+                            includeGroupByRegex("com\\.android.*")
+                            includeGroupByRegex("com\\.google.*")
+                            includeGroupByRegex("androidx.*")
+                        }
+                    }
                     exclusiveContent {
                         forRepository {
                             ivy("https://nodejs.org/dist") {

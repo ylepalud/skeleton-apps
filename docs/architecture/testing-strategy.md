@@ -12,6 +12,8 @@ Each kind of test answers one question, as cheaply as possible.
 | End to end, API | `NotesEndToEndTest`, `ActuatorTest` | Does the whole chain work with real tokens? | Spring Boot on a random port, Testcontainers for PostgreSQL and the identity provider |
 | Web app | `services/api-app/src/**/*.spec.ts` | Do the store and the screens behave? | Vitest, Testing Library, an in-memory fake client |
 | End to end, browser | `services/api-app/e2e` | Can a user sign in and manage notes? Does any console error appear? | Playwright against the local stack |
+| Native clients | `clients/shared/src/commonTest` | Do the use cases, the HTTP mapping and the sign-in behave? | `kotlin.test`, Ktor `MockEngine`; run on the JVM, against the Android variant on the host, and on the iOS simulator on macOS |
+| Native clients architecture | `ArchitectureTest` in `clients/shared/src/jvmTest` | Do the hexagon's boundaries hold, and does the public API stay within Swift export's limits? | Konsist |
 | API collection | `bruno` | Does every operation answer without an auth or server failure? | `bru run` against the local stack |
 | Build conventions | `build-logic/src/functionalTest` | Do the plugins configure what they claim, and do the gates fail when they should? | Gradle TestKit |
 
@@ -28,4 +30,5 @@ Each kind of test answers one question, as cheaply as possible.
 | --- | --- | --- |
 | JaCoCo, over unit and integration tests | 80% of instructions, branches and lines | `check` |
 | PIT, on `domain` and `application` | 80% mutation score | nightly |
-| Generated code | excluded from both, it lives in `:contracts:api` | |
+| Kover, on the native clients' JVM target | 80% of lines and branches | `check` |
+| Generated code | excluded from all of them: `:contracts:api` for the server, the `generated` package of `:clients:shared`, and `@Serializable` transport classes | |

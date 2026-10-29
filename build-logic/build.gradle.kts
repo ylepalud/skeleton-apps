@@ -13,6 +13,10 @@ dependencies {
     implementation(libs.gradle.node)
     implementation(libs.gradle.jib)
     implementation(libs.gradle.openapi.generator)
+    implementation(libs.gradle.kotlin)
+    implementation(libs.gradle.kotlin.serialization)
+    implementation(libs.gradle.android)
+    implementation(libs.gradle.kover)
 }
 
 // Functional tests run every convention plugin against throwaway projects,

@@ -10,7 +10,7 @@ It ships one small but complete feature, personal **notes**, so that every conve
 
 ## Quick start
 
-You need Docker with Compose v2. Gradle downloads its own JDK (Temurin 25) and the Node version the web app needs; a local Node is only required for the web app's development server.
+You need Docker with Compose v2 and the Android SDK (`ANDROID_HOME` set; the command-line tools are enough). Gradle downloads its own JDK (Temurin 25) and the Node version the web app needs; a local Node is only required for the web app's development server. Building and testing for iOS needs macOS with Xcode.
 
 ```bash
 ./gradlew check            # build and verify everything
@@ -38,6 +38,7 @@ The installer renames the project, the package and the images, and writes `my-id
 | `services/api` | Spring Boot API, one Spring Modulith application with the `notes` module |
 | `services/api-app` | Angular web app, served by nginx in its image |
 | `contracts/api` | OpenAPI contract, and the server interfaces generated from it |
+| `clients/shared` | Kotlin Multiplatform library of the native clients: generated API client, sign-in, use cases |
 | `bruno` | API collection generated from the contract |
 | `build-logic` | Gradle convention plugins shared by every project |
 | `compose.yaml` | Local stack: Postgres, a mock identity provider, the API and the web app |

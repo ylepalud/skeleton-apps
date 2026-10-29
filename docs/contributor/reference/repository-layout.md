@@ -29,6 +29,11 @@ skeleton-apps/
 │       ├── main/resources/      application.yml, Liquibase changelogs
 │       ├── test/                unit tests, architecture tests, port contract tests
 │       └── integrationTest/     Testcontainers tests, end to end
+├── clients/shared/              Kotlin Multiplatform library of the native clients (:clients:shared)
+│   └── src/
+│       ├── commonMain/kotlin/dev/ylp/client/   SharedClient, notes/ and auth/, each domain, application, adapter
+│       ├── commonTest/          tests run on the JVM and the iOS simulator
+│       └── jvmTest/             ArchitectureTest (Konsist)
 ├── services/api-app/            Angular web app (:services:api-app)
 │   ├── src/app/                 one folder per feature (notes, auth)
 │   ├── e2e/                     Playwright tests
@@ -54,4 +59,4 @@ skeleton-apps/
 Template only, left out of generated projects: `scripts/installer/` (the project installer), the root `package.json` and `package-lock.json` (its dependencies), `.github/workflows/installer.yml` and `docs/template/`, which the installer replaces with a page naming the template version.
 
 <!-- template-only:end -->
-Generated and ignored: `services/api-app/src/app/api/generated` (web client), `contracts/api/build/generated` (server code), every `build/` and `node_modules/`.
+Generated and ignored: `services/api-app/src/app/api/generated` (web client), `contracts/api/build/generated` (server code), `clients/shared/build/generated` (native client code), every `build/` and `node_modules/`.

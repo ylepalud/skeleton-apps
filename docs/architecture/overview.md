@@ -5,10 +5,11 @@
 ```mermaid
 flowchart LR
   browser[Browser] -->|/ and /api/v1| web[web: nginx<br/>Angular bundle]
-  cli[CLI, later] -->|/api/v1| web
+  native[Android, iOS, CLI<br/>clients/shared] -->|/api/v1| web
   web -->|/api/| api[api: Spring Boot]
   api --> db[(PostgreSQL<br/>one schema per module)]
   browser -.->|sign-in, PKCE| idp[OpenID Connect provider]
+  native -.->|sign-in, PKCE| idp
   api -.->|signing keys| idp
   probes[Kubelet, Prometheus] -->|8081| api
 ```
@@ -59,3 +60,7 @@ The same annotations draw the [domain model](domain-model.md) page: `ModularityT
 ## The web app
 
 Angular, zoneless, organised by feature (`src/app/notes`, `src/app/auth`). A feature has a store built on signals, a thin client over the generated API client (the seam tests replace), and its components. Configuration that varies by environment is read at runtime from `/config.json`.
+
+## The native clients
+
+The Android, iOS and command-line clients share a Kotlin Multiplatform library, `clients/shared`, organised as a hexagon like an API module: the API client generated from the contract, the OpenID Connect sign-in and the use cases live there, and each app implements its UI and a few platform adapters. See [Native clients](clients.md).
