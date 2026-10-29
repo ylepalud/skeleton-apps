@@ -10,6 +10,7 @@ Gradle monorepo: a Spring Boot API organised as a Spring Modulith (`services/api
 - **Module boundaries and hexagonal layers are enforced** by `ModularityTest` and `HexagonalArchitectureTest`: fix the design, not the test.
 - **Ownership**: an owner reaches a use case only through `CurrentOwner`; someone else's resource answers 404.
 - **Secrets** live in environment variables, never in files.
+- **Documentation with every change**, in the same pull request: the site in `docs/` and its nav, an ADR for a structuring choice, the README, and how to start locally anything new that runs.
 - **Conventional Commits**, pull requests to `develop`.
 
 ## Before you…
@@ -29,4 +30,5 @@ Gradle monorepo: a Spring Boot API organised as a Spring Modulith (`services/api
 | change CI, images or releases | [docs/operations/ci-cd.md](docs/operations/ci-cd.md) |
 | update a dependency | [docs/operations/update-dependencies.md](docs/operations/update-dependencies.md) |
 | debug a red CI | [docs/operations/read-a-failing-ci.md](docs/operations/read-a-failing-ci.md) |
+| work on a sub-issue of an epic | [docs/contributor/how-to/track-an-epic.md](docs/contributor/how-to/track-an-epic.md) |
 | debug the local build or stack | [docs/operations/troubleshoot.md](docs/operations/troubleshoot.md) |
