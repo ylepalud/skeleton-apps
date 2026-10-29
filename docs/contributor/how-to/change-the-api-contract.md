@@ -11,8 +11,9 @@ The contract changes first; everything else follows. Background: [Contract first
 
 3. **Implement the server side.** `./gradlew :services:api:compileJava` regenerates the interfaces and shows what the controller must now implement. Map DTOs to commands and domain types in the module's REST mapper; never let a `*Dto` reach `application` or `domain`.
 4. **Update the web app.** The client is regenerated on every build (`npm run generate:api` in `services/api-app` when using the development server); TypeScript then shows what to adapt.
-5. **Test it.** Controller test for statuses and validation, use case and domain tests for the behaviour, and the end-to-end test when ownership or a new route is involved: every new route must prove that someone else's resource answers 404.
-6. **Verify:**
+5. **Update the native clients.** The Kotlin client in `:clients:shared` is regenerated on every build; `./gradlew :clients:shared:compileKotlinJvm` shows where `HttpNoteGateway` and the domain no longer match. Mirror a new limit in the module's draft (`NoteDraft`), and keep the public API within [Swift export's limits](../../architecture/clients.md#within-swift-exports-limits).
+6. **Test it.** Controller test for statuses and validation, use case and domain tests for the behaviour, and the end-to-end test when ownership or a new route is involved: every new route must prove that someone else's resource answers 404.
+7. **Verify:**
 
    ```bash
    ./gradlew check

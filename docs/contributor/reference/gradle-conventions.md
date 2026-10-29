@@ -8,6 +8,7 @@ The build is a Kotlin DSL monorepo. Every project applies one or more convention
 | --- | --- |
 | Libraries and Gradle plugins | `gradle/libs.versions.toml` |
 | Build tools (JaCoCo, google-java-format, PIT, Node, Jib base image) | `gradle.properties`, each with a `# renovate:` comment |
+| Android SDK levels (`androidCompileSdk`, `androidMinSdk`) | `gradle.properties` |
 | Libraries managed by the Spring Boot BOM | declared without a version |
 | JDK of the Gradle daemon | `gradle/gradle-daemon-jvm.properties` (Temurin 25) |
 
@@ -23,10 +24,14 @@ The build is a Kotlin DSL monorepo. Every project applies one or more convention
 | `container-image` | the API | Jib image on the distroless Java 25 `nonroot` base pinned by digest, production classpath only, named `<root project>/<project>`; CI sets the repository, the tag and the source label |
 | `openapi-server` | `contracts/api` | Generates Spring MVC interfaces and `*Dto` models from the contract (JSpecify annotations, bean validation) into a library the API depends on |
 | `frontend-convention` | the web app | Pinned Node downloaded by the build, `npm ci`, API client generation from the contract, `lint` and `test` in `check`, `build` in `assemble`, Playwright behind `-PrunE2e=true` |
+| `kotlin-multiplatform-convention` | `clients/shared` | Kotlin Multiplatform with the `android`, `iosArm64`, `iosSimulatorArm64` and `jvm` targets, the common tests run on each (the JVM target ships nowhere: it carries the architecture tests and the coverage), warnings as errors, kotlinx.serialization, ktlint, Kover at 80% of lines and branches in `check` |
+| `openapi-kotlin-client` | `clients/shared` | Generates an internal Ktor client and models from the contract into `commonMain` (`openApiClient { contract; packageName }`), with one HTTP engine per platform; the generated package is out of coverage |
 | `bruno-collection` | `bruno` | Regenerates the requests from the contract (`updateCollection`) and fails `check` when they drift (`verifyCollection`) |
 
 ## Rules worth knowing
 
 - **Configuration cache is on.** A task action must not capture the build script: copy what it needs into local values first. TestKit tests run with the configuration cache, so they catch this.
 - **Docker is resolved from the caller's `PATH`** (`dev.ylp.buildlogic.dockerExecutable`): a long-lived Gradle daemon may have a minimal `PATH`.
+- **The Android SDK is a prerequisite** of every build: the Android Gradle Plugin configures `clients/shared` even when only the API is built. Set `ANDROID_HOME`.
+- **iOS needs macOS with Xcode.** Elsewhere, Kotlin skips the iOS targets.
 - **A change to a convention plugin comes with a TestKit test.**
