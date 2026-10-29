@@ -22,7 +22,8 @@ Gradle monorepo: a Spring Boot API organised as a Spring Modulith (`services/api
 | add a module | [docs/contributor/how-to/add-a-module.md](docs/contributor/how-to/add-a-module.md) |
 | touch domain, use cases or adapters | [docs/architecture/overview.md](docs/architecture/overview.md) |
 | write or fix tests | [docs/architecture/testing-strategy.md](docs/architecture/testing-strategy.md) |
-| touch the native clients (`clients/shared`) | [docs/architecture/clients.md](docs/architecture/clients.md) |
+| touch the native clients (`clients/`) | [docs/architecture/clients.md](docs/architecture/clients.md) |
+| run the Android app | [docs/contributor/how-to/run-the-android-app.md](docs/contributor/how-to/run-the-android-app.md) |
 | touch security, tokens or limits | [docs/architecture/security.md](docs/architecture/security.md) |
 | change a convention plugin or the build | [docs/contributor/reference/gradle-conventions.md](docs/contributor/reference/gradle-conventions.md) |
 | change CI, images or releases | [docs/operations/ci-cd.md](docs/operations/ci-cd.md) |

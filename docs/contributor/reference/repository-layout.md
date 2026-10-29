@@ -34,6 +34,8 @@ skeleton-apps/
 │       ├── commonMain/kotlin/dev/ylp/client/   SharedClient, notes/ and auth/, each domain, application, adapter
 │       ├── commonTest/          tests run on the JVM and the iOS simulator
 │       └── jvmTest/             ArchitectureTest (Konsist)
+├── clients/android/             Android app (:clients:android): Compose screens, Custom Tabs and Keystore adapters
+│   └── src/test/                Robolectric tests of the screens against a mock backend
 ├── services/api-app/            Angular web app (:services:api-app)
 │   ├── src/app/                 one folder per feature (notes, auth)
 │   ├── e2e/                     Playwright tests

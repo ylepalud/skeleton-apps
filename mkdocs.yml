@@ -53,6 +53,7 @@ nav:
           - contributor/tutorials/first-feature.md
       - How-to guides:
           - contributor/how-to/run-locally.md
+          - contributor/how-to/run-the-android-app.md
           - contributor/how-to/change-the-api-contract.md
           - contributor/how-to/add-a-module.md
           - contributor/how-to/switch-identity-provider.md

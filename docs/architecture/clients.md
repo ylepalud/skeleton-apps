@@ -28,15 +28,17 @@ clients/shared/src/commonMain/kotlin/dev/ylp/client/
 
 | Port | Role | Android | iOS | CLI |
 | --- | --- | --- | --- | --- |
-| `AuthorizationBrowser` | Opens the provider's sign-in page and returns the redirect URL, or null when the user cancels | Custom Tabs | `ASWebAuthenticationSession` | the device flow, no browser |
-| `TokenStore` | Keeps the tokens between launches | Keystore-backed storage | Keychain | Keychain, libsecret, or an owner-only file |
+| `AuthorizationBrowser` | Opens the provider's sign-in page and returns the redirect URL, or null when the user cancels | `CustomTabsBrowser`: a Custom Tab, the redirect back through `dev.ylp.notes://callback` | `ASWebAuthenticationSession` | the device flow, no browser |
+| `TokenStore` | Keeps the tokens between launches | `KeystoreTokenStore`: AES-GCM with a key of the AndroidKeyStore, excluded from backups | Keychain | Keychain, libsecret, or an owner-only file |
+
+The Android app (`clients/android`) implements its column: see [Run the Android app](../contributor/how-to/run-the-android-app.md).
 
 `InMemoryTokenStore` is the default: tokens live as long as the process. An app then builds the client once:
 
 ```kotlin
 val client = SharedClient(
     apiBaseUrl = "https://example.org/api/v1",
-    auth = AuthConfig(issuer = "https://idp.example.org", clientId = "mobile", redirectUri = "dev.ylp.app:/callback"),
+    auth = AuthConfig(issuer = "https://idp.example.org", clientId = "mobile", redirectUri = "dev.ylp.notes://callback"),
     browser = platformBrowser,
     tokenStore = platformTokenStore,
 )

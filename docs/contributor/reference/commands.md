@@ -9,6 +9,7 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 | `./gradlew check` | Everything a pull request needs: compilation with ErrorProne and NullAway, Spotless, unit and integration tests, coverage gate, architecture tests, the web app's lint and tests, the Bruno drift check, and the TestKit tests of the conventions |
 | `./gradlew :services:api:check` | The same for the API only |
 | `./gradlew :clients:shared:check` | The native clients' library: JVM and Android host tests, iOS simulator tests on macOS with Xcode, Konsist, Kover, ktlint |
+| `./gradlew :clients:android:check` | The Android app: lint, Robolectric tests, coverage, ktlint |
 | `./gradlew :build-logic:functionalTest` | The TestKit tests of the convention plugins only |
 | `./gradlew pitest` | Mutation testing (80% threshold), outside `check` |
 | `./gradlew spotlessApply` | Formats Java and Kotlin sources; `:build-logic:spotlessApply` formats the Kotlin build code |
@@ -21,6 +22,7 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 | `./gradlew stopLocalStack` | Stops the stack, keeps the database |
 | `./gradlew resetDatabase` | Stops the stack and deletes the database |
 | `./gradlew :services:api:bootRun` | Runs the API from source on port 8080, with Postgres and the identity provider started by Docker Compose |
+| `./gradlew :clients:android:installDebug` | Installs the Android app on the running emulator; see [Run the Android app](../how-to/run-the-android-app.md) |
 | `cd services/api-app && npm start` | Runs the web app's development server on port 4200, proxying `/api` to `localhost:8080` |
 
 ## Contract and collection
