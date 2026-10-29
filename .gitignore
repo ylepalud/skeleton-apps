@@ -3,8 +3,9 @@
 build/
 .kotlin/
 
-# Documentation: generated API reference, Zensical cache
+# Documentation: generated API reference and domain model, Zensical cache
 docs/product/api-reference.html
+docs/architecture/domain-model.md
 .cache/
 
 # Frontend

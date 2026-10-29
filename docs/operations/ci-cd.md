@@ -57,7 +57,7 @@ Public template repository. Secret scanning with push protection, Dependabot ale
 
 ## Documentation site
 
-`docs/` is published as a site built by Zensical (`mkdocs.yml`), with an API reference rendered from the contract by Redocly. Pull requests only build it, in the `docs` job of `ci.yml`; `docs.yml` publishes it from `main`, so the site describes the latest release. Locally: `./gradlew docsServe`, then <http://localhost:8000>.
+`docs/` is published as a site built by Zensical (`mkdocs.yml`), with an API reference rendered from the contract by Redocly and a domain model page generated from the code by `ModularityTest`. Pull requests only build it, in the `docs` job of `ci.yml`; `docs.yml` publishes it from `main`, so the site describes the latest release. Locally: `./gradlew docsServe`, then <http://localhost:8000>.
 
 Publishing is opt-in, because GitHub Pages must be enabled per repository and a private repository on a free plan has none. To turn it on:
 
