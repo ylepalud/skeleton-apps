@@ -2,6 +2,14 @@ pluginManagement {
     includeBuild("build-logic")
     repositories {
         gradlePluginPortal()
+        // The Android Gradle Plugin, a dependency of the convention plugins.
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
     }
 }
 
@@ -20,6 +28,14 @@ dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.PREFER_SETTINGS
     repositories {
         mavenCentral()
+        // Android libraries and the build tools the Android Gradle Plugin downloads.
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         exclusiveContent {
             forRepository {
                 ivy("https://nodejs.org/dist") {
@@ -39,3 +55,4 @@ include("services:api")
 include("contracts:api")
 include("services:api-app")
 include("bruno")
+include("clients:shared")
