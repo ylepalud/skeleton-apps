@@ -27,6 +27,7 @@ The build is a Kotlin DSL monorepo. Every project applies one or more convention
 | `kotlin-multiplatform-convention` | `apps/clients/shared` | Kotlin Multiplatform with the `android`, `iosArm64`, `iosSimulatorArm64` and `jvm` targets, the common tests run on each (the JVM target ships nowhere: it carries the architecture tests and the coverage), warnings as errors, kotlinx.serialization, ktlint, Kover at 80% of lines and branches in `check` |
 | `openapi-kotlin-client` | `apps/clients/shared` | Generates an internal Ktor client and models from the contract into `commonMain` (`openApiClient { contract; packageName }`), with one HTTP engine per platform; the generated package is out of coverage |
 | `android-app-convention` | `apps/clients/android` | Android application with Compose (AGP 9, built-in Kotlin), SDK levels from `gradle.properties`, lint warnings as errors in `check`, JVM tests on the JUnit platform (Jupiter, and Vintage for the JUnit 4 API Robolectric needs) on the debug variant only, Kover at 80% |
+| `xcode-app` | the root build, for `apps/clients/ios` | Drives an Xcode app that is not a Gradle project (`xcodeApp { projectDir; scheme; bundleId }`): XcodeGen generates the project from `project.yml`, `iosLint` runs swift-format, `iosTest` runs xcodebuild on a simulator (`-PiosSimulator`, default `iPhone 17`), `iosVerifyCoverage` requires 80% of the app's lines, `iosRun` launches it; lint and coverage in `check`, every task skipped without Xcode |
 | `bruno-collection` | `apps/bruno` | Regenerates the requests from the contract (`updateCollection`) and fails `check` when they drift (`verifyCollection`) |
 
 ## Rules worth knowing
@@ -34,5 +35,5 @@ The build is a Kotlin DSL monorepo. Every project applies one or more convention
 - **Configuration cache is on.** A task action must not capture the build script: copy what it needs into local values first. TestKit tests run with the configuration cache, so they catch this.
 - **Docker is resolved from the caller's `PATH`** (`dev.ylp.buildlogic.dockerExecutable`): a long-lived Gradle daemon may have a minimal `PATH`.
 - **The Android SDK is a prerequisite** of every build: the Android Gradle Plugin configures `apps/clients/shared` even when only the API is built. Set `ANDROID_HOME`.
-- **iOS needs macOS with Xcode.** Elsewhere, Kotlin skips the iOS targets.
+- **iOS needs macOS with Xcode.** Elsewhere, Kotlin skips the iOS targets and the `ios*` tasks are skipped. The iOS app also needs XcodeGen (`brew install xcodegen`).
 - **A change to a convention plugin comes with a TestKit test.**

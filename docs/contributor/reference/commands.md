@@ -6,10 +6,11 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 
 | Command | What it does |
 | --- | --- |
-| `./gradlew check` | Everything a pull request needs: compilation with ErrorProne and NullAway, Spotless, unit and integration tests, coverage gate, architecture tests, the web app's lint and tests, the Bruno drift check, and the TestKit tests of the conventions |
+| `./gradlew check` | Everything a pull request needs: compilation with ErrorProne and NullAway, Spotless, unit and integration tests, coverage gate, architecture tests, the web app's lint and tests, the Bruno drift check, the TestKit tests of the conventions, and the iOS app's lint, tests and coverage on a Mac with Xcode |
 | `./gradlew :apps:services:api:check` | The same for the API only |
 | `./gradlew :apps:clients:shared:check` | The native clients' library: JVM and Android host tests, iOS simulator tests on macOS with Xcode, Konsist, Kover, ktlint |
 | `./gradlew :apps:clients:android:check` | The Android app: lint, Robolectric tests, coverage, ktlint |
+| `./gradlew iosLint iosTest iosVerifyCoverage` | The iOS app, on macOS with Xcode: swift-format, unit and UI tests on the simulator, coverage; skipped elsewhere |
 | `./gradlew :build-logic:functionalTest` | The TestKit tests of the convention plugins only |
 | `./gradlew pitest` | Mutation testing (80% threshold), outside `check` |
 | `./gradlew spotlessApply` | Formats Java and Kotlin sources; `:build-logic:spotlessApply` formats the Kotlin build code |
@@ -23,6 +24,8 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 | `./gradlew resetDatabase` | Stops the stack and deletes the database |
 | `./gradlew :apps:services:api:bootRun` | Runs the API from source on port 8080, with Postgres and the identity provider started by Docker Compose |
 | `./gradlew :apps:clients:android:installDebug` | Installs the Android app on the running emulator; see [Run the Android app](../how-to/run-the-android-app.md) |
+| `./gradlew iosRun` | Builds the iOS app and launches it on the simulator; see [Run the iOS app](../how-to/run-the-ios-app.md) |
+| `./gradlew iosGenerateProject` | Generates `apps/clients/ios/Notes.xcodeproj` from `project.yml`, to open in Xcode |
 | `cd apps/services/api-app && npm start` | Runs the web app's development server on port 4200, proxying `/api` to `localhost:8080` |
 
 ## Contract and collection

@@ -10,6 +10,7 @@ Everything needed to change the code, sorted by what you are trying to do.
 
 - [Run locally](how-to/run-locally.md)
 - [Run the Android app](how-to/run-the-android-app.md)
+- [Run the iOS app](how-to/run-the-ios-app.md)
 - [Change the API contract](how-to/change-the-api-contract.md)
 - [Add a module](how-to/add-a-module.md)
 - [Switch the identity provider](how-to/switch-identity-provider.md)

@@ -6,6 +6,22 @@ import java.time.Duration
 
 plugins {
     base
+    id("xcode-app")
+}
+
+// The iOS app is not a Gradle project: the root build drives Xcode for it.
+xcodeApp {
+    projectDir = layout.projectDirectory.dir("apps/clients/ios")
+    scheme = "Notes"
+    bundleId = "dev.ylp.notes"
+    // The same settings as the Android app; unset, the app targets the local stack.
+    buildSettings.putAll(
+        mapOf(
+            "NOTES_API_BASE_URL" to "mobileApiBaseUrl",
+            "NOTES_OIDC_ISSUER" to "mobileOidcIssuer",
+            "NOTES_OIDC_CLIENT_ID" to "mobileOidcClientId",
+        ).mapNotNull { (setting, property) -> providers.gradleProperty(property).orNull?.let { setting to it } }.toMap(),
+    )
 }
 
 // The convention plugins are a product of this repository: their functional

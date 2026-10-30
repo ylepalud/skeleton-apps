@@ -1,6 +1,6 @@
 # Run locally
 
-Three ways to run the API and the web app, from the most faithful to the fastest to iterate with, then the Android app on top of the full stack. All of them use Docker for PostgreSQL and the mock identity provider; see [Local stack](../reference/local-stack.md) for ports and accounts.
+Three ways to run the API and the web app, from the most faithful to the fastest to iterate with, then the Android and iOS apps on top of the full stack. All of them use Docker for PostgreSQL and the mock identity provider; see [Local stack](../reference/local-stack.md) for ports and accounts.
 
 ## The full stack, as in production
 
@@ -61,3 +61,13 @@ adb reverse tcp:8090 tcp:8090
 ```
 
 The emulator, the reason for `adb reverse` and how to target another environment: [Run the Android app](run-the-android-app.md).
+
+## The iOS app on the simulator
+
+On a Mac with Xcode and XcodeGen, with the full stack running:
+
+```bash
+./gradlew iosRun
+```
+
+The simulator shares the machine's network: no port mapping is needed. Opening the project in Xcode and targeting another environment: [Run the iOS app](run-the-ios-app.md).

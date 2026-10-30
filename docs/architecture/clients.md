@@ -7,6 +7,7 @@ The Android app, the iOS app and the command-line client share one Kotlin Multip
 ```text
 apps/clients/shared/src/commonMain/kotlin/dev/ylp/client/
 ├── SharedClient.kt              composition root: builds everything, exposes the use cases
+├── PlatformAdapter.kt           base class of a port implemented in Swift
 ├── notes/
 │   ├── domain/                  Note, NotePage, NoteDraft (the contract's limits), results, NoteGateway (port)
 │   ├── application/             ListNotes, GetNote, CreateNote, UpdateNote, DeleteNote
@@ -28,10 +29,10 @@ apps/clients/shared/src/commonMain/kotlin/dev/ylp/client/
 
 | Port | Role | Android | iOS | CLI |
 | --- | --- | --- | --- | --- |
-| `AuthorizationBrowser` | Opens the provider's sign-in page and returns the redirect URL, or null when the user cancels | `CustomTabsBrowser`: a Custom Tab, the redirect back through `dev.ylp.notes://callback` | `ASWebAuthenticationSession` | the device flow, no browser |
-| `TokenStore` | Keeps the tokens between launches | `KeystoreTokenStore`: AES-GCM with a key of the AndroidKeyStore, excluded from backups | Keychain | Keychain, libsecret, or an owner-only file |
+| `AuthorizationBrowser` | Opens the provider's sign-in page and returns the redirect URL, or null when the user cancels | `CustomTabsBrowser`: a Custom Tab, the redirect back through `dev.ylp.notes://callback` | `WebAuthenticationBrowser`: `ASWebAuthenticationSession`, the same redirect | the device flow, no browser |
+| `TokenStore` | Keeps the tokens between launches | `KeystoreTokenStore`: AES-GCM with a key of the AndroidKeyStore, excluded from backups | `KeychainTokenStore`: one Keychain item, this device only, available after the first unlock | Keychain, libsecret, or an owner-only file |
 
-The Android app (`apps/clients/android`) implements its column: see [Run the Android app](../contributor/how-to/run-the-android-app.md).
+The Android app (`apps/clients/android`) and the iOS app (`apps/clients/ios`) implement their columns: see [Run the Android app](../contributor/how-to/run-the-android-app.md) and [Run the iOS app](../contributor/how-to/run-the-ios-app.md).
 
 `InMemoryTokenStore` is the default: tokens live as long as the process. An app then builds the client once:
 
@@ -89,7 +90,24 @@ The iOS app reaches the library through Kotlin's Swift export, still in Alpha. I
 - returns one sealed result type per operation (`NoteResult`, `NotePageResult`, `DeleteNoteResult`) rather than a generic `Result<T>`;
 - exposes `data` classes and sealed hierarchies only.
 
-`ArchitectureTest` fails when a public class, interface or function declares a type parameter. If Swift export blocks on a construct, the fallback is the Objective-C export with SKIE.
+`ArchitectureTest` fails when a public class, interface or function declares a type parameter. Swift export also leaves out default arguments (Swift passes every parameter, `Int` as `Int32`), and flattens only the root package `dev.ylp.client`: the iOS app names the other types once, in `SharedNames.swift`. If Swift export blocks on a construct, the fallback is the Objective-C export with SKIE ([ADR 0027](decisions/0027-ios-app-swift-export-and-xcodegen.md)).
+
+The module reaches Xcode through `embedSwiftExportForXcode`, which an Xcode build phase calls: Xcode builds the Kotlin code with the app, for the simulator or a device as it needs.
+
+From Swift, a port is a protocol; its implementation inherits from `PlatformAdapter`, because Swift export lets a Swift class implement a Kotlin interface only through an exported Kotlin superclass:
+
+```swift
+final class KeychainTokenStore: PlatformAdapter, TokenStore {
+    func load() async throws -> Tokens? { ... }
+    func save(tokens: Tokens) async throws { ... }
+    func clear() async throws { ... }
+}
+
+switch try await client.listNotes.execute(page: 0, size: 20).sealedType() {
+case .success(let success): show(success.value.page.notes)
+case .failed(let failed): show(failed.value.failure)
+}
+```
 
 ## The generated client
 
@@ -105,7 +123,7 @@ A contract change regenerates the client, and the HTTP adapter stops compiling w
 | Target | Used by | Tests |
 | --- | --- | --- |
 | `android` | the Android app | `commonTest` on the host JVM |
-| `iosArm64`, `iosSimulatorArm64` | the iOS app | `commonTest` on the simulator, macOS with Xcode only |
+| `iosArm64`, `iosSimulatorArm64` | the iOS app, through Swift export | `commonTest` on the simulator, macOS with Xcode only |
 | `jvm` | nothing shipped | `commonTest`, `ArchitectureTest`, Kover |
 
 Tests use Ktor's `MockEngine` for the API and the provider. See the [testing strategy](testing-strategy.md).

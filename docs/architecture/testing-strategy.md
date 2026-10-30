@@ -15,6 +15,7 @@ Each kind of test answers one question, as cheaply as possible.
 | Native clients | `apps/clients/shared/src/commonTest` | Do the use cases, the HTTP mapping and the sign-in behave? | `kotlin.test`, Ktor `MockEngine`; run on the JVM, against the Android variant on the host, and on the iOS simulator on macOS |
 | Native clients architecture | `ArchitectureTest` in `apps/clients/shared/src/jvmTest` | Do the hexagon's boundaries hold, and does the public API stay within Swift export's limits? | Konsist |
 | Android app | `apps/clients/android/src/test` | Do the screens drive the notes flow, sign-in and errors included? Do the adapters keep the session? | Robolectric, Compose UI tests, a real `SharedClient` against MockWebServer |
+| iOS app | `apps/clients/ios/NotesUITests`, `NotesTests` | The same flows as the Android app, on the simulator; the Keychain store and the sign-in browser | XCUITest and XCTest, a real `SharedClient` against a stub server in the test runner |
 | API collection | `apps/bruno` | Does every operation answer without an auth or server failure? | `bru run` against the local stack |
 | Build conventions | `build-logic/src/functionalTest` | Do the plugins configure what they claim, and do the gates fail when they should? | Gradle TestKit |
 
@@ -32,4 +33,5 @@ Each kind of test answers one question, as cheaply as possible.
 | JaCoCo, over unit and integration tests | 80% of instructions, branches and lines | `check` |
 | PIT, on `domain` and `application` | 80% mutation score | nightly |
 | Kover, on the native clients' JVM target and the Android app | 80% of lines and branches | `check` |
+| xccov, on the iOS app | 80% of lines | `check`, on a Mac with Xcode |
 | Generated code | excluded from all of them: `:apps:contracts:api` for the server, the `generated` package of `:apps:clients:shared`, and `@Serializable` transport classes | |
