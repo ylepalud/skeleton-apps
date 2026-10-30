@@ -110,7 +110,7 @@ export function transformText(path, text, answers) {
       answers.packageName.replaceAll('.', '/'),
     );
   // `api-app` also names the web module: only the client id settings change.
-  if (path === 'services/api-app/public/config.json') {
+  if (path === 'apps/services/api-app/public/config.json') {
     result = result.replace(`"clientId": "${TEMPLATE.clientId}"`, `"clientId": "${answers.clientId}"`);
   }
   if (path === 'compose.yaml') {

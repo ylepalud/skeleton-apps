@@ -1,6 +1,6 @@
 # API errors
 
-Every error is an RFC 9457 problem (`application/problem+json`), declared once in `contracts/api/common.yaml` as `Problem`.
+Every error is an RFC 9457 problem (`application/problem+json`), declared once in `apps/contracts/api/common.yaml` as `Problem`.
 
 | Field | Content |
 | --- | --- |

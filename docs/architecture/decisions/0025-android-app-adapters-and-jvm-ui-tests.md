@@ -5,7 +5,7 @@
 
 ## Context
 
-The Android app implements the UI and the two ports of `clients/shared` (issue #67): a browser for the sign-in and a token store. Its tests must run in `check`, on CI's Linux runners, without an emulator. The repository's tests run on the JUnit platform (JUnit 6), but Robolectric and the Compose test rule only offer a JUnit 4 API.
+The Android app implements the UI and the two ports of `apps/clients/shared` (issue #67): a browser for the sign-in and a token store. Its tests must run in `check`, on CI's Linux runners, without an emulator. The repository's tests run on the JUnit platform (JUnit 6), but Robolectric and the Compose test rule only offer a JUnit 4 API.
 
 ## Options
 

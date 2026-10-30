@@ -18,7 +18,7 @@ interface FrontendExtension {
 }
 
 val frontend = extensions.create<FrontendExtension>("frontend")
-frontend.apiContract.convention(rootProject.layout.projectDirectory.file("contracts/api/openapi.yaml"))
+frontend.apiContract.convention(rootProject.layout.projectDirectory.file("apps/contracts/api/openapi.yaml"))
 
 node {
     version = providers.gradleProperty("nodeToolchainVersion")

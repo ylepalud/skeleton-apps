@@ -29,7 +29,7 @@ To change a version (Java, Spring, Angular, a tool), change it here first, relea
 
 - `ylepalud/skeleton-apps` becomes `<owner>/<name>` (badges, image names, signature identity), then `skeleton-apps` becomes `<name>` (root project, compose project, local images, release-please, docs).
 - The base package `dev.ylp` becomes yours, in sources and build scripts, and the source folders move with it.
-- The web app's OIDC client id changes in `services/api-app/public/config.json` and `compose.yaml`. The web module keeps its name, `api-app`.
+- The web app's OIDC client id changes in `apps/services/api-app/public/config.json` and `compose.yaml`. The web module keeps its name, `api-app`.
 - The release history restarts: no `CHANGELOG.md`, manifest at `0.0.0`.
 - Template-only material stays out: the installer, its workflow, references to this repository's issues, and this section of the docs, replaced by a page naming the template version the project came from.
 - The `notes` module stays as the living example. Delete it, with its contract file, changelog, Bruno folder and web feature, once your first module exists.

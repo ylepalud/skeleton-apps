@@ -24,7 +24,7 @@ To run the Android app against that stack, start an emulator, then:
 
 ```bash
 adb reverse tcp:8088 tcp:8088 && adb reverse tcp:8090 tcp:8090  # the emulator's localhost is your machine's
-./gradlew :clients:android:installDebug
+./gradlew :apps:clients:android:installDebug
 ```
 
 Open **Notes** on the emulator and sign in the same way. Creating the emulator once, and why `adb reverse`: [Run the Android app](docs/contributor/how-to/run-the-android-app.md).
@@ -44,12 +44,12 @@ The installer renames the project, the package and the images, and writes `my-id
 
 | Path | Content |
 | --- | --- |
-| `services/api` | Spring Boot API, one Spring Modulith application with the `notes` module |
-| `services/api-app` | Angular web app, served by nginx in its image |
-| `contracts/api` | OpenAPI contract, and the server interfaces generated from it |
-| `clients/android` | Android app on the shared library: Compose screens, Custom Tabs sign-in, Keystore session |
-| `clients/shared` | Kotlin Multiplatform library of the native clients: generated API client, sign-in, use cases |
-| `bruno` | API collection generated from the contract |
+| `apps/services/api` | Spring Boot API, one Spring Modulith application with the `notes` module |
+| `apps/services/api-app` | Angular web app, served by nginx in its image |
+| `apps/contracts/api` | OpenAPI contract, and the server interfaces generated from it |
+| `apps/clients/android` | Android app on the shared library: Compose screens, Custom Tabs sign-in, Keystore session |
+| `apps/clients/shared` | Kotlin Multiplatform library of the native clients: generated API client, sign-in, use cases |
+| `apps/bruno` | API collection generated from the contract |
 | `build-logic` | Gradle convention plugins shared by every project |
 | `compose.yaml` | Local stack: Postgres, a mock identity provider, the API and the web app |
 | `.github` | CI, image publication, nightly mutation testing, releases |
@@ -58,7 +58,7 @@ Details: [Repository layout](docs/contributor/reference/repository-layout.md).
 
 ## How it works
 
-**Contract first.** The OpenAPI contract in `contracts/api` is the source of truth. The API implements interfaces generated from it, so the build breaks when code and contract disagree; the web app's client and the Bruno collection are generated from the same contract. [Why](docs/architecture/contract-first.md).
+**Contract first.** The OpenAPI contract in `apps/contracts/api` is the source of truth. The API implements interfaces generated from it, so the build breaks when code and contract disagree; the web app's client and the Bruno collection are generated from the same contract. [Why](docs/architecture/contract-first.md).
 
 **Modules, hexagonal inside.** The API is a Spring Modulith: each business module is a top-level package with its own database schema. Inside a module, the domain and the use cases depend on no framework; adapters plug them into HTTP and PostgreSQL. Both rules are checked by tests. [Architecture](docs/architecture/overview.md).
 

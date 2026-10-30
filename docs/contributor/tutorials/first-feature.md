@@ -10,7 +10,7 @@ git switch -c feat/pin-notes
 
 ## 1. Change the contract
 
-The contract comes first. In `contracts/api/notes.yaml`, add `pinned` to `NoteRequest`, optional with a default so that existing clients keep working:
+The contract comes first. In `apps/contracts/api/notes.yaml`, add `pinned` to `NoteRequest`, optional with a default so that existing clients keep working:
 
 ```yaml
     NoteRequest:
@@ -42,15 +42,15 @@ Update the explicit request examples of `createNote` and `updateNote` (add `pinn
 ## 2. Regenerate the collection
 
 ```bash
-./gradlew :bruno:updateCollection
+./gradlew :apps:bruno:updateCollection
 ```
 
-The requests in `bruno/notes` now carry `pinned`. The list request's file is renamed after its new summary. Commit these files with the contract: `check` fails when the collection drifts from it.
+The requests in `apps/bruno/notes` now carry `pinned`. The list request's file is renamed after its new summary. Commit these files with the contract: `check` fails when the collection drifts from it.
 
 ## 3. Let the compiler guide you
 
 ```bash
-./gradlew :services:api:compileJava
+./gradlew :apps:services:api:compileJava
 ```
 
 It fails in `NoteRestMapper`: the generated `NoteDto` constructor now expects `pinned`. The contract drives the code; the next steps make the domain able to answer.
@@ -88,7 +88,7 @@ and pass `command.pinned()` to `Note.create` and `note.edit`. Update the Javadoc
 
 ## 5. Persistence
 
-Never change an applied changeset: add one. Create `services/api/src/main/resources/db/changelog/notes/002-add-pinned.yaml`:
+Never change an applied changeset: add one. Create `apps/services/api/src/main/resources/db/changelog/notes/002-add-pinned.yaml`:
 
 ```yaml
 databaseChangeLog:
@@ -137,12 +137,12 @@ Then the order, in `PostgresNoteRepository`:
   }
 ```
 
-Pass `isPinned(request)` to both commands. `./gradlew :services:api:compileJava` now passes.
+Pass `isPinned(request)` to both commands. `./gradlew :apps:services:api:compileJava` now passes.
 
 ## 7. Tests for the API
 
 ```bash
-./gradlew :services:api:compileTestJava :services:api:compileIntegrationTestJava
+./gradlew :apps:services:api:compileTestJava :apps:services:api:compileIntegrationTestJava
 ```
 
 The compiler lists every test that builds a note or a command; add the new argument there. `NoteTestDataBuilder` gets a `pinned()` method so tests can ask for a pinned note. Then add tests for the behaviour, not only for the compiler:
@@ -153,7 +153,7 @@ The compiler lists every test that builds a note or a command; add the new argum
 
 ```bash
 ./gradlew spotlessApply
-./gradlew :services:api:check
+./gradlew :apps:services:api:check
 ```
 
 ## 8. The web app
@@ -186,7 +186,7 @@ In `notes-page.html`, a checkbox in the form and a badge in the list:
 The in-memory `FakeNotesClient` (`notes-client.fake.ts`) used by the tests must behave like the API: store `pinned` (`request.pinned ?? false`) and list pinned notes first. Then a test in `notes-page.spec.ts`: edit the second note, tick "Pin to the top", save, and check it now comes first with its badge.
 
 ```bash
-./gradlew :services:api-app:check
+./gradlew :apps:services:api-app:check
 ```
 
 ## 9. See it work
@@ -199,8 +199,8 @@ The in-memory `FakeNotesClient` (`notes-client.fake.ts`) used by the tests must 
 Open <http://localhost:8088>, write two notes, pin the older one: it moves to the top. Then run the end-to-end tests and replay the collection:
 
 ```bash
-E2E_BASE_URL=http://localhost:8088 ./gradlew :services:api-app:npmRunE2e -PrunE2e=true
-cd bruno && npm ci && npm run smoke
+E2E_BASE_URL=http://localhost:8088 ./gradlew :apps:services:api-app:npmRunE2e -PrunE2e=true
+cd apps/bruno && npm ci && npm run smoke
 ```
 
 `./gradlew stopLocalStack` when you are done.

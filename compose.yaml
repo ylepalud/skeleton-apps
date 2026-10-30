@@ -1,6 +1,6 @@
 # Local stack, the same images as in the cluster.
 #   ./gradlew startLocalStack   builds the images, starts everything (profile "app")
-#   ./gradlew :services:api:bootRun   starts only postgres and the identity provider
+#   ./gradlew :apps:services:api:bootRun   starts only postgres and the identity provider
 # Web app and API: http://localhost:8088 · identity provider: http://localhost:8090
 name: skeleton-apps
 

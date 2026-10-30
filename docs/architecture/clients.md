@@ -1,11 +1,11 @@
 # Native clients
 
-The Android app, the iOS app and the command-line client share one Kotlin Multiplatform library, `clients/shared` (`:clients:shared`). It holds everything that talks to the API: the client generated from the contract, the OpenID Connect sign-in, and the use cases. The apps implement their UI and a few platform adapters, nothing else.
+The Android app, the iOS app and the command-line client share one Kotlin Multiplatform library, `apps/clients/shared` (`:apps:clients:shared`). It holds everything that talks to the API: the client generated from the contract, the OpenID Connect sign-in, and the use cases. The apps implement their UI and a few platform adapters, nothing else.
 
 ## A hexagon, like an API module
 
 ```text
-clients/shared/src/commonMain/kotlin/dev/ylp/client/
+apps/clients/shared/src/commonMain/kotlin/dev/ylp/client/
 ├── SharedClient.kt              composition root: builds everything, exposes the use cases
 ├── notes/
 │   ├── domain/                  Note, NotePage, NoteDraft (the contract's limits), results, NoteGateway (port)
@@ -31,7 +31,7 @@ clients/shared/src/commonMain/kotlin/dev/ylp/client/
 | `AuthorizationBrowser` | Opens the provider's sign-in page and returns the redirect URL, or null when the user cancels | `CustomTabsBrowser`: a Custom Tab, the redirect back through `dev.ylp.notes://callback` | `ASWebAuthenticationSession` | the device flow, no browser |
 | `TokenStore` | Keeps the tokens between launches | `KeystoreTokenStore`: AES-GCM with a key of the AndroidKeyStore, excluded from backups | Keychain | Keychain, libsecret, or an owner-only file |
 
-The Android app (`clients/android`) implements its column: see [Run the Android app](../contributor/how-to/run-the-android-app.md).
+The Android app (`apps/clients/android`) implements its column: see [Run the Android app](../contributor/how-to/run-the-android-app.md).
 
 `InMemoryTokenStore` is the default: tokens live as long as the process. An app then builds the client once:
 

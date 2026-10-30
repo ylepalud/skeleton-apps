@@ -15,37 +15,37 @@ class ServiceIsolationTest {
     @BeforeEach
     fun setUp() {
         fixture = Fixture(dir)
-        fixture.settings("services:a", "services:b", "libs:shared")
+        fixture.settings("apps:services:a", "apps:services:b", "libs:shared")
         val service = "plugins {\n    java\n    id(\"service-isolation\")\n}\n"
-        fixture.file("services/b/build.gradle.kts", service)
+        fixture.file("apps/services/b/build.gradle.kts", service)
         fixture.file("libs/shared/build.gradle.kts", "plugins {\n    java\n}\n")
     }
 
     @Test
     fun `a service depending on another service fails check`() {
         fixture.file(
-            "services/a/build.gradle.kts",
+            "apps/services/a/build.gradle.kts",
             "plugins {\n    java\n    id(\"service-isolation\")\n}\n\n" +
-                "dependencies {\n    implementation(project(\":services:b\"))\n}\n",
+                "dependencies {\n    implementation(project(\":apps:services:b\"))\n}\n",
         )
 
-        val result = fixture.fail(":services:a:verifyServiceIsolation")
+        val result = fixture.fail(":apps:services:a:verifyServiceIsolation")
 
         assertThat(result.output)
-            .contains(":services:a depends on another service")
-            .contains("implementation -> :services:b")
+            .contains(":apps:services:a depends on another service")
+            .contains("implementation -> :apps:services:b")
     }
 
     @Test
     fun `a service depending on a shared library passes`() {
         fixture.file(
-            "services/a/build.gradle.kts",
+            "apps/services/a/build.gradle.kts",
             "plugins {\n    java\n    id(\"service-isolation\")\n}\n\n" +
                 "dependencies {\n    implementation(project(\":libs:shared\"))\n}\n",
         )
 
-        val result = fixture.build(":services:a:verifyServiceIsolation")
+        val result = fixture.build(":apps:services:a:verifyServiceIsolation")
 
-        assertThat(result.task(":services:a:verifyServiceIsolation")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        assertThat(result.task(":apps:services:a:verifyServiceIsolation")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     }
 }

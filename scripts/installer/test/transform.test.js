@@ -28,7 +28,7 @@ describe('isExcluded', () => {
     expect(isExcluded(path)).toBe(true);
   });
 
-  it.each(['services/api-app/package.json', 'bruno/package-lock.json', '.github/workflows/ci.yml', 'docs/CHANGELOG.md'])(
+  it.each(['apps/services/api-app/package.json', 'apps/bruno/package-lock.json', '.github/workflows/ci.yml', 'docs/CHANGELOG.md'])(
     'keeps %s',
     (path) => {
       expect(isExcluded(path)).toBe(false);
@@ -48,8 +48,8 @@ describe('isBinary', () => {
 
 describe('transformPath', () => {
   it('moves the package folders', () => {
-    expect(transformPath('services/api/src/main/java/dev/ylp/notes/Note.java', answers)).toBe(
-      'services/api/src/main/java/dev/example/demo/notes/Note.java',
+    expect(transformPath('apps/services/api/src/main/java/dev/ylp/notes/Note.java', answers)).toBe(
+      'apps/services/api/src/main/java/dev/example/demo/notes/Note.java',
     );
     expect(transformPath('build-logic/src/main/kotlin/dev/ylp/buildlogic/Docker.kt', answers)).toBe(
       'build-logic/src/main/kotlin/dev/example/demo/buildlogic/Docker.kt',
@@ -57,7 +57,7 @@ describe('transformPath', () => {
   });
 
   it('leaves other paths alone', () => {
-    expect(transformPath('services/api-app/src/main.ts', answers)).toBe('services/api-app/src/main.ts');
+    expect(transformPath('apps/services/api-app/src/main.ts', answers)).toBe('apps/services/api-app/src/main.ts');
     expect(transformPath('docs/dev/ylpx/file.md', answers)).toBe('docs/dev/ylpx/file.md');
   });
 });
@@ -81,14 +81,14 @@ describe('transformText', () => {
   });
 
   it('changes the client id of the web app, not the web module', () => {
-    expect(transformText('services/api-app/public/config.json', '{ "clientId": "api-app" }', answers)).toBe(
+    expect(transformText('apps/services/api-app/public/config.json', '{ "clientId": "api-app" }', answers)).toBe(
       '{ "clientId": "demo-app-web" }',
     );
     expect(
       transformText('compose.yaml', 'image: skeleton-apps/api-app:local\n  OIDC_CLIENT_ID: api-app', answers),
     ).toBe('image: demo-app/api-app:local\n  OIDC_CLIENT_ID: demo-app-web');
-    expect(transformText('settings.gradle.kts', 'include(":services:api-app")', answers)).toBe(
-      'include(":services:api-app")',
+    expect(transformText('settings.gradle.kts', 'include(":apps:services:api-app")', answers)).toBe(
+      'include(":apps:services:api-app")',
     );
   });
 
@@ -126,20 +126,20 @@ describe('transformTree', () => {
       ['package.json', { content: encoder.encode('{}'), mode: 0o644 }],
       ['gradlew', { content: encoder.encode('#!/bin/sh\n# skeleton-apps'), mode: 0o755 }],
       ['gradle/wrapper/gradle-wrapper.jar', { content: jar, mode: 0o644 }],
-      ['services/api/src/main/java/dev/ylp/App.java', { content: encoder.encode('package dev.ylp;'), mode: 0o644 }],
+      ['apps/services/api/src/main/java/dev/ylp/App.java', { content: encoder.encode('package dev.ylp;'), mode: 0o644 }],
     ]);
 
     const result = transformTree(files, answers);
 
     expect([...result.keys()].sort()).toEqual([
+      'apps/services/api/src/main/java/dev/example/demo/App.java',
       'gradle/wrapper/gradle-wrapper.jar',
       'gradlew',
-      'services/api/src/main/java/dev/example/demo/App.java',
     ]);
     expect(decoder.decode(result.get('gradlew')?.content)).toBe('#!/bin/sh\n# demo-app');
     expect(result.get('gradlew')?.mode).toBe(0o755);
     expect(result.get('gradle/wrapper/gradle-wrapper.jar')?.content).toBe(jar);
-    expect(decoder.decode(result.get('services/api/src/main/java/dev/example/demo/App.java')?.content)).toBe(
+    expect(decoder.decode(result.get('apps/services/api/src/main/java/dev/example/demo/App.java')?.content)).toBe(
       'package dev.example.demo;',
     );
   });

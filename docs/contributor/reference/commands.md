@@ -7,9 +7,9 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 | Command | What it does |
 | --- | --- |
 | `./gradlew check` | Everything a pull request needs: compilation with ErrorProne and NullAway, Spotless, unit and integration tests, coverage gate, architecture tests, the web app's lint and tests, the Bruno drift check, and the TestKit tests of the conventions |
-| `./gradlew :services:api:check` | The same for the API only |
-| `./gradlew :clients:shared:check` | The native clients' library: JVM and Android host tests, iOS simulator tests on macOS with Xcode, Konsist, Kover, ktlint |
-| `./gradlew :clients:android:check` | The Android app: lint, Robolectric tests, coverage, ktlint |
+| `./gradlew :apps:services:api:check` | The same for the API only |
+| `./gradlew :apps:clients:shared:check` | The native clients' library: JVM and Android host tests, iOS simulator tests on macOS with Xcode, Konsist, Kover, ktlint |
+| `./gradlew :apps:clients:android:check` | The Android app: lint, Robolectric tests, coverage, ktlint |
 | `./gradlew :build-logic:functionalTest` | The TestKit tests of the convention plugins only |
 | `./gradlew pitest` | Mutation testing (80% threshold), outside `check` |
 | `./gradlew spotlessApply` | Formats Java and Kotlin sources; `:build-logic:spotlessApply` formats the Kotlin build code |
@@ -21,24 +21,24 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 | `./gradlew startLocalStack` | Builds both images and starts the whole stack, then waits for the API to be ready |
 | `./gradlew stopLocalStack` | Stops the stack, keeps the database |
 | `./gradlew resetDatabase` | Stops the stack and deletes the database |
-| `./gradlew :services:api:bootRun` | Runs the API from source on port 8080, with Postgres and the identity provider started by Docker Compose |
-| `./gradlew :clients:android:installDebug` | Installs the Android app on the running emulator; see [Run the Android app](../how-to/run-the-android-app.md) |
-| `cd services/api-app && npm start` | Runs the web app's development server on port 4200, proxying `/api` to `localhost:8080` |
+| `./gradlew :apps:services:api:bootRun` | Runs the API from source on port 8080, with Postgres and the identity provider started by Docker Compose |
+| `./gradlew :apps:clients:android:installDebug` | Installs the Android app on the running emulator; see [Run the Android app](../how-to/run-the-android-app.md) |
+| `cd apps/services/api-app && npm start` | Runs the web app's development server on port 4200, proxying `/api` to `localhost:8080` |
 
 ## Contract and collection
 
 | Command | What it does |
 | --- | --- |
-| `./gradlew :bruno:updateCollection` | Regenerates the Bruno requests from the contract; run it after any contract change |
-| `cd bruno && npm run smoke` | Replays every request of the collection against the local stack |
+| `./gradlew :apps:bruno:updateCollection` | Regenerates the Bruno requests from the contract; run it after any contract change |
+| `cd apps/bruno && npm run smoke` | Replays every request of the collection against the local stack |
 
 ## Images and end-to-end tests
 
 | Command | What it does |
 | --- | --- |
-| `./gradlew :services:api:jibDockerBuild` | Builds the API image `skeleton-apps/api:local` |
-| `./gradlew :services:api-app:dockerBuild` | Builds the web app image `skeleton-apps/api-app:local` |
-| `./gradlew :services:api-app:npmRunE2e -PrunE2e=true` | Runs the Playwright tests; set `E2E_BASE_URL=http://localhost:8088` to target the local stack |
+| `./gradlew :apps:services:api:jibDockerBuild` | Builds the API image `skeleton-apps/api:local` |
+| `./gradlew :apps:services:api-app:dockerBuild` | Builds the web app image `skeleton-apps/api-app:local` |
+| `./gradlew :apps:services:api-app:npmRunE2e -PrunE2e=true` | Runs the Playwright tests; set `E2E_BASE_URL=http://localhost:8088` to target the local stack |
 
 ## Documentation
 
@@ -49,7 +49,7 @@ The tools run in containers pinned in `gradle.properties`: Docker is the only pr
 | `./gradlew docsServe` | Serves the site on <http://localhost:8000>, rebuilt on every change |
 | `./gradlew docsBuild` | Builds the site into `build/docs/site`; a broken link or anchor fails it |
 | `./gradlew docsLint` | Lints the Markdown of the README and `docs/` (`.markdownlint-cli2.jsonc`) |
-| `./gradlew :services:api:docsDomainModel` | Generates the domain model page from the modules and their jMolecules annotations (`docs/architecture/domain-model.md`, not committed) |
+| `./gradlew :apps:services:api:docsDomainModel` | Generates the domain model page from the modules and their jMolecules annotations (`docs/architecture/domain-model.md`, not committed) |
 | `./gradlew docsApiReference` | Renders the API reference from the contract (`docs/product/api-reference.html`, not committed) |
 
 <!-- template-only:start -->

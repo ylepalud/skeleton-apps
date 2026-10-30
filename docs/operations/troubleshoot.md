@@ -16,7 +16,7 @@ rm -rf ~/.gradle/caches/build-cache-1   # only if the problem comes back
 
 ## SDK location not found
 
-The Android Gradle Plugin configures `clients/shared` in every build, so a missing Android SDK fails even `./gradlew :services:api:check`. Install the command-line tools and point `ANDROID_HOME` at them, for example on macOS:
+The Android Gradle Plugin configures `apps/clients/shared` in every build, so a missing Android SDK fails even `./gradlew :apps:services:api:check`. Install the command-line tools and point `ANDROID_HOME` at them, for example on macOS:
 
 ```bash
 brew install --cask android-commandlinetools
@@ -28,7 +28,7 @@ The build downloads the platform it compiles against. A `local.properties` file 
 
 ## iOS tasks fail with "xcrun" or "MissingXcodeException"
 
-Linking and testing for iOS need the full Xcode, not only the command-line tools. Install Xcode, then `sudo xcode-select -s /Applications/Xcode.app`. Without it, run `./gradlew check -x :clients:shared:iosSimulatorArm64Test`; CI runs the iOS tests on macOS.
+Linking and testing for iOS need the full Xcode, not only the command-line tools. Install Xcode, then `sudo xcode-select -s /Applications/Xcode.app`. Without it, run `./gradlew check -x :apps:clients:shared:iosSimulatorArm64Test`; CI runs the iOS tests on macOS.
 
 ## docker is not found
 

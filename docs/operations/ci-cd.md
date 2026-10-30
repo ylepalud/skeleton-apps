@@ -24,7 +24,7 @@ The template also runs `installer.yml` on pull requests to `develop` or `main`: 
 | API | Jib | `ghcr.io/ylepalud/skeleton-apps/api:<commit sha>` |
 | Web app | `docker buildx` | `ghcr.io/ylepalud/skeleton-apps/api-app:<commit sha>` |
 
-Path filters decide which images a push to `develop` publishes: the API for `services/api`, `contracts`, `build-logic` and the Gradle files; the web app for `services/api-app`, `contracts` and its convention. Tags are immutable commit SHAs; a release adds `vX.Y.Z` to the same image. There is no `latest`.
+Path filters decide which images a push to `develop` publishes: the API for `apps/services/api`, `apps/contracts`, `build-logic` and the Gradle files; the web app for `apps/services/api-app`, `apps/contracts` and its convention. Tags are immutable commit SHAs; a release adds `vX.Y.Z` to the same image. There is no `latest`.
 
 The `.github/actions/secure-image` action runs for each image:
 

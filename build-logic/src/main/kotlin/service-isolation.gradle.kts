@@ -7,7 +7,7 @@ plugins {
     base
 }
 
-val servicePathPrefix = ":services:"
+val servicePathPrefix = ":apps:services:"
 val servicePath = path
 
 // Collected at configuration time so the task holds plain strings only, which
