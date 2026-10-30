@@ -45,8 +45,8 @@ jobs:
             **/build/test-results/
           retention-days: 7
 
-  # Which mobile apps a change can affect. The mobile jobs are required checks:
-  # rather than not starting, they are skipped, which counts as passed.
+  # Which mobile apps a change can affect; the others are skipped, and the
+  # mobile job below reports for both.
   changes:
     name: changes
     runs-on: ubuntu-26.04
@@ -62,9 +62,15 @@ jobs:
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          # Shared by both apps: the client library, the contract it is generated
-          # from, the build and this workflow.
-          shared='^(apps/clients/shared/|apps/contracts/api/|build-logic/|gradle/|[^/]*\.gradle\.kts$|gradle\.properties$|\.github/workflows/ci\.yml$)'
+          # Both apps: the client library, the contract it is generated from and
+          # this workflow.
+          shared='^(apps/clients/shared/|apps/contracts/api/|\.github/workflows/ci\.yml$)'
+          # Android also follows the whole build: its job is short. The iOS job
+          # takes a macOS runner for a quarter of an hour: it follows only the
+          # conventions it builds with, and the nightly run covers the rest, such
+          # as a dependency upgrade.
+          build='^(build-logic/|gradle/|[^/]*\.gradle\.kts$|gradle\.properties$)'
+          ios_build='^(build-logic/src/main/kotlin/(xcode-app|kotlin-multiplatform-convention|openapi-kotlin-client)\.gradle\.kts$|\.github/workflows/ios\.yml$)'
           if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
             # No base to compare with, such as a new branch: check everything.
             files="apps/clients/android/ apps/clients/ios/"
@@ -72,8 +78,8 @@ jobs:
             files=$(git diff --name-only "$BASE" "$GITHUB_SHA")
           fi
           affects() { grep -Eq "$shared|$1" <<<"$files" && echo true || echo false; }
-          echo "android=$(affects '^apps/clients/android/')" >> "$GITHUB_OUTPUT"
-          echo "ios=$(affects '^apps/clients/ios/')" >> "$GITHUB_OUTPUT"
+          echo "android=$(affects "^apps/clients/android/|$build")" >> "$GITHUB_OUTPUT"
+          echo "ios=$(affects "^apps/clients/ios/|$ios_build")" >> "$GITHUB_OUTPUT"
           cat "$GITHUB_OUTPUT"
 
   android:
@@ -111,59 +117,29 @@ jobs:
     name: ios
     needs: changes
     if: needs.changes.outputs.ios == 'true'
-    runs-on: macos-26
-    timeout-minutes: 45
-    env:
-      SIMULATOR: iPhone 17
+    uses: ./.github/workflows/ios.yml
+
+  # The required check for the mobile apps: a skipped job, or one run through a
+  # reusable workflow, reports under a name that changes with what happened.
+  # This one always reports, and fails if either app job failed.
+  mobile:
+    name: mobile
+    needs: [changes, android, ios]
+    if: always()
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
-        with:
-          distribution: temurin
-          java-version: "25"
-      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
-      # The Kotlin/Native compiler and its dependencies: about 1 GB, downloaded
-      # once per Kotlin version.
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.konan
-          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: konan-${{ runner.os }}-
-      - run: brew install xcodegen
-      # The simulator of that name on the newest installed runtime, by UDID: by
-      # name, xcodebuild wants the SDK's own version, which may not be installed.
-      # Booted first, since a first boot can outlast xcodebuild's wait.
-      - name: Boot the simulator
+      # A failed changes job skips both app jobs: it must fail this one too.
+      - env:
+          CHANGES: ${{ needs.changes.result }}
+          ANDROID: ${{ needs.android.result }}
+          IOS: ${{ needs.ios.result }}
         run: |
-          udid=$(xcrun simctl list devices available -j | jq -r --arg name "$SIMULATOR" '
-            .devices | to_entries | map(select(.key | test("iOS")))
-            | sort_by(.key | capture("iOS-(?<v>.*)").v | split("-") | map(tonumber))
-            | map(.value[] | select(.name == $name)) | last | .udid')
-          echo "Simulator: $SIMULATOR ($udid)"
-          echo "SIMULATOR_ID=$udid" >> "$GITHUB_ENV"
-          xcrun simctl boot "$udid"
-          xcrun simctl bootstatus "$udid" -b
-      - name: Shared module on the simulator, then the app's lint, tests and coverage
-        run: >-
-          ./gradlew :apps:clients:shared:iosSimulatorArm64Test iosLint iosVerifyCoverage
-          -PiosSimulator="$SIMULATOR_ID"
-      - name: Package the simulator build
-        run: ditto -c -k --keepParent apps/clients/ios/build/DerivedData/Build/Products/Debug-iphonesimulator/Notes.app Notes-simulator.zip
-      - name: Keep the simulator build (unsigned)
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: ios-simulator-app
-          path: Notes-simulator.zip
-          retention-days: 7
-      - name: Keep the test results
-        if: failure()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: ios-test-results
-          path: |
-            build/ios/Test.xcresult
-            apps/clients/shared/build/reports/
-          retention-days: 7
+          echo "changes: $CHANGES, android: $ANDROID, ios: $IOS"
+          [ "$CHANGES" = success ] || exit 1
+          for result in "$ANDROID" "$IOS"; do
+            case "$result" in success|skipped) ;; *) exit 1 ;; esac
+          done
 
   e2e:
     name: e2e
