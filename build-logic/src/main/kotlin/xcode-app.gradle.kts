@@ -67,13 +67,14 @@ val settings = xcodeApp.buildSettings.map { map -> map.map { (key, value) -> "$k
 val sources = xcodeApp.projectDir.map { dir -> dir.asFileTree.matching { exclude("build/**", "*.xcodeproj/**") } }
 
 // Lambdas below read local copies: a script property would drag the script into the configuration cache.
-tasks.withType<Exec>().configureEach {
+fun Task.needsXcode() {
     val available = xcodeAvailable
     onlyIf("Xcode is installed") { available.get() }
 }
 
 val generate =
     tasks.register<Exec>("iosGenerateProject") {
+        needsXcode()
         group = "ios"
         description = "Generates the Xcode project from project.yml with XcodeGen."
         inputs.files(sources).withPropertyName("sources")
@@ -83,6 +84,7 @@ val generate =
     }
 
 tasks.register<Exec>("iosLint") {
+    needsXcode()
     group = "ios"
     description = "Checks the Swift sources against swift-format's rules."
     val swiftSources = sources.map { it.matching { include("**/*.swift") } }
@@ -104,6 +106,7 @@ val resultBundle = output.map { it.dir("Test.xcresult") }
 
 val test =
     tasks.register<Exec>("iosTest") {
+        needsXcode()
         group = "ios"
         description = "Runs the unit and UI tests of the iOS app on a simulator."
         dependsOn(generate)
@@ -195,8 +198,7 @@ val coverageReportTask =
         group = "ios"
         description = "Writes the coverage of the last iOS test run as JSON."
         dependsOn(test)
-        val available = xcodeAvailable
-        onlyIf("Xcode is installed") { available.get() }
+        needsXcode()
         results = resultBundle
         report = coverageReport
     }
@@ -206,8 +208,7 @@ val verifyCoverage =
         group = "ios"
         description = "Fails when the iOS app's line coverage is under the minimum."
         dependsOn(coverageReportTask)
-        val available = xcodeAvailable
-        onlyIf("Xcode is installed") { available.get() }
+        needsXcode()
         this.report = coverageReport
         target = xcodeApp.scheme.map { "$it.app" }
         minimum = xcodeApp.minimumCoverage
@@ -266,8 +267,7 @@ tasks.register<RunOnSimulator>("iosRun") {
     group = "ios"
     description = "Builds the app, then installs and launches it on the simulator."
     dependsOn(generate)
-    val available = xcodeAvailable
-    onlyIf("Xcode is installed") { available.get() }
+    needsXcode()
     outputs.upToDateWhen { false }
     projectDir = xcodeApp.projectDir
     buildArguments =

@@ -61,6 +61,24 @@ class XcodeAppTest {
     }
 
     @Test
+    fun `without xcode the other tasks of the build still run`() {
+        build("xcodeAvailable = false")
+        fixture.file(
+            "build.gradle.kts",
+            dir.resolve("build.gradle.kts").readText() +
+                """
+                tasks.register<Exec>("hello") {
+                    commandLine("echo", "hello from exec")
+                }
+                """.trimIndent() + "\n",
+        )
+
+        val result = fixture.build("hello")
+
+        assertThat(result.output).contains("hello from exec")
+    }
+
+    @Test
     fun `a coverage under the minimum fails the build`() {
         coverage(0.62)
 
