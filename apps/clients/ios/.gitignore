@@ -1,0 +1,5 @@
+# Generated from project.yml by XcodeGen.
+Notes.xcodeproj/
+Notes/Info.plist
+# Xcode output when building from Gradle.
+build/
