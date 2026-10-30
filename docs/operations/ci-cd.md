@@ -6,7 +6,7 @@ All workflows live in `.github/workflows`. Actions are pinned by commit SHA (Ren
 
 | Workflow | Trigger | Jobs |
 | --- | --- | --- |
-| `ci.yml` | pull requests to `develop` or `main`, push to `main`, called by `publish.yml` | `check` (`./gradlew check`), `e2e` (local stack, Playwright, Bruno smoke run, Trivy scan of the two images the stack runs), `trivy-fs` (dependencies including development ones, secrets and configuration; findings in the Security tab), `docs` (no em dash, `./gradlew docsLint docsBuild`: Markdown lint and a strict build of the site, which fails on a broken link or anchor) |
+| `ci.yml` | pull requests to `develop` or `main`, push to `main`, called by `publish.yml` | `check` (`./gradlew check`, the Android app aside), `android` and `ios` (see [Mobile apps](#mobile-apps)), `e2e` (local stack, Playwright, Bruno smoke run, Trivy scan of the two images the stack runs), `trivy-fs` (dependencies including development ones, secrets and configuration; findings in the Security tab), `docs` (no em dash, `./gradlew docsLint docsBuild`: Markdown lint and a strict build of the site, which fails on a broken link or anchor) |
 | `docs.yml` | push to `main`, or manual; only when the variable `DOCS_PAGES` is `true` | builds the documentation site and deploys it to GitHub Pages (see [Documentation site](#documentation-site)) |
 | `publish.yml` | push to `develop`, or manual with `all=true` | `ci.yml`, then one image job per image whose code changed: build and push, scan, SBOM, signature |
 | `nightly.yml` | every day at 03:00 UTC, or manual | `./gradlew pitest` on `develop` |
@@ -42,11 +42,22 @@ cosign verify ghcr.io/ylepalud/skeleton-apps/api@<digest> \
 
 `cosign verify-attestation --type spdxjson` with the same options checks the SBOM.
 
+## Mobile apps
+
+`ci.yml` checks the native apps in two jobs of their own, which a `changes` job starts only when a change can affect them: their own folder, `apps/clients/shared`, the contract, the build (`build-logic`, `gradle/`, the root Gradle files) or the workflow. Otherwise they are skipped, which counts as passed for a required check.
+
+| Job | Runner | Runs | Keeps |
+| --- | --- | --- | --- |
+| `android` | `ubuntu-26.04` (Android SDK preinstalled) | `:apps:clients:android:check` (lint, Robolectric UI tests, Kover) and `assembleDebug` | `android-debug-apk`: the debug APK, 7 days; `android-reports` on failure |
+| `ios` | `macos-26` (Xcode, simulators) | the shared module's tests on the simulator, `iosLint`, `iosTest` and `iosVerifyCoverage`, on the `iPhone 17` simulator booted first | `ios-simulator-app`: the simulator build, 7 days; `ios-test-results` (the `.xcresult`) on failure |
+
+The `ios` job caches `~/.konan`, the Kotlin/Native toolchain, by Kotlin version, on top of the Gradle cache `setup-gradle` keeps; it installs XcodeGen with Homebrew. Neither job signs anything: the APK is a debug build and the iOS build runs on the simulator only. Store releases are #74.
+
 ## Branches and rulesets
 
 | Branch | Role | Merge method | Rules |
 | --- | --- | --- | --- |
-| `develop` | default branch, the only one deployed | squash | pull request required, `check`, `e2e`<!-- template-only:start -->, `installer`<!-- template-only:end -->, `trivy-fs` and `docs` required, linear history, no force push or deletion |
+| `develop` | default branch, the only one deployed | squash | pull request required, `check`, `android`, `ios`, `e2e`<!-- template-only:start -->, `installer`<!-- template-only:end --> and `trivy-fs` required, linear history, no force push or deletion |
 | `main` | releases | merge commit | pull request required, the same checks, no force push or deletion; the branch need not be up to date, since release-please's commits only exist on `main` |
 
 Repository administrators can bypass the rulesets. Without the release App, this is how release-please's pull requests get merged (see [Release](release.md)).

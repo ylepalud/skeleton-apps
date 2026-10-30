@@ -34,7 +34,7 @@ Chosen: Swift export, XcodeGen and a stub. On Kotlin 2.4, Swift export covers wh
 - The app needs iOS 18: Swift export's coroutine bridge uses `Mutex`.
 - The bridge Kotlin generates warns on a kotlinx.coroutines opt-in; only its compilation task tolerates warnings.
 - Swift export flattens the root package only: the app names the other types through `SharedNames.swift`, and marks the use cases `@unchecked Sendable` for Swift 6's strict concurrency (they hold immutable references, and Kotlin/Native objects may be shared across threads).
-- `./gradlew check` runs the iOS lint, tests and 80% coverage gate on macOS with Xcode; elsewhere these tasks are skipped. CI runs them once it has a macOS runner (#69).
+- `./gradlew check` runs the iOS lint, tests and 80% coverage gate on macOS with Xcode; elsewhere these tasks are skipped. CI runs them in the `ios` job, on a macOS runner.
 - If Swift export blocks on a construct or breaks with a Kotlin release, the fallback is the Objective-C export with SKIE: the ports and use cases stay, only the Swift names change.
 
 More: [Native clients](../clients.md), [Run the iOS app](../../contributor/how-to/run-the-ios-app.md).
