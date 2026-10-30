@@ -22,3 +22,21 @@ kotlin {
         }
     }
 }
+
+// The iOS app reads the module as Swift: one `Shared` module, built and embedded by Xcode through
+// `embedSwiftExportForXcode`. Swift export is Alpha; ADR 0027 says when to fall back to SKIE.
+kotlin {
+    @OptIn(org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl::class)
+    swiftExport {
+        moduleName = "Shared"
+        flattenPackage = "dev.ylp.client"
+    }
+}
+
+// The bridge Kotlin generates for coroutines warns on a kotlinx.coroutines opt-in it does not
+// declare. That code is not ours: only its compilation tolerates warnings.
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile>().configureEach {
+    if (name.startsWith("compileSwiftExport")) {
+        compilerOptions.allWarningsAsErrors = false
+    }
+}
