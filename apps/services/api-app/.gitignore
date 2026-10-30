@@ -43,7 +43,7 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-# Generated from contracts/api on every build
+# Generated from apps/contracts/api on every build
 /src/app/api/generated
 
 # Playwright

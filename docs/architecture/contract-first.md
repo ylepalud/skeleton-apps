@@ -1,15 +1,15 @@
 # Contract first
 
-The OpenAPI contract in `contracts/api` is written before the code and is the single description of the API.
+The OpenAPI contract in `apps/contracts/api` is written before the code and is the single description of the API.
 
 ## What is generated from it
 
 | Consumer | Generator | Effect |
 | --- | --- | --- |
-| The API | openapi-generator (`interfaceOnly`), in the `:contracts:api` project | `NotesApi` and the `*Dto` models; `NotesController implements NotesApi`, so the API stops compiling when it drifts from the contract |
+| The API | openapi-generator (`interfaceOnly`), in the `:apps:contracts:api` project | `NotesApi` and the `*Dto` models; `NotesController implements NotesApi`, so the API stops compiling when it drifts from the contract |
 | The web app | hey-api (`@hey-api/client-angular`) | A typed client that goes through Angular's `HttpClient` |
 | The Bruno collection | `bru import openapi` | One request per operation, with the contract's examples |
-| The native clients | openapi-generator (`kotlin`, `multiplatform`), in `:clients:shared` | An internal Ktor client behind the library's HTTP adapter, which stops compiling when it drifts from the contract (see [Native clients](clients.md)) |
+| The native clients | openapi-generator (`kotlin`, `multiplatform`), in `:apps:clients:shared` | An internal Ktor client behind the library's HTTP adapter, which stops compiling when it drifts from the contract (see [Native clients](clients.md)) |
 
 ## Why
 
@@ -24,4 +24,4 @@ The OpenAPI contract in `contracts/api` is written before the code and is the si
 
 ## The rule
 
-Change the contract first, then regenerate the collection (`./gradlew :bruno:updateCollection`), then implement. `check` fails when the collection drifts. See [Change the API contract](../contributor/how-to/change-the-api-contract.md).
+Change the contract first, then regenerate the collection (`./gradlew :apps:bruno:updateCollection`), then implement. `check` fails when the collection drifts. See [Change the API contract](../contributor/how-to/change-the-api-contract.md).

@@ -34,7 +34,7 @@
     { "groupName": "spring", "matchPackageNames": ["/^org\\.springframework\\./"] },
     { "groupName": "angular", "matchPackageNames": ["/^@angular\\//", "/^@angular-eslint\\//", "angular-eslint"] },
     { "groupName": "github actions", "matchManagers": ["github-actions"] },
-    { "groupName": "bruno tooling", "matchFileNames": ["bruno/package.json"] }
+    { "groupName": "bruno tooling", "matchFileNames": ["apps/bruno/package.json"] }
   ],
   "customManagers": [
     {
@@ -55,7 +55,7 @@
     {
       "description": "Images started by Testcontainers, kept in step with compose.yaml",
       "customType": "regex",
-      "managerFilePatterns": ["/^services/api/src/integrationTest/.+\\.java$/"],
+      "managerFilePatterns": ["/^apps/services/api/src/integrationTest/.+\\.java$/"],
       "matchStrings": [
         "\"(?<depName>[a-z0-9./-]+):(?<currentValue>[A-Za-z0-9._-]+)\"\\s*\\+\\s*\"@(?<currentDigest>sha256:[a-f0-9]+)\"",
         "Container\\(\"(?<depName>[a-z0-9./-]+):(?<currentValue>[A-Za-z0-9._-]+)\"\\)"

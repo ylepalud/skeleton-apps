@@ -8,7 +8,7 @@ What the people who use the product need: how to reach it, sign in, and what the
 | [Use the Android app](use-the-android-app.md) | the same, on Android |
 | [API errors](api-errors.md) | the shape of every error, statuses and error codes |
 
-On the documentation site, an API reference rendered from `contracts/api/openapi.yaml` completes this section.
+On the documentation site, an API reference rendered from `apps/contracts/api/openapi.yaml` completes this section.
 
 <!--
 Pages a project usually adds here once the matching feature exists:

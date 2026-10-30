@@ -20,7 +20,7 @@ interface BrunoCollectionExtension {
 }
 
 val collection = extensions.create<BrunoCollectionExtension>("brunoCollection")
-collection.contract.convention(rootProject.layout.projectDirectory.file("contracts/api/openapi.yaml"))
+collection.contract.convention(rootProject.layout.projectDirectory.file("apps/contracts/api/openapi.yaml"))
 
 node {
     version = providers.gradleProperty("nodeToolchainVersion")

@@ -62,7 +62,7 @@ val docker: String =
 val composeUp =
     tasks.register<Exec>("composeUp") {
         description = "Starts the compose stack with the application images."
-        dependsOn(":services:api:jibDockerBuild", ":services:api-app:dockerBuild")
+        dependsOn(":apps:services:api:jibDockerBuild", ":apps:services:api-app:dockerBuild")
         commandLine(docker, "compose", "--profile", "app", "up", "--detach", "--wait")
     }
 
@@ -115,14 +115,14 @@ val docsApiReference =
         group = "documentation"
         description = "Renders the API reference from the contract into docs/product/api-reference.html."
         // The YAML files only: the contract project's build/ is another task's output.
-        inputs.files(fileTree("contracts/api") { include("*.yaml") }).withPropertyName("contract")
+        inputs.files(fileTree("apps/contracts/api") { include("*.yaml") }).withPropertyName("contract")
         outputs.file("docs/product/api-reference.html")
         // --inlineBundle: the page loads no script from a CDN.
         commandLine(
             dockerRun(
                 "docsApiReferenceImage",
                 "build-docs",
-                "contracts/api/openapi.yaml",
+                "apps/contracts/api/openapi.yaml",
                 "--inlineBundle",
                 "--title",
                 "API reference",
@@ -135,7 +135,7 @@ val docsApiReference =
 tasks.register<Exec>("docsBuild") {
     group = "documentation"
     description = "Builds the documentation site into build/docs/site; a broken link or anchor fails it."
-    dependsOn(docsApiReference, ":services:api:docsDomainModel")
+    dependsOn(docsApiReference, ":apps:services:api:docsDomainModel")
     // SITE_URL, when set, is the address the site is published at.
     val siteUrl = providers.environmentVariable("SITE_URL").map { listOf("-e", "SITE_URL=$it") }.getOrElse(emptyList())
     commandLine(dockerRun("docsSiteImage", "build", "--strict", "--clean", options = siteUrl))
@@ -144,7 +144,7 @@ tasks.register<Exec>("docsBuild") {
 tasks.register<Exec>("docsServe") {
     group = "documentation"
     description = "Serves the documentation site on http://localhost:8000, rebuilt on every change."
-    dependsOn(docsApiReference, ":services:api:docsDomainModel")
+    dependsOn(docsApiReference, ":apps:services:api:docsDomainModel")
     commandLine(dockerRun("docsSiteImage", "serve", "--dev-addr", "0.0.0.0:8000", options = listOf("-p", "8000:8000")))
 }
 

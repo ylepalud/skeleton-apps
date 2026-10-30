@@ -11,7 +11,7 @@ import kotlin.test.Test
  * supports.
  */
 class ArchitectureTest {
-    private val production = Konsist.scopeFromSourceSet("commonMain", "clients/shared")
+    private val production = Konsist.scopeFromSourceSet("commonMain", "apps/clients/shared")
 
     @Test
     fun `the domain and the use cases depend on no adapter, transport or generated code`() {

@@ -1,4 +1,4 @@
-# The API alone: ./gradlew :services:api:bootRun.
+# The API alone: ./gradlew :apps:services:api:bootRun.
 name: BootRun
 variables:
   - name: baseUrl

@@ -12,40 +12,41 @@ skeleton-apps/
 ├── gradle.properties            build tool versions (JaCoCo, PIT, Node, images...)
 ├── settings.gradle.kts          repositories and the list of projects
 ├── build.gradle.kts             local stack and documentation tasks
-├── contracts/api/               OpenAPI contract and the :contracts:api project
-│   ├── openapi.yaml             entry point: info, servers, security, paths
-│   ├── common.yaml              Problem schema and shared responses
-│   └── notes.yaml               the notes module: paths and schemas
-├── services/api/                Spring Boot API (:services:api)
-│   └── src/
-│       ├── main/java/dev/ylp/
-│       │   ├── ApiApplication.java
-│       │   ├── config/          cross-cutting configuration (security, clock, paths)
-│       │   ├── shared/          open module: identifiers, error types
-│       │   └── notes/           a business module
-│       │       ├── domain/      model and ports
-│       │       ├── application/ use cases
-│       │       └── adapter/     in/rest, out/postgres
-│       ├── main/resources/      application.yml, Liquibase changelogs
-│       ├── test/                unit tests, architecture tests, port contract tests
-│       └── integrationTest/     Testcontainers tests, end to end
-├── clients/shared/              Kotlin Multiplatform library of the native clients (:clients:shared)
-│   └── src/
-│       ├── commonMain/kotlin/dev/ylp/client/   SharedClient, notes/ and auth/, each domain, application, adapter
-│       ├── commonTest/          tests run on the JVM and the iOS simulator
-│       └── jvmTest/             ArchitectureTest (Konsist)
-├── clients/android/             Android app (:clients:android): Compose screens, Custom Tabs and Keystore adapters
-│   └── src/test/                Robolectric tests of the screens against a mock backend
-├── services/api-app/            Angular web app (:services:api-app)
-│   ├── src/app/                 one folder per feature (notes, auth)
-│   ├── e2e/                     Playwright tests
-│   ├── nginx/                   nginx configuration template of the image
-│   └── Dockerfile
-├── bruno/                       API collection (:bruno)
-│   ├── opencollection.yml       hand-written: auth, shared test
-│   ├── environments/            hand-written: Stack, BootRun
-│   ├── notes/                   generated from the contract
-│   └── scripts/collection.mjs   generation and drift check
+├── apps/                        all product code, one Gradle project each (the iOS app will be the only exception)
+│   ├── contracts/api/           OpenAPI contract and the :apps:contracts:api project
+│   │   ├── openapi.yaml         entry point: info, servers, security, paths
+│   │   ├── common.yaml          Problem schema and shared responses
+│   │   └── notes.yaml           the notes module: paths and schemas
+│   ├── services/api/            Spring Boot API (:apps:services:api)
+│   │   └── src/
+│   │       ├── main/java/dev/ylp/
+│   │       │   ├── ApiApplication.java
+│   │       │   ├── config/      cross-cutting configuration (security, clock, paths)
+│   │       │   ├── shared/      open module: identifiers, error types
+│   │       │   └── notes/       a business module
+│   │       │       ├── domain/      model and ports
+│   │       │       ├── application/ use cases
+│   │       │       └── adapter/     in/rest, out/postgres
+│   │       ├── main/resources/  application.yml, Liquibase changelogs
+│   │       ├── test/            unit tests, architecture tests, port contract tests
+│   │       └── integrationTest/ Testcontainers tests, end to end
+│   ├── services/api-app/        Angular web app (:apps:services:api-app)
+│   │   ├── src/app/             one folder per feature (notes, auth)
+│   │   ├── e2e/                 Playwright tests
+│   │   ├── nginx/               nginx configuration template of the image
+│   │   └── Dockerfile
+│   ├── clients/shared/          Kotlin Multiplatform library of the native clients (:apps:clients:shared)
+│   │   └── src/
+│   │       ├── commonMain/kotlin/dev/ylp/client/   SharedClient, notes/ and auth/, each domain, application, adapter
+│   │       ├── commonTest/      tests run on the JVM and the iOS simulator
+│   │       └── jvmTest/         ArchitectureTest (Konsist)
+│   ├── clients/android/         Android app (:apps:clients:android): Compose screens, Custom Tabs and Keystore adapters
+│   │   └── src/test/            Robolectric tests of the screens against a mock backend
+│   └── bruno/                   API collection (:apps:bruno)
+│       ├── opencollection.yml   hand-written: auth, shared test
+│       ├── environments/        hand-written: Stack, BootRun
+│       ├── notes/               generated from the contract
+│       └── scripts/collection.mjs   generation and drift check
 ├── compose.yaml                 local stack
 ├── docs/                        this documentation, one folder per reader
 ├── mkdocs.yml                   documentation site (Zensical)
@@ -61,4 +62,4 @@ skeleton-apps/
 Template only, left out of generated projects: `scripts/installer/` (the project installer), the root `package.json` and `package-lock.json` (its dependencies), `.github/workflows/installer.yml` and `docs/template/`, which the installer replaces with a page naming the template version.
 
 <!-- template-only:end -->
-Generated and ignored: `services/api-app/src/app/api/generated` (web client), `contracts/api/build/generated` (server code), `clients/shared/build/generated` (native client code), every `build/` and `node_modules/`.
+Generated and ignored: `apps/services/api-app/src/app/api/generated` (web client), `apps/contracts/api/build/generated` (server code), `apps/clients/shared/build/generated` (native client code), every `build/` and `node_modules/`.

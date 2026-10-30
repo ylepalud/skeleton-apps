@@ -9,12 +9,12 @@ The code generated from the contract must compile under the same strict rules as
 
 ## Options
 
-- A dedicated project, `:contracts:api`, producing a plain jar
+- A dedicated project, `:apps:contracts:api`, producing a plain jar
 - Generation into the API's own source set, with exclusions in every tool
 
 ## Decision
 
-Chosen: A dedicated project, `:contracts:api`, producing a plain jar.
+Chosen: A dedicated project, `:apps:contracts:api`, producing a plain jar.
 
 ## Consequences
 

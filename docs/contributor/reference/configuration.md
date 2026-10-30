@@ -1,8 +1,8 @@
 # Configuration
 
-Settings that change between environments come from environment variables. Everything else lives in `services/api/src/main/resources/application.yml` and in the web image's nginx template.
+Settings that change between environments come from environment variables. Everything else lives in `apps/services/api/src/main/resources/application.yml` and in the web image's nginx template.
 
-## API (`services/api`)
+## API (`apps/services/api`)
 
 | Variable | Example | Purpose |
 | --- | --- | --- |
@@ -16,7 +16,7 @@ Fixed in `application.yml`: the token audience `api`, port 8080 for the API and 
 
 Under the `local` profile, which `bootRun` uses, Docker Compose provides the database and the issuer is `http://localhost:8090/default`.
 
-## Web app image (`services/api-app`)
+## Web app image (`apps/services/api-app`)
 
 | Variable | Example | Purpose |
 | --- | --- | --- |
@@ -25,4 +25,4 @@ Under the `local` profile, which `bootRun` uses, Docker Compose provides the dat
 | `OIDC_CLIENT_ID` | `api-app` | Client id of the web app at the identity provider |
 | `OIDC_ORIGIN` | `https://id.example.com` | Origin of the identity provider, allowed by the content security policy |
 
-The app reads `/config.json` at startup, so one image runs in every environment. The development server serves `services/api-app/public/config.json`, which points to the local mock.
+The app reads `/config.json` at startup, so one image runs in every environment. The development server serves `apps/services/api-app/public/config.json`, which points to the local mock.

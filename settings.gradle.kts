@@ -51,9 +51,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "skeleton-apps"
 
-include("services:api")
-include("contracts:api")
-include("services:api-app")
-include("bruno")
-include("clients:shared")
-include("clients:android")
+include("apps:services:api")
+include("apps:contracts:api")
+include("apps:services:api-app")
+include("apps:bruno")
+include("apps:clients:shared")
+include("apps:clients:android")

@@ -5,7 +5,7 @@
 ```mermaid
 flowchart LR
   browser[Browser] -->|/ and /api/v1| web[web: nginx<br/>Angular bundle]
-  native[Android, iOS, CLI<br/>clients/shared] -->|/api/v1| web
+  native[Android, iOS, CLI<br/>apps/clients/shared] -->|/api/v1| web
   web -->|/api/| api[api: Spring Boot]
   api --> db[(PostgreSQL<br/>one schema per module)]
   browser -.->|sign-in, PKCE| idp[OpenID Connect provider]
@@ -63,4 +63,4 @@ Angular, zoneless, organised by feature (`src/app/notes`, `src/app/auth`). A fea
 
 ## The native clients
 
-The Android, iOS and command-line clients share a Kotlin Multiplatform library, `clients/shared`, organised as a hexagon like an API module: the API client generated from the contract, the OpenID Connect sign-in and the use cases live there, and each app implements its UI and a few platform adapters. See [Native clients](clients.md).
+The Android, iOS and command-line clients share a Kotlin Multiplatform library, `apps/clients/shared`, organised as a hexagon like an API module: the API client generated from the contract, the OpenID Connect sign-in and the use cases live there, and each app implements its UI and a few platform adapters. See [Native clients](clients.md).

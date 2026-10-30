@@ -20,7 +20,7 @@ For the sign-in, inside the library:
 
 ## Decision
 
-Chosen: a Kotlin Multiplatform library, `clients/shared`, organised as a hexagon. It defines the ports (`AuthorizationBrowser`, `TokenStore`) that each app implements, and exposes use cases; the apps implement their UI only. The sign-in is written in Kotlin in the library. The client is generated from the contract by openapi-generator's multiplatform library and kept internal. The public API stays within Kotlin's Swift export (Alpha): no generic type or function, one sealed result per operation. SKIE is the fallback if Swift export blocks.
+Chosen: a Kotlin Multiplatform library, `apps/clients/shared`, organised as a hexagon. It defines the ports (`AuthorizationBrowser`, `TokenStore`) that each app implements, and exposes use cases; the apps implement their UI only. The sign-in is written in Kotlin in the library. The client is generated from the contract by openapi-generator's multiplatform library and kept internal. The public API stays within Kotlin's Swift export (Alpha): no generic type or function, one sealed result per operation. SKIE is the fallback if Swift export blocks.
 
 ## Consequences
 

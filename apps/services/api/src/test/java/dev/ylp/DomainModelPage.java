@@ -67,7 +67,7 @@ final class DomainModelPage {
     StringBuilder page = new StringBuilder();
     page.append("# Domain model\n\n")
         .append(
-            "Generated from the code by `./gradlew :services:api:docsDomainModel`: the modules come"
+            "Generated from the code by `./gradlew :apps:services:api:docsDomainModel`: the modules come"
                 + " from Spring Modulith, the roles from the jMolecules annotations. Do not edit"
                 + " this page; change the code or its annotations.\n\n")
         .append("## Modules\n\n")

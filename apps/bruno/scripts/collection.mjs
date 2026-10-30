@@ -46,7 +46,7 @@ try {
     if (differences.length > 0) {
       console.error('The Bruno collection does not match the API contract:');
       differences.forEach((difference) => console.error(`  - ${difference}`));
-      console.error('Run ./gradlew :bruno:updateCollection and commit the result.');
+      console.error('Run ./gradlew :apps:bruno:updateCollection and commit the result.');
       process.exit(1);
     }
     console.log('The Bruno collection matches the API contract.');

@@ -1,7 +1,7 @@
 import { defineConfig } from '@hey-api/openapi-ts';
 
 /**
- * Generates the API client from the contract shared with services/api. The client goes
+ * Generates the API client from the contract shared with apps/services/api. The client goes
  * through Angular's HttpClient, so interceptors (the bearer token) apply to every call.
  */
 export default defineConfig({

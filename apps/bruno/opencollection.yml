@@ -4,8 +4,8 @@ info:
   name: Platform API
   version: "1"
 
-# Written by hand. The request folders next to it are generated from contracts/api:
-# ./gradlew :bruno:updateCollection after any contract change (check fails otherwise).
+# Written by hand. The request folders next to it are generated from apps/contracts/api:
+# ./gradlew :apps:bruno:updateCollection after any contract change (check fails otherwise).
 request:
   # Every request inherits this: a client credentials token from the identity provider,
   # whose subject is the client id, i.e. the {{user}} of the environment.

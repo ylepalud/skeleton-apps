@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":contracts:api"))
+    implementation(project(":apps:contracts:api"))
 }
 
 springBoot {

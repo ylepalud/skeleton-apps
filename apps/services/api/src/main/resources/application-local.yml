@@ -3,7 +3,7 @@ spring:
     compose:
       # The repository's compose file, relative to bootRun's working directory. Without the
       # "app" profile it starts only postgres and the identity provider.
-      file: ../../compose.yaml
+      file: ../../../compose.yaml
       # Keep them running between application restarts.
       lifecycle-management: start-only
   security:

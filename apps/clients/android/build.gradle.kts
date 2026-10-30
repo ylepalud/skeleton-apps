@@ -24,7 +24,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":clients:shared"))
+    implementation(project(":apps:clients:shared"))
     implementation(libs.compose.material3)
     implementation(libs.activity.compose)
     implementation(libs.lifecycle.viewmodel.compose)
