@@ -20,7 +20,7 @@ Open Xcode once to accept its license and install the iOS simulator it offers.
 
 Sign in with any username: the mock identity provider accepts everyone. The simulator shares the machine's network, so `localhost` reaches the stack directly and the tokens carry the issuer the API checks.
 
-`iosRun` uses the `iPhone 17` simulator; pick another with `-PiosSimulator="iPhone 16"` (`xcrun simctl list devices available` lists them).
+`iosRun` uses the `iPhone 17` simulator; pick another with `-PiosSimulator="iPhone 16"`, or a device identifier when several runtimes have that name (`xcrun simctl list devices available` lists both).
 
 ## In Xcode
 

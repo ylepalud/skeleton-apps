@@ -79,6 +79,26 @@ class XcodeAppTest {
     }
 
     @Test
+    fun `the simulator is named, or identified by its udid`() {
+        fixture.file(
+            "build.gradle.kts",
+            dir.resolve("build.gradle.kts").readText() +
+                """
+                tasks.register("printDestination") {
+                    val destination = xcodeApp.destination
+                    doLast { println("destination: " + destination.get()) }
+                }
+                """.trimIndent() + "\n",
+        )
+
+        val byName = fixture.build("printDestination", "-PiosSimulator=iPhone 16")
+        val byUdid = fixture.build("printDestination", "-PiosSimulator=5B1D690E-D6FA-452B-96AD-93EEFD0187FB")
+
+        assertThat(byName.output).contains("destination: platform=iOS Simulator,name=iPhone 16")
+        assertThat(byUdid.output).contains("destination: platform=iOS Simulator,id=5B1D690E-D6FA-452B-96AD-93EEFD0187FB")
+    }
+
+    @Test
     fun `a coverage under the minimum fails the build`() {
         coverage(0.62)
 

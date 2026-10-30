@@ -130,15 +130,23 @@ jobs:
           key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
           restore-keys: konan-${{ runner.os }}-
       - run: brew install xcodegen
-      # A simulator booted for the first time can outlast xcodebuild's wait.
+      # The simulator of that name on the newest installed runtime, by UDID: by
+      # name, xcodebuild wants the SDK's own version, which may not be installed.
+      # Booted first, since a first boot can outlast xcodebuild's wait.
       - name: Boot the simulator
         run: |
-          xcrun simctl boot "$SIMULATOR"
-          xcrun simctl bootstatus "$SIMULATOR" -b
+          udid=$(xcrun simctl list devices available -j | jq -r --arg name "$SIMULATOR" '
+            .devices | to_entries | map(select(.key | test("iOS")))
+            | sort_by(.key | capture("iOS-(?<v>.*)").v | split("-") | map(tonumber))
+            | map(.value[] | select(.name == $name)) | last | .udid')
+          echo "Simulator: $SIMULATOR ($udid)"
+          echo "SIMULATOR_ID=$udid" >> "$GITHUB_ENV"
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
       - name: Shared module on the simulator, then the app's lint, tests and coverage
         run: >-
           ./gradlew :apps:clients:shared:iosSimulatorArm64Test iosLint iosVerifyCoverage
-          -PiosSimulator="$SIMULATOR"
+          -PiosSimulator="$SIMULATOR_ID"
       - name: Package the simulator build
         run: ditto -c -k --keepParent apps/clients/ios/build/DerivedData/Build/Products/Debug-iphonesimulator/Notes.app Notes-simulator.zip
       - name: Keep the simulator build (unsigned)

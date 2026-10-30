@@ -49,7 +49,7 @@ cosign verify ghcr.io/ylepalud/skeleton-apps/api@<digest> \
 | Job | Runner | Runs | Keeps |
 | --- | --- | --- | --- |
 | `android` | `ubuntu-26.04` (Android SDK preinstalled) | `:apps:clients:android:check` (lint, Robolectric UI tests, Kover) and `assembleDebug` | `android-debug-apk`: the debug APK, 7 days; `android-reports` on failure |
-| `ios` | `macos-26` (Xcode, simulators) | the shared module's tests on the simulator, `iosLint`, `iosTest` and `iosVerifyCoverage`, on the `iPhone 17` simulator booted first | `ios-simulator-app`: the simulator build, 7 days; `ios-test-results` (the `.xcresult`) on failure |
+| `ios` | `macos-26` (Xcode, simulators) | the shared module's tests on the simulator, `iosLint`, `iosTest` and `iosVerifyCoverage`, on the `iPhone 17` simulator of the newest installed runtime, picked by UDID and booted first | `ios-simulator-app`: the simulator build, 7 days; `ios-test-results` (the `.xcresult`) on failure |
 
 The `ios` job caches `~/.konan`, the Kotlin/Native toolchain, by Kotlin version, on top of the Gradle cache `setup-gradle` keeps; it installs XcodeGen with Homebrew. Neither job signs anything: the APK is a debug build and the iOS build runs on the simulator only. Store releases are #74.
 
