@@ -42,6 +42,12 @@ skeleton-apps/
 │   │       └── jvmTest/         ArchitectureTest (Konsist)
 │   ├── clients/android/         Android app (:apps:clients:android): Compose screens, Custom Tabs and Keystore adapters
 │   │   └── src/test/            Robolectric tests of the screens against a mock backend
+│   ├── clients/ios/             iOS app, not a Gradle project (driven by the root build's xcode-app plugin)
+│   │   ├── project.yml          XcodeGen spec; the generated Notes.xcodeproj is not committed
+│   │   ├── Notes/               SwiftUI screens, ASWebAuthenticationSession and Keychain adapters
+│   │   ├── NotesTests/          unit tests of the adapters and the configuration
+│   │   ├── NotesUITests/        XCUITest of the notes flow
+│   │   └── TestSupport/         stub backend shared by both test targets
 │   └── bruno/                   API collection (:apps:bruno)
 │       ├── opencollection.yml   hand-written: auth, shared test
 │       ├── environments/        hand-written: Stack, BootRun

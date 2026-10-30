@@ -5,7 +5,7 @@ Gradle monorepo: a Spring Boot API organised as a Spring Modulith (`apps/service
 ## Rules
 
 - **English** for everything written: code, comments, docs, commits, pull requests.
-- **Product code lives in `apps/`**, one Gradle project per app or library; Gradle builds everything, and the iOS app will be the only folder that is not a Gradle project.
+- **Product code lives in `apps/`**, one Gradle project per app or library; Gradle builds everything, and the iOS app (`apps/clients/ios`) is the only folder that is not a Gradle project, driven by the root build.
 - **Contract first.** An API change starts in `apps/contracts/api`, then `./gradlew :apps:bruno:updateCollection`, then code.
 - **Tests with every change**, at the level that proves it; `./gradlew check` passes before any commit.
 - **Module boundaries and hexagonal layers are enforced** by `ModularityTest` and `HexagonalArchitectureTest`: fix the design, not the test.
@@ -26,6 +26,7 @@ Gradle monorepo: a Spring Boot API organised as a Spring Modulith (`apps/service
 | write or fix tests | [docs/architecture/testing-strategy.md](docs/architecture/testing-strategy.md) |
 | touch the native clients (`apps/clients/`) | [docs/architecture/clients.md](docs/architecture/clients.md) |
 | run the Android app | [docs/contributor/how-to/run-the-android-app.md](docs/contributor/how-to/run-the-android-app.md) |
+| run the iOS app | [docs/contributor/how-to/run-the-ios-app.md](docs/contributor/how-to/run-the-ios-app.md) |
 | touch security, tokens or limits | [docs/architecture/security.md](docs/architecture/security.md) |
 | change a convention plugin or the build | [docs/contributor/reference/gradle-conventions.md](docs/contributor/reference/gradle-conventions.md) |
 | change CI, images or releases | [docs/operations/ci-cd.md](docs/operations/ci-cd.md) |
