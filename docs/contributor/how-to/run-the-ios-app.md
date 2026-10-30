@@ -20,7 +20,7 @@ Open Xcode once to accept its license and install the iOS simulator it offers.
 
 Sign in with any username: the mock identity provider accepts everyone. The simulator shares the machine's network, so `localhost` reaches the stack directly and the tokens carry the issuer the API checks.
 
-`iosRun` uses the `iPhone 17` simulator; pick another with `-PiosSimulator="iPhone 16"` (`xcrun simctl list devices available` lists them).
+`iosRun` uses the `iPhone 17` simulator; pick another with `-PiosSimulator="iPhone 16"`, or a device identifier when several runtimes have that name (`xcrun simctl list devices available` lists both).
 
 ## In Xcode
 
@@ -43,4 +43,4 @@ The provider must accept the redirect URI `dev.ylp.notes://callback` for that cl
 
 ## Tests
 
-`./gradlew iosTest` runs the unit and UI tests on the simulator: a stub server in the test runner stands in for the API and the identity provider, and the sign-in page is answered without showing it. `./gradlew iosVerifyCoverage` then requires 80% of the app's lines, and `./gradlew iosLint` runs swift-format. `./gradlew check` includes all three on a Mac with Xcode.
+`./gradlew iosTest` runs the unit and UI tests on the simulator: a stub server in the test runner stands in for the API and the identity provider, and the sign-in page is answered without showing it. `./gradlew iosVerifyCoverage` then requires 80% of the app's lines, and `./gradlew iosLint` runs swift-format. `./gradlew check` includes all three on a Mac with Xcode; CI runs them in the `ios` job when a change can affect the app, and every night on `develop`.

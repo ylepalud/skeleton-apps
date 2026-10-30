@@ -24,8 +24,11 @@ interface XcodeAppExtension {
     /** The app's bundle identifier, which `iosRun` launches. */
     val bundleId: Property<String>
 
-    /** The simulator the tests and the app run on, by name. */
+    /** The simulator the tests and the app run on: a name, or a device identifier (UDID). */
     val simulator: Property<String>
+
+    /** The xcodebuild destination, derived from [simulator]. */
+    val destination: Property<String>
 
     /** Build settings passed to xcodebuild, such as where the app finds its API. */
     val buildSettings: MapProperty<String, String>
@@ -60,7 +63,15 @@ xcodeApp.xcodeAvailable.convention(
 val xcodeAvailable = xcodeApp.xcodeAvailable
 val output = layout.buildDirectory.dir("ios")
 val xcodeProject = xcodeApp.projectDir.zip(xcodeApp.scheme) { dir, scheme -> dir.dir("$scheme.xcodeproj") }
-val destination = xcodeApp.simulator.map { "platform=iOS Simulator,name=$it" }
+// By name, xcodebuild looks for the SDK's latest OS, which a machine may not have installed:
+// a UDID names one simulator exactly.
+xcodeApp.destination.convention(
+    xcodeApp.simulator.map {
+        val udid = Regex("[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}")
+        if (udid.matches(it)) "platform=iOS Simulator,id=$it" else "platform=iOS Simulator,name=$it"
+    },
+)
+val destination = xcodeApp.destination
 val settings = xcodeApp.buildSettings.map { map -> map.map { (key, value) -> "$key=$value" } }
 
 // The app's own sources: the generated project and the build output are not.

@@ -3,7 +3,9 @@ import XCTest
 /// The notes flow on the real screens and the real shared client, against a stub backend.
 @MainActor
 final class NotesFlowTests: XCTestCase {
-    private var backend: StubBackend!
+    // Set by setUp and stopped by tearDown, which XCTest runs outside the main actor, never
+    // while a test runs; the stub itself is thread-safe.
+    nonisolated(unsafe) private var backend: StubBackend!
     private let app = XCUIApplication()
     private static let timeout: TimeInterval = 10
 
