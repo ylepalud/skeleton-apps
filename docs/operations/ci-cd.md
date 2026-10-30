@@ -44,11 +44,11 @@ cosign verify ghcr.io/ylepalud/skeleton-apps/api@<digest> \
 
 ## Mobile apps
 
-`ci.yml` checks the native apps in jobs of their own, which a `changes` job starts only when a change can affect them; a skipped job costs nothing. The `mobile` job then reports for both, and is the required check: it passes when each app job passed or was skipped.
+`ci.yml` checks the native apps through one workflow per platform, `android.yml` and `ios.yml`, which a `changes` job starts only when a change can affect them; a skipped job costs nothing. The `mobile` job then reports for both, and is the required check: it passes when each app job passed or was skipped.
 
 | Job | Runner | Starts when a change touches | Runs | Keeps |
 | --- | --- | --- | --- | --- |
-| `android` | `ubuntu-26.04` (Android SDK preinstalled), about 4 min | `apps/clients/android`, `apps/clients/shared`, the contract, `ci.yml`, or the build (`build-logic`, `gradle/`, the root Gradle files) | `:apps:clients:android:check` (lint, Robolectric UI tests, Kover) and `assembleDebug` | `android-debug-apk`: the debug APK, 7 days; `android-reports` on failure |
+| `android` (`android.yml`) | `ubuntu-26.04` (Android SDK preinstalled), about 4 min | `apps/clients/android`, `apps/clients/shared`, the contract, `ci.yml`, `android.yml`, or the build (`build-logic`, `gradle/`, the root Gradle files) | `:apps:clients:android:check` (lint, Robolectric UI tests, Kover) and `assembleDebug` | `android-debug-apk`: the debug APK, 7 days; `android-reports` on failure |
 | `ios` (`ios.yml`) | `macos-26` (Xcode, simulators), about 10 to 15 min with warm caches | `apps/clients/ios`, `apps/clients/shared`, the contract, `ci.yml`, `ios.yml`, or the conventions it builds with (`xcode-app`, `kotlin-multiplatform-convention`, `openapi-kotlin-client`) | `iosLint`, `iosTest` and `iosVerifyCoverage` on the `iPhone 17` simulator of the newest installed runtime, picked by UDID and booted while Gradle starts | `ios-simulator-app`: the simulator build, 7 days; `ios-test-results` (the `.xcresult`) on failure |
 
 The `ios` job is the slow one, so it follows fewer paths: a dependency upgrade or another convention does not start it. `nightly.yml` runs it every night on `develop` with the shared module's tests on the simulator too, and catches within a day what a pull request let through, such as a Kotlin upgrade that changes Swift export. Those nightly runs also fill the caches pull requests start from: the Gradle cache that `setup-gradle` writes from `develop` only, and `~/.konan`, the Kotlin/Native toolchain, kept by Kotlin version even when a run fails.
