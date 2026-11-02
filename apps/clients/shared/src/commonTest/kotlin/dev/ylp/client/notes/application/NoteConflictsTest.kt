@@ -148,6 +148,8 @@ class NoteConflictsTest : NotesFixture() {
             assertTrue(conflict.mineDeleted)
             assertEquals(listOf(Resolution.KEEP_MINE, Resolution.KEEP_THEIRS), conflict.resolutions)
             assertEquals("Theirs", api.notes.getValue(note.id).title)
+            assertEquals(listOf("Groceries"), titles())
+            assertEquals(SyncState.CONFLICTING, getNote.execute(note.id).note().sync)
             resolveConflict.execute(note.id, Resolution.KEEP_MINE)
             assertTrue(api.notes.isEmpty())
         }

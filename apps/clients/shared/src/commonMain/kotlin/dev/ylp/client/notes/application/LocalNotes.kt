@@ -41,9 +41,9 @@ internal class LocalNotes(
 ) : ChangeReplayer {
     override val entity = "note"
 
-    suspend fun find(id: String): LocalNote? = store.byId(id)?.takeUnless { it.deleted }
+    suspend fun find(id: String): LocalNote? = store.byId(id)?.takeUnless { it.hidden }
 
-    suspend fun deletedHere(id: String): Boolean = store.byId(id)?.deleted == true
+    suspend fun deletedHere(id: String): Boolean = store.byId(id)?.hidden == true
 
     suspend fun create(draft: NoteDraft): Note =
         lock.withLock {
@@ -97,7 +97,7 @@ internal class LocalNotes(
         lock.withLock {
             fetched.notes.forEach { keepFetched(it) }
             forgetDeletedElsewhere(fetched)
-            val shown = fetched.notes.mapNotNull { store.byServerId(it.id)?.takeUnless { note -> note.deleted }?.toNote() }
+            val shown = fetched.notes.mapNotNull { store.byServerId(it.id)?.takeUnless { note -> note.hidden }?.toNote() }
             val createdHere = if (fetched.page == 0) store.localOnly().map { it.toNote() } else emptyList()
             val total = fetched.totalNotes + store.localOnly().size - store.countDeletedHere()
             fetched.copy(notes = createdHere + shown, totalNotes = total.coerceAtLeast(0))
@@ -119,7 +119,7 @@ internal class LocalNotes(
         if (local == null || local.sync == SyncState.SYNCED) {
             store.save(fetched.toLocal(id = local?.id ?: fetched.id))
         }
-        return store.byServerId(fetched.id)?.takeUnless { it.deleted }?.toNote()
+        return store.byServerId(fetched.id)?.takeUnless { it.hidden }?.toNote()
     }
 
     // A synced note in the fetched page's range that the page does not hold was deleted elsewhere.

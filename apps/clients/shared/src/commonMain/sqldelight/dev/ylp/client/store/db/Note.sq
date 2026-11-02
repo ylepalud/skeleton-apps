@@ -33,18 +33,19 @@ SELECT * FROM note WHERE id = ?;
 byServerId:
 SELECT * FROM note WHERE server_id = ?;
 
+-- A note deleted here stays listed while its deletion is in conflict: the user resolves it.
 page:
-SELECT * FROM note WHERE deleted = 0 ORDER BY updated_at DESC, id LIMIT :size OFFSET :offset;
+SELECT * FROM note WHERE deleted = 0 OR sync = 'CONFLICTING' ORDER BY updated_at DESC, id LIMIT :size OFFSET :offset;
 
 countVisible:
-SELECT count(*) FROM note WHERE deleted = 0;
+SELECT count(*) FROM note WHERE deleted = 0 OR sync = 'CONFLICTING';
 
 -- Notes written here that the API does not have yet: listed first, above the API's pages.
 localOnly:
 SELECT * FROM note WHERE server_id IS NULL AND deleted = 0 ORDER BY updated_at DESC, id;
 
 countDeletedHere:
-SELECT count(*) FROM note WHERE deleted = 1 AND server_id IS NOT NULL;
+SELECT count(*) FROM note WHERE deleted = 1 AND sync != 'CONFLICTING' AND server_id IS NOT NULL;
 
 -- The synced notes of a fetched page's range: those the page no longer holds were deleted elsewhere.
 syncedInRange:

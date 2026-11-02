@@ -20,6 +20,9 @@ internal data class LocalNote(
 ) {
     fun toNote() = Note(id, title, content, createdAt, updatedAt, version, sync)
 
+    /** Deleted here, deletion not in conflict: the user no longer sees it. */
+    val hidden: Boolean get() = deleted && sync != SyncState.CONFLICTING
+
     fun draft() = NoteDraft(title, content)
 }
 
@@ -35,7 +38,7 @@ internal interface NoteStore {
 
     suspend fun byServerId(serverId: String): LocalNote?
 
-    /** The notes not deleted here, most recently updated first. */
+    /** The notes the user sees, most recently updated first. */
     suspend fun page(
         offset: Long,
         size: Long,
