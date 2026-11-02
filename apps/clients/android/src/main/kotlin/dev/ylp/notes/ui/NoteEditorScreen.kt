@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,12 +29,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.ylp.client.SharedClient
 import dev.ylp.client.notes.domain.DeleteNoteResult
+import dev.ylp.client.notes.domain.Note
+import dev.ylp.client.notes.domain.NoteConflict
+import dev.ylp.client.notes.domain.NoteConflictResult
 import dev.ylp.client.notes.domain.NoteDraft
 import dev.ylp.client.notes.domain.NoteFailure
 import dev.ylp.client.notes.domain.NoteResult
+import dev.ylp.client.notes.domain.Resolution
+import dev.ylp.client.notes.domain.ResolutionResult
+import dev.ylp.client.notes.domain.SyncState
 import kotlinx.coroutines.launch
 
-/** Writes a new note when [id] is null, otherwise edits or deletes that note. */
+/**
+ * Writes a new note when [id] is null, otherwise edits or deletes that note. A change the API
+ * refuses because of a change made elsewhere shows as a conflict, resolved with the notes strategy.
+ */
 class NoteEditorViewModel(
     private val client: SharedClient,
     private val id: String?,
@@ -48,8 +59,9 @@ class NoteEditorViewModel(
         private set
     var confirmingDelete by mutableStateOf(false)
 
-    /** The version of the note as read: the change is based on it. */
-    private var version = 0L
+    /** The conflict of the note, while the user resolves it. */
+    var conflict by mutableStateOf<NoteConflict?>(null)
+        private set
 
     init {
         if (id != null) viewModelScope.launch { load(id) }
@@ -60,7 +72,7 @@ class NoteEditorViewModel(
             is NoteResult.Success -> {
                 title = result.note.title
                 content = result.note.content
-                version = result.note.version
+                if (result.note.sync == SyncState.CONFLICTING) showConflict(id)
             }
 
             is NoteResult.Failed -> fail(result.failure)
@@ -69,9 +81,9 @@ class NoteEditorViewModel(
 
     fun save() {
         viewModelScope.launch {
-            val result = if (id == null) client.createNote.execute(title, content) else client.updateNote.execute(id, title, content, version)
+            val result = if (id == null) client.createNote.execute(title, content) else client.updateNote.execute(id, title, content)
             when (result) {
-                is NoteResult.Success -> done = true
+                is NoteResult.Success -> if (result.note.sync == SyncState.CONFLICTING) showConflict(result.note.id) else done = true
                 is NoteResult.Failed -> fail(result.failure)
             }
         }
@@ -81,17 +93,33 @@ class NoteEditorViewModel(
         val id = id ?: return
         confirmingDelete = false
         viewModelScope.launch {
-            when (val result = client.deleteNote.execute(id, version)) {
-                DeleteNoteResult.Deleted -> done = true
+            when (val result = client.deleteNote.execute(id)) {
+                // A deletion of a note changed elsewhere waits for the user.
+                DeleteNoteResult.Deleted -> if (!showConflict(id)) done = true
+
                 is DeleteNoteResult.Failed -> fail(result.failure)
             }
         }
     }
 
-    // The policy of notes for a concurrent change: nothing is overwritten, the editor shows the
-    // latest version, and the user redoes the change.
-    private suspend fun fail(failure: NoteFailure) {
-        if (failure == NoteFailure.Changed && id != null) load(id)
+    fun resolve(resolution: Resolution) {
+        val id = conflict?.mine?.id ?: return
+        viewModelScope.launch {
+            when (val result = client.resolveConflict.execute(id, resolution)) {
+                ResolutionResult.Resolved -> done = true
+                is ResolutionResult.Failed -> fail(result.failure)
+            }
+        }
+    }
+
+    /** Shows the conflict of the note, if it has one. */
+    private suspend fun showConflict(id: String): Boolean {
+        val result = client.getConflict.execute(id)
+        conflict = (result as? NoteConflictResult.Found)?.conflict
+        return conflict != null
+    }
+
+    private fun fail(failure: NoteFailure) {
         if (failure == NoteFailure.SignedOut) signedOut = true else problem = failure.message()
     }
 }
@@ -106,6 +134,11 @@ fun NoteEditorScreen(
     LaunchedEffect(model.done) { if (model.done) onDone() }
     LaunchedEffect(model.signedOut) { if (model.signedOut) onSignedOut() }
     Scaffold(topBar = { TopAppBar(title = { Text(if (model.editing) "Edit note" else "New note") }) }) { padding ->
+        val conflict = model.conflict
+        if (conflict != null) {
+            ConflictPanel(conflict, model.problem, model::resolve, Modifier.padding(padding))
+            return@Scaffold
+        }
         Column(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(
                 value = model.title,
@@ -135,5 +168,36 @@ fun NoteEditorScreen(
             confirmButton = { TextButton(onClick = model::delete) { Text("Delete") } },
             dismissButton = { TextButton(onClick = { model.confirmingDelete = false }) { Text("Keep") } },
         )
+    }
+}
+
+/** Both sides of a conflict, and one button per resolution. */
+@Composable
+private fun ConflictPanel(
+    conflict: NoteConflict,
+    problem: String?,
+    onResolve: (Resolution) -> Unit,
+    modifier: Modifier,
+) {
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(conflict.headline(), style = MaterialTheme.typography.titleMedium)
+        if (!conflict.mineDeleted) Side("Yours", conflict.mine)
+        conflict.theirs?.let { Side("Theirs", it) }
+        problem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        conflict.resolutions.forEach { resolution ->
+            OutlinedButton(onClick = { onResolve(resolution) }, modifier = Modifier.fillMaxWidth()) { Text(conflict.label(resolution)) }
+        }
+    }
+}
+
+@Composable
+private fun Side(
+    name: String,
+    note: Note,
+) {
+    Column {
+        Text(name, style = MaterialTheme.typography.labelMedium)
+        Text(note.title, style = MaterialTheme.typography.bodyLarge)
+        if (note.content.isNotEmpty()) Text(note.content)
     }
 }

@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
@@ -104,25 +105,76 @@ class NotesFlowTest {
     }
 
     @Test
-    fun aNoteChangedElsewhereIsReloadedInsteadOfOverwritten() {
-        val id = backend.add("Groceries", "Milk")
-        signIn()
-        compose.waitUntilText("Groceries")
-        compose.onNodeWithText("Groceries").performClick()
-        compose.waitUntilText("Milk")
-        backend.changeElsewhere(id, "From the browser", "Eggs")
+    fun aNoteChangedElsewhereIsKeptAsMine() {
+        val id = changeOnBothSides()
 
-        compose.onNodeWithText("Groceries").performTextClearance()
-        compose.onNodeWithText("Title").performTextInput("From the phone")
-        compose.onNodeWithText("Save").performClick()
+        compose.onNodeWithText("Keep mine").performScrollTo().performClick()
 
-        waitFor(CHANGED_ELSEWHERE)
-        waitFor("From the browser")
-        waitFor("Eggs")
-        assertEquals("From the browser" to "Eggs", backend.notes.getValue(id))
-
-        compose.onNodeWithText("Save").performClick()
         waitFor("Your notes (1)")
+        waitFor("From the phone")
+        assertEquals("From the phone" to "Milk", backend.notes.getValue(id))
+    }
+
+    @Test
+    fun aNoteChangedElsewhereIsKeptAsTheirs() {
+        val id = changeOnBothSides()
+
+        compose.onNodeWithText("Keep theirs").performScrollTo().performClick()
+
+        waitFor("Your notes (1)")
+        waitFor("From the browser")
+        assertEquals("From the browser" to "Eggs", backend.notes.getValue(id))
+    }
+
+    @Test
+    fun aNoteChangedElsewhereIsKeptOnBothSides() {
+        changeOnBothSides()
+
+        compose.onNodeWithText("Keep both").performScrollTo().performClick()
+
+        waitFor("Your notes (2)")
+        assertEquals(setOf("From the phone", "From the browser"), backend.notes.values.map { it.first }.toSet())
+    }
+
+    @Test
+    fun aNoteWrittenOfflineIsListedThenSentWhenTheApiIsBack() {
+        backend.add("Groceries")
+        signIn()
+        waitFor("Groceries")
+        backend.offline = true
+
+        compose.onNodeWithText("New note").performClick()
+        compose.onNodeWithText("Title").performTextInput("Books")
+        compose.onNodeWithText("Add note").performClick()
+
+        waitFor(OFFLINE)
+        waitFor("Books")
+        waitFor("Not synced")
+        backend.offline = false
+        compose.onNodeWithText("Retry").performClick()
+        compose.waitUntil(TIMEOUT) { compose.onAllNodesWithText("Not synced").fetchSemanticsNodes().isEmpty() }
+        assertEquals(setOf("Groceries", "Books"), backend.notes.values.map { it.first }.toSet())
+    }
+
+    @Test
+    fun signingOutWithChangesNotSyncedAsksFirst() {
+        signIn()
+        waitFor("No notes yet.")
+        backend.offline = true
+        compose.onNodeWithText("New note").performClick()
+        compose.onNodeWithText("Title").performTextInput("Books")
+        compose.onNodeWithText("Add note").performClick()
+        waitFor("Not synced")
+
+        compose.onNodeWithText("Sign out").performClick()
+        waitFor("Changes not synced yet: 1. Signing out loses them.")
+        compose.onNodeWithText("Stay").performClick()
+        compose.waitUntil(TIMEOUT) { compose.onAllNodesWithText("Stay").fetchSemanticsNodes().isEmpty() }
+        compose.onNodeWithText("Sign out").performClick()
+        waitFor("Sign out anyway")
+        compose.onNodeWithText("Sign out anyway").performClick()
+
+        waitFor("Sign in")
     }
 
     @Test
@@ -174,7 +226,7 @@ class NotesFlowTest {
         backend.failNextWith = 503
         signIn()
 
-        waitFor("The service cannot be reached. Try again.")
+        waitFor(OFFLINE)
         compose.onNodeWithText("Retry").performClick()
 
         waitFor("Groceries")
@@ -205,6 +257,25 @@ class NotesFlowTest {
 
         waitFor("Sign in")
         assertEquals(null, runBlocking { TestNotesApplication.tokens.load() })
+    }
+
+    /** A note opened here, changed elsewhere, then saved here: the editor shows the conflict. */
+    private fun changeOnBothSides(): String {
+        val id = backend.add("Groceries", "Milk")
+        signIn()
+        compose.waitUntilText("Groceries")
+        compose.onNodeWithText("Groceries").performClick()
+        compose.waitUntilText("Milk")
+        backend.changeElsewhere(id, "From the browser", "Eggs")
+
+        compose.onNodeWithText("Groceries").performTextClearance()
+        compose.onNodeWithText("Title").performTextInput("From the phone")
+        compose.onNodeWithText("Save").performClick()
+
+        waitFor("This note was changed elsewhere.")
+        waitFor("From the browser")
+        assertEquals("From the browser" to "Eggs", backend.notes.getValue(id))
+        return id
     }
 
     private fun signIn() {

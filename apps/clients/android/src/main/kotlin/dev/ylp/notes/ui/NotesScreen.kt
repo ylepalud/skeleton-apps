@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +49,11 @@ class NotesViewModel(
         private set
     var signedOut by mutableStateOf(false)
         private set
+    var offline by mutableStateOf(false)
+        private set
+
+    /** The changes a sign-out would lose, while the user confirms it. */
+    var confirmingSignOut by mutableStateOf<Long?>(null)
     private var page = 0
 
     /** Reloads from the first page, as when coming back from the editor. */
@@ -55,7 +61,16 @@ class NotesViewModel(
 
     fun loadMore() = load(page + 1)
 
+    /** Signs out at once, or first asks when changes not sent yet would be lost. */
     fun signOut() {
+        viewModelScope.launch {
+            val pending = client.countPendingChanges.execute()
+            if (pending > 0) confirmingSignOut = pending else signOutAnyway()
+        }
+    }
+
+    fun signOutAnyway() {
+        confirmingSignOut = null
         viewModelScope.launch {
             client.signOut.execute()
             signedOut = true
@@ -71,6 +86,7 @@ class NotesViewModel(
                     notes = if (page == 0) result.page.notes else notes + result.page.notes
                     totalNotes = result.page.totalNotes
                     hasNext = result.page.hasNext
+                    offline = result.page.offline
                     problem = null
                 }
 
@@ -109,6 +125,10 @@ fun NotesScreen(
                 Text(problem, color = MaterialTheme.colorScheme.error)
                 Button(onClick = model::refresh) { Text("Retry") }
             }
+            if (model.offline) {
+                Text(OFFLINE)
+                Button(onClick = model::refresh) { Text("Retry") }
+            }
             if (!model.loading && model.problem == null && model.notes.isEmpty()) Text("No notes yet.")
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(model.notes, key = { it.id }) { note ->
@@ -116,6 +136,7 @@ fun NotesScreen(
                         Column(Modifier.padding(16.dp)) {
                             Text(note.title, style = MaterialTheme.typography.titleMedium)
                             if (note.content.isNotEmpty()) Text(note.content, maxLines = 3)
+                            note.sync.label()?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.tertiary) }
                         }
                     }
                 }
@@ -124,5 +145,13 @@ fun NotesScreen(
                 }
             }
         }
+    }
+    model.confirmingSignOut?.let { pending ->
+        AlertDialog(
+            onDismissRequest = { model.confirmingSignOut = null },
+            text = { Text("Changes not synced yet: $pending. Signing out loses them.") },
+            confirmButton = { TextButton(onClick = model::signOutAnyway) { Text("Sign out anyway") } },
+            dismissButton = { TextButton(onClick = { model.confirmingSignOut = null }) { Text("Stay") } },
+        )
     }
 }
