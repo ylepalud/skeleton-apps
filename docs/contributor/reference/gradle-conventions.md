@@ -36,4 +36,5 @@ The build is a Kotlin DSL monorepo. Every project applies one or more convention
 - **Docker is resolved from the caller's `PATH`** (`dev.ylp.buildlogic.dockerExecutable`): a long-lived Gradle daemon may have a minimal `PATH`.
 - **The Android SDK is a prerequisite** of every build: the Android Gradle Plugin configures `apps/clients/shared` even when only the API is built. Set `ANDROID_HOME`.
 - **iOS needs macOS with Xcode.** Elsewhere, Kotlin skips the iOS targets and the `ios*` tasks are skipped. The iOS app also needs XcodeGen (`brew install xcodegen`).
+- **`apps/clients/shared` also applies SQLDelight** in its own build: the local store's schema lives in `src/commonMain/sqldelight`, and the build makes the generated queries `internal`, like the API client, so Swift export never publishes them.
 - **A change to a convention plugin comes with a TestKit test.**

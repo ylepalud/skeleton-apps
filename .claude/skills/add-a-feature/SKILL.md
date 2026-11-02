@@ -9,4 +9,5 @@ Done when:
 - each layer changed in that order, and the compiler reports nothing left;
 - the behaviour has tests at the level that proves it, including the port contract test for persistence changes;
 - a write on a versioned resource takes the version it is based on (`ExpectedVersion`, `If-Match`), its use case states its conflict policy in its Javadoc, and a test proves a stale version changes nothing (docs/architecture/overview.md#optimistic-concurrency);
+- in the native clients, a change of a note's fields reaches the local store too (`src/commonMain/sqldelight`, `LocalNote`, `SqlNoteStore`), and a new entity changed offline brings its `ChangeReplayer` with a stated conflict strategy (docs/architecture/clients.md#offline);
 - `./gradlew check` passes, and the end-to-end tests pass against `./gradlew startLocalStack`.

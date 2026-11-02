@@ -67,15 +67,16 @@ A resource users change from several places carries a **version**, so that a cha
 | REST adapter | `ETags.of(version)` writes the ETag; `ETags.expected(ifMatch)` reads `If-Match` into an `ExpectedVersion` (`*` means any version); a missing `If-Match` becomes a 428 | `dev.ylp.shared.concurrency` |
 | Use case | Takes the `ExpectedVersion` in its command, calls the aggregate's `requireVersion` before changing anything, and states its **conflict policy** in its Javadoc | `UpdateNoteUseCase`, `DeleteNoteUseCase` |
 | Persistence | A `version` column and a JPA `@Version`: the adapter updates the stored row in place and flushes, so a change committed between the read and the write still fails | `PostgresNoteRepository` |
-| Clients | Keep the version of what they show, send it back, and apply the screen's policy on 412 | web store, `NoteFailure.Changed` in the native clients |
+| Clients | Keep the version of what they show, send it back, and apply the screen's policy on 412 | web store; in the native clients, the local store and its queue ([offline](clients.md#offline)) |
 
 The conflict policy is a decision for each use case, not for the mechanism:
 
 | Policy | When | Example |
 | --- | --- | --- |
-| Refuse, show the latest version | The user edits content another device may also edit; nothing may be lost silently | notes: update and delete |
+| Refuse, show the latest version | The user edits content another device may also edit; nothing may be lost silently | notes: update and delete, on the web |
+| Refuse, keep both sides, let the user choose | The change was made offline, or can be redone only with effort: it waits next to the API's state | notes: update and delete, in the native clients ([ADR 0029](decisions/0029-offline-native-clients-with-a-queue-and-a-conflict-strategy-per-entity.md)) |
 | Last write wins (`If-Match: *`) | The change does not depend on the current state, such as an append-only record or a reset | none yet |
-| Merge | Both changes can be combined field by field | none yet; offline use (#71) may need it |
+| Merge | Both changes can be combined field by field | none yet |
 
 A new write use case states which one it applies and tests it; [ADR 0028](decisions/0028-optimistic-concurrency-with-a-policy-per-use-case.md) records why.
 

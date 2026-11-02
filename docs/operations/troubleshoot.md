@@ -42,6 +42,14 @@ Xcode builds the Kotlin code through `embedSwiftExportForXcode`. If the app's Sw
 ./gradlew :apps:clients:shared:compileKotlinIosSimulatorArm64 --rerun --no-build-cache
 ```
 
+## The iOS app does not link: "_sqlite3_" symbols not found
+
+The local store of `apps/clients/shared` uses the system's SQLite, which Swift export does not link by itself. `apps/clients/ios/project.yml` passes `-lsqlite3` in the `Notes` target's `OTHER_LDFLAGS`; an Xcode project made by hand, or a target added to `project.yml`, needs the same flag.
+
+## The app shows notes that are no longer on the server
+
+The native apps keep notes on the device and show them when the API cannot be reached; the list then says "Offline". A note labelled **Not synced** waits for the network; one labelled **Conflict** waits for you to choose ([Native clients, offline](../architecture/clients.md#offline)). To start from an empty device, sign out, or clear the app's storage.
+
 ## iosTest fails with "Failed to install or launch the test runner"
 
 A simulator booted for the first time can take longer than xcodebuild waits, and a simulator that has run many test sessions can stop answering. Boot it first, or erase it if that is not enough, then run the tests again:
