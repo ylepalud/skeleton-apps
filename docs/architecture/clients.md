@@ -74,12 +74,17 @@ sequenceDiagram
 - Every API call carries the stored access token. On a 401 the library refreshes it once and retries; if the refresh fails, it clears the store and the call answers `SignedOut`.
 - `Tokens` and `AuthorizationRequest` hide their secrets from `toString`, so a log never prints them.
 
+## Versions
+
+`Note.version` is the version the API returned. `UpdateNote` and `DeleteNote` take the version the change is based on and send it in `If-Match`; a note changed since answers `NoteFailure.Changed`. What happens next is each screen's policy: the editors of both apps show the message and reload the latest version, the [policy of notes](overview.md#optimistic-concurrency).
+
 ## Errors
 
 | API answer | Result |
 | --- | --- |
 | 401 after a failed refresh, or no session | `NoteFailure.SignedOut` |
 | 404 | `NoteFailure.NotFound`: missing, or someone else's |
+| 412 | `NoteFailure.Changed`: the note changed since the version the change was based on; nothing was overwritten |
 | 400, 413 | `NoteFailure.Invalid`, with the problem's `detail` |
 | Anything else, or no network | `NoteFailure.Unavailable` |
 

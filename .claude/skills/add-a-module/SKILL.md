@@ -8,5 +8,6 @@ Follow [docs/contributor/how-to/add-a-module.md](../../../docs/contributor/how-t
 Done when:
 - the module has its package with `@ApplicationModule`, its own schema and changelog, its contract file and tag;
 - each port has an abstract contract test, extended by its adapter's Testcontainers test;
+- a resource that can be changed is versioned (JPA `@Version`, `version` in its schema, ETag and `If-Match`), and each of its write use cases states its conflict policy;
 - `ModularityTest` and `HexagonalArchitectureTest` pass without changes to them;
 - `./gradlew check` passes.

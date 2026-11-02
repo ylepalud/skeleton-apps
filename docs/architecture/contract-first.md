@@ -20,7 +20,7 @@ The OpenAPI contract in `apps/contracts/api` is written before the code and is t
 
 ## Layout
 
-`openapi.yaml` is the entry point (info, servers, security, paths). Shared building blocks (`Problem`, common responses) live in `common.yaml`; each module has its own file and tag (`notes.yaml`). Today one generation serves the single module; a second module will need one generation per tag, so that each module owns its generated code (issue #14).
+`openapi.yaml` is the entry point (info, servers, security, paths). Shared building blocks (`Problem`, common responses, and the `IfMatch` parameter, `ETag` header and 412/428 responses of [optimistic concurrency](overview.md#optimistic-concurrency)) live in `common.yaml`; each module has its own file and tag (`notes.yaml`). Today one generation serves the single module; a second module will need one generation per tag, so that each module owns its generated code (issue #14).
 
 ## The rule
 
