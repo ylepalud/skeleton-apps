@@ -14,6 +14,14 @@ Run from the repository root. The Gradle tasks are the source of truth: `./gradl
 | `./gradlew :build-logic:functionalTest` | The TestKit tests of the convention plugins only |
 | `./gradlew pitest` | Mutation testing (80% threshold), outside `check` |
 | `./gradlew spotlessApply` | Formats Java and Kotlin sources; `:build-logic:spotlessApply` formats the Kotlin build code |
+| `./gradlew agentCliTest` | The agent CLI's unit tests and selftest, part of `check` |
+
+## Agent CLI
+
+| Command | What it does |
+| --- | --- |
+| `bin/agent-cli help` | Lists the lookups it answers; `bin/agent-cli <command> --help` for one, see [Agent CLI](agent-cli.md) |
+| `bin/agent-cli docs --write` | Regenerates its reference page after a change to its registry |
 
 ## Run
 

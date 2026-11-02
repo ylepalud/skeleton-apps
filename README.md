@@ -89,7 +89,7 @@ One section per reader; [docs/README.md](docs/README.md) lists them. The same pa
 | [Operations](docs/operations/README.md) | keeping it delivering: CI/CD, releases, dependencies, a red build |
 | [Architecture](docs/architecture/README.md) | understanding the design, and the [decision records](docs/architecture/decisions.md) behind it |
 
-Coding agents start with [AGENTS.md](AGENTS.md).
+Coding agents start with [AGENTS.md](AGENTS.md) and `bin/agent-cli help`.
 
 ## Contributing
 

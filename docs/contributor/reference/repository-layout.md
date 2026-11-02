@@ -3,6 +3,8 @@
 ```text
 skeleton-apps/
 ├── AGENTS.md                    instructions for coding agents (CLAUDE.md imports it)
+├── bin/agent-cli                the lookups agents repeat, one command each (agent-cli.mjs, its tests)
+├── .claude/                     project skills, and the hook that points agents to bin/agent-cli
 ├── build-logic/                 Gradle convention plugins, an included build
 │   ├── src/main/kotlin/         one *.gradle.kts file per plugin
 │   └── src/functionalTest/      TestKit tests of the plugins

@@ -4,6 +4,7 @@ Gradle monorepo: a Spring Boot API organised as a Spring Modulith (`apps/service
 
 ## Rules
 
+- **`bin/agent-cli` first** for any lookup: branch, pull request, CI, issues, modules, docs, decisions, a Gradle run. `bin/agent-cli help` lists the commands; prefer them to re-reading files or guessing a command.
 - **English** for everything written: code, comments, docs, commits, pull requests.
 - **Product code lives in `apps/`**, one Gradle project per app or library; Gradle builds everything, and the iOS app (`apps/clients/ios`) is the only folder that is not a Gradle project, driven by the root build.
 - **Contract first.** An API change starts in `apps/contracts/api`, then `./gradlew :apps:bruno:updateCollection`, then code.
@@ -33,4 +34,5 @@ Gradle monorepo: a Spring Boot API organised as a Spring Modulith (`apps/service
 | update a dependency | [docs/operations/update-dependencies.md](docs/operations/update-dependencies.md) |
 | debug a red CI | [docs/operations/read-a-failing-ci.md](docs/operations/read-a-failing-ci.md) |
 | work on a sub-issue of an epic | [docs/contributor/how-to/track-an-epic.md](docs/contributor/how-to/track-an-epic.md) |
+| add or change an `agent-cli` command | [docs/contributor/reference/agent-cli.md](docs/contributor/reference/agent-cli.md) |
 | debug the local build or stack | [docs/operations/troubleshoot.md](docs/operations/troubleshoot.md) |
