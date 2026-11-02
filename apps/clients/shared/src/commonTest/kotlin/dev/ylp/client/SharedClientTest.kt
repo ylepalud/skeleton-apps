@@ -10,11 +10,11 @@ import dev.ylp.client.notes.domain.NoteFailure
 import dev.ylp.client.notes.domain.NotePage
 import dev.ylp.client.notes.domain.NotePageResult
 import dev.ylp.client.notes.domain.NoteResult
-import dev.ylp.client.notes.domain.Violation
+import dev.ylp.client.notes.domain.SyncState
+import dev.ylp.client.sync.domain.SyncResult
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
-import io.ktor.client.engine.mock.toByteArray
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
@@ -30,6 +30,7 @@ import kotlin.time.Instant
 /** The client end to end, over a mock of the API and of the identity provider. */
 class SharedClientTest {
     private val store = InMemoryTokenStore()
+    private val localStore = testStore()
     private val requests = mutableListOf<HttpRequestData>()
 
     private fun client(api: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): SharedClient {
@@ -60,6 +61,7 @@ class SharedClientTest {
             "https://api.example/api/v1/",
             AuthConfig("https://idp.example/default", "mobile", "app://callback"),
             FakeBrowser(null),
+            localStore,
             store,
             engine,
         )
@@ -85,7 +87,7 @@ class SharedClientTest {
         }
 
     @Test
-    fun `a note is written then read then replaced then deleted`() =
+    fun `a note is written then read then replaced then deleted under its local id`() =
         runTest {
             store.save(Tokens("access", "refresh", null))
             val client =
@@ -99,116 +101,45 @@ class SharedClientTest {
                     }
                 }
 
-            assertEquals(NoteResult.Success(NOTE), client.createNote.execute("Groceries", "Milk"))
-            assertEquals(NoteResult.Success(NOTE), client.getNote.execute(NOTE.id))
-            assertEquals(NoteResult.Success(NOTE), client.updateNote.execute(NOTE.id, "Groceries", "Milk", version = 4))
-            assertEquals(DeleteNoteResult.Deleted, client.deleteNote.execute(NOTE.id, version = 4))
+            val created = (client.createNote.execute("Groceries", "Milk") as NoteResult.Success).note
+            assertEquals(NOTE.copy(id = created.id), created)
+            assertEquals(NoteResult.Success(created), client.getNote.execute(created.id))
+            assertEquals(NoteResult.Success(created), client.updateNote.execute(created.id, "Groceries", "Milk"))
+            assertEquals(DeleteNoteResult.Deleted, client.deleteNote.execute(created.id))
 
             assertEquals(listOf(HttpMethod.Post, HttpMethod.Get, HttpMethod.Put, HttpMethod.Delete), requests.map { it.method })
+            assertEquals("https://api.example/api/v1/notes/${NOTE.id}", requests[1].url.toString())
             assertEquals(listOf(null, null, "\"4\"", "\"4\""), requests.map { it.headers[HttpHeaders.IfMatch] })
-            assertEquals(
-                """{"title":"Groceries","content":"Milk"}""",
-                requests
-                    .first()
-                    .body
-                    .toByteArray()
-                    .decodeToString(),
-            )
+            assertEquals(0, client.countPendingChanges.execute())
         }
 
     @Test
-    fun `someone else's note is not found`() =
+    fun `an unreachable API leaves the change queued until a sync gets through`() =
         runTest {
             store.save(Tokens("access", "refresh", null))
-            val client = client { problem(HttpStatusCode.NotFound, "Note not found") }
+            var online = false
+            val client = client { if (online) json(NOTE_JSON) else throw IllegalStateException("offline") }
 
-            assertEquals(NoteResult.Failed(NoteFailure.NotFound), client.getNote.execute(NOTE.id))
+            val created = (client.createNote.execute("Groceries", "Milk") as NoteResult.Success).note
+            assertEquals(SyncState.PENDING, created.sync)
+            assertEquals(SyncResult.OFFLINE, client.syncChanges.execute())
+
+            online = true
+            assertEquals(SyncResult.SYNCED, client.syncChanges.execute())
+            assertEquals(0, client.countPendingChanges.execute())
         }
 
     @Test
-    fun `a note changed since the version a change is based on reports the change`() =
-        runTest {
-            store.save(Tokens("access", "refresh", null))
-            val client = client { problem(HttpStatusCode.PreconditionFailed, "Note is at version 5, not 4") }
-
-            assertEquals(NoteResult.Failed(NoteFailure.Changed), client.updateNote.execute(NOTE.id, "Groceries", "Milk", version = 4))
-            assertEquals(DeleteNoteResult.Failed(NoteFailure.Changed), client.deleteNote.execute(NOTE.id, version = 4))
-        }
-
-    @Test
-    fun `a request the API rejects reports its detail`() =
-        runTest {
-            store.save(Tokens("access", "refresh", null))
-            val client = client { problem(HttpStatusCode.BadRequest, "title: must not be blank") }
-
-            assertEquals(
-                NoteResult.Failed(NoteFailure.Invalid(listOf(Violation(null, "title: must not be blank")))),
-                client.createNote.execute(" ", "Milk"),
-            )
-        }
-
-    @Test
-    fun `a rejection without a problem body still reports the request as invalid`() =
-        runTest {
-            store.save(Tokens("access", "refresh", null))
-            val client = client { respond("", HttpStatusCode.PayloadTooLarge) }
-
-            assertEquals(
-                NoteResult.Failed(NoteFailure.Invalid(listOf(Violation(null, "Invalid request")))),
-                client.updateNote.execute(NOTE.id, "Groceries", "Milk", version = 0),
-            )
-        }
-
-    @Test
-    fun `a problem without detail reports its title`() =
-        runTest {
-            store.save(Tokens("access", "refresh", null))
-            val client =
-                client {
-                    respond(
-                        """{"type": "about:blank", "title": "Bad Request", "status": 400}""",
-                        HttpStatusCode.BadRequest,
-                        headersOf(HttpHeaders.ContentType, "application/problem+json"),
-                    )
-                }
-
-            assertEquals(
-                NoteResult.Failed(NoteFailure.Invalid(listOf(Violation(null, "Bad Request")))),
-                client.createNote.execute("Groceries", "Milk"),
-            )
-        }
-
-    @Test
-    fun `an unexpected answer without a problem body reports its status`() =
-        runTest {
-            store.save(Tokens("access", "refresh", null))
-            val client = client { respond("", HttpStatusCode.BadGateway) }
-
-            assertEquals(
-                NotePageResult.Failed(NoteFailure.Unavailable("Unexpected answer from the API: 502")),
-                client.listNotes.execute(),
-            )
-        }
-
-    @Test
-    fun `an unexpected error of the API is reported as unavailable`() =
-        runTest {
-            store.save(Tokens("access", "refresh", null))
-            val client = client { problem(HttpStatusCode.InternalServerError, "boom") }
-
-            assertEquals(
-                DeleteNoteResult.Failed(NoteFailure.Unavailable("Internal Server Error")),
-                client.deleteNote.execute(NOTE.id, version = 0),
-            )
-        }
-
-    @Test
-    fun `an unreachable API is reported as unavailable`() =
+    fun `signing out forgets the notes kept on the device`() =
         runTest {
             store.save(Tokens("access", "refresh", null))
             val client = client { throw IllegalStateException("offline") }
+            client.createNote.execute("Groceries", "Milk")
 
-            assertEquals(NoteResult.Failed(NoteFailure.Unavailable("offline")), client.getNote.execute(NOTE.id))
+            client.signOut.execute()
+
+            assertEquals(0, client.countPendingChanges.execute())
+            assertEquals(emptyList(), (client.listNotes.execute() as NotePageResult.Success).page.notes)
         }
 
     @Test
@@ -259,6 +190,7 @@ class SharedClientTest {
                     "https://api.example/api/v1",
                     AuthConfig("https://idp.example/default", "mobile", "app://callback"),
                     FakeBrowser(null),
+                    testStore(),
                 )
 
             assertEquals(dev.ylp.client.auth.application.Session.SignedOut, client.currentSession.execute())
@@ -274,15 +206,6 @@ class SharedClientTest {
 
     private fun MockRequestHandleScope.unauthorized() =
         respond("", HttpStatusCode.Unauthorized, headersOf(HttpHeaders.WWWAuthenticate, "Bearer"))
-
-    private fun MockRequestHandleScope.problem(
-        status: HttpStatusCode,
-        detail: String,
-    ) = respond(
-        """{"type": "about:blank", "title": "${status.description}", "status": ${status.value}, "detail": "$detail"}""",
-        status,
-        headersOf(HttpHeaders.ContentType, "application/problem+json"),
-    )
 
     private fun MockRequestHandleScope.json(
         body: String,

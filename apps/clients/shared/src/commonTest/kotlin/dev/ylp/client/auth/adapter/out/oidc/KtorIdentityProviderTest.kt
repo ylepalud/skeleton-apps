@@ -2,6 +2,7 @@ package dev.ylp.client.auth.adapter.out.oidc
 
 import dev.ylp.client.auth.domain.AuthConfig
 import dev.ylp.client.auth.domain.AuthenticationException
+import dev.ylp.client.auth.domain.Authorization
 import dev.ylp.client.auth.domain.AuthorizationRequest
 import dev.ylp.client.auth.domain.Tokens
 import io.ktor.client.HttpClient
@@ -100,9 +101,9 @@ class KtorIdentityProviderTest {
     @Test
     fun `the code of the redirect is exchanged with the verifier`() =
         runTest {
-            val tokens = provider { tokens() }.completeAuthorization(REQUEST, "app://callback?code=the-code&state=the-state")
+            val authorization = provider { tokens() }.completeAuthorization(REQUEST, "app://callback?code=the-code&state=the-state")
 
-            assertEquals(Tokens("access", "refresh", now + kotlin.time.Duration.parse("5m")), tokens)
+            assertEquals(Authorization(Tokens("access", "refresh", now + kotlin.time.Duration.parse("5m")), subject = null), authorization)
             assertEquals(
                 mapOf(
                     "grant_type" to "authorization_code",
@@ -113,6 +114,27 @@ class KtorIdentityProviderTest {
                 ),
                 tokenForms.single(),
             )
+        }
+
+    @Test
+    fun `the user signing in is named by the ID token`() =
+        runTest {
+            // The payload is {"sub":"alice"}; the signature does not matter here.
+            val answer = """{"access_token": "access", "id_token": "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhbGljZSJ9.c2ln"}"""
+
+            val authorization = provider { json(answer) }.completeAuthorization(REQUEST, "app://callback?code=c&state=the-state")
+
+            assertEquals("alice", authorization.subject)
+        }
+
+    @Test
+    fun `an ID token that cannot be read names nobody`() =
+        runTest {
+            val authorization =
+                provider { json("""{"access_token": "access", "id_token": "not-a-jwt"}""") }
+                    .completeAuthorization(REQUEST, "app://callback?code=c&state=the-state")
+
+            assertEquals(null, authorization.subject)
         }
 
     @Test

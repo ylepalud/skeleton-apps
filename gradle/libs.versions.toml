@@ -30,6 +30,7 @@ androidx-test-core = "1.7.0"
 espresso = "3.7.0"
 kotlincrypto-hash = "0.8.0"
 kotlincrypto-random = "0.6.0"
+sqldelight = "2.4.1"
 junit = "6.1.3"
 assertj = "3.27.7"
 
@@ -47,6 +48,7 @@ gradle-kotlin-serialization = { module = "org.jetbrains.kotlin:kotlin-serializat
 gradle-android = { module = "com.android.tools.build:gradle", version.ref = "android-gradle-plugin" }
 gradle-compose-compiler = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
 gradle-kover = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version.ref = "kover" }
+gradle-sqldelight = { module = "app.cash.sqldelight:gradle-plugin", version.ref = "sqldelight" }
 
 # Platforms imported by the spring convention.
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
@@ -73,6 +75,10 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlincrypto-sha2 = { module = "org.kotlincrypto.hash:sha2", version.ref = "kotlincrypto-hash" }
 kotlincrypto-random = { module = "org.kotlincrypto.random:crypto-rand", version.ref = "kotlincrypto-random" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
+# The local store of the native clients: one SQLite driver per platform, and the JVM one for tests.
+sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
+sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
+sqldelight-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 
 # Android app: Compose UI, navigation, Custom Tabs, and its JVM tests.
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }

@@ -29,7 +29,13 @@ interface IdentityProvider {
     suspend fun completeAuthorization(
         request: AuthorizationRequest,
         redirectUrl: String,
-    ): Tokens
+    ): Authorization
 
     suspend fun refresh(refreshToken: String): Tokens
 }
+
+/** The outcome of a sign-in: the tokens, and the subject of the user when the provider names it. */
+data class Authorization(
+    val tokens: Tokens,
+    val subject: String?,
+)
