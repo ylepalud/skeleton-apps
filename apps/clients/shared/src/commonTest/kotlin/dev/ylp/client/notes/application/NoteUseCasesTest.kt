@@ -34,7 +34,7 @@ class NoteUseCasesTest {
     @Test
     fun `a title or content over the contract's limits is rejected`() =
         runTest {
-            val result = UpdateNote(gateway).execute("id", "t".repeat(201), "c".repeat(20_001))
+            val result = UpdateNote(gateway).execute("id", "t".repeat(201), "c".repeat(20_001), version = 0)
 
             val failure = (result as NoteResult.Failed).failure as NoteFailure.Invalid
             assertEquals(listOf("title", "content"), failure.violations.map { it.field })
@@ -42,11 +42,11 @@ class NoteUseCasesTest {
         }
 
     @Test
-    fun `a valid replacement is sent`() =
+    fun `a valid replacement is sent with the version it is based on`() =
         runTest {
-            UpdateNote(gateway).execute("id", "Groceries", "Milk")
+            UpdateNote(gateway).execute("id", "Groceries", "Milk", version = 2)
 
-            assertEquals(listOf("update id Groceries"), gateway.calls)
+            assertEquals(listOf("update id Groceries at 2"), gateway.calls)
         }
 
     @Test
@@ -80,7 +80,7 @@ class NoteUseCasesTest {
     fun `a note is read and deleted by id`() =
         runTest {
             assertEquals(NoteResult.Success(FakeNoteGateway.NOTE), GetNote(gateway).execute("id"))
-            assertEquals(DeleteNoteResult.Deleted, DeleteNote(gateway).execute("id"))
-            assertEquals(listOf("get id", "delete id"), gateway.calls)
+            assertEquals(DeleteNoteResult.Deleted, DeleteNote(gateway).execute("id", version = 2))
+            assertEquals(listOf("get id", "delete id at 2"), gateway.calls)
         }
 }
