@@ -39,11 +39,15 @@ internal class HttpNoteGateway(
     override suspend fun update(
         id: String,
         draft: NoteDraft,
-    ): NoteResult = noteCall { api.updateNote(id, draft.toBody()) }
+        version: Long,
+    ): NoteResult = noteCall { api.updateNote(id, etag(version), draft.toBody()) }
 
-    override suspend fun delete(id: String): DeleteNoteResult =
+    override suspend fun delete(
+        id: String,
+        version: Long,
+    ): DeleteNoteResult =
         call(
-            request = { api.deleteNote(id) },
+            request = { api.deleteNote(id, etag(version)) },
             success = { DeleteNoteResult.Deleted },
             failure = { DeleteNoteResult.Failed(it) },
         )
@@ -74,6 +78,7 @@ internal class HttpNoteGateway(
         when (status) {
             401 -> NoteFailure.SignedOut
             404 -> NoteFailure.NotFound
+            412 -> NoteFailure.Changed
             400, 413 -> NoteFailure.Invalid(listOf(Violation(null, problem()?.let { it.detail ?: it.title } ?: "Invalid request")))
             else -> NoteFailure.Unavailable(problem()?.title ?: "Unexpected answer from the API: $status")
         }
@@ -82,7 +87,11 @@ internal class HttpNoteGateway(
 
     private fun NoteDraft.toBody() = NoteRequest(title = title, content = content)
 
-    private fun NoteBody.toDomain() = Note(id = id, title = title, content = content, createdAt = createdAt, updatedAt = updatedAt)
+    // The API's ETags carry the version, quoted.
+    private fun etag(version: Long) = "\"$version\""
+
+    private fun NoteBody.toDomain() =
+        Note(id = id, title = title, content = content, createdAt = createdAt, updatedAt = updatedAt, version = version)
 
     private fun NotePageBody.toDomain() =
         NotePage(

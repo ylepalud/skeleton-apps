@@ -10,11 +10,13 @@ import java.util.UUID
 
 /**
  * The API and the identity provider on one mock server, with notes kept in memory. It answers
- * as the real API does: pages, 404 for an unknown note, 401 for an unknown token.
+ * as the real API does: pages, 404 for an unknown note, 401 for an unknown token, and versions:
+ * 428 for a change without If-Match, 412 for one based on an older version.
  */
 class FakeBackend : Dispatcher() {
     val server = MockWebServer()
     val notes = linkedMapOf<String, Pair<String, String>>()
+    private val versions = mutableMapOf<String, Long>()
     val requests = mutableListOf<String>()
 
     /** When false, the token endpoint refuses every refresh: the session is over. */
@@ -34,6 +36,18 @@ class FakeBackend : Dispatcher() {
         title: String,
         content: String = "",
     ): String = UUID.randomUUID().toString().also { notes[it] = title to content }
+
+    /** Changes a note as another device would, so that the versions read before are stale. */
+    fun changeElsewhere(
+        id: String,
+        title: String,
+        content: String = "",
+    ) {
+        notes[id] = title to content
+        versions[id] = versionOf(id) + 1
+    }
+
+    private fun versionOf(id: String) = versions[id] ?: 0
 
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.url.encodedPath
@@ -88,9 +102,14 @@ class FakeBackend : Dispatcher() {
 
             method == "GET" -> json(200, note(id))
 
+            request.headers["If-Match"] == null -> json(428, JSONObject().put("title", "Precondition Required").put("status", 428))
+
+            request.headers["If-Match"] != "\"${versionOf(id)}\"" ->
+                json(412, JSONObject().put("title", "Precondition Failed").put("status", 412).put("errorCode", "VERSION_MISMATCH"))
+
             method == "PUT" -> {
                 val body = JSONObject(request.body!!.utf8())
-                notes[id] = body.getString("title") to body.getString("content")
+                changeElsewhere(id, body.getString("title"), body.getString("content"))
                 json(200, note(id))
             }
 
@@ -108,6 +127,7 @@ class FakeBackend : Dispatcher() {
             .put("content", content)
             .put("createdAt", "2026-10-29T08:00:00Z")
             .put("updatedAt", "2026-10-29T09:00:00Z")
+            .put("version", versionOf(id))
     }
 
     private fun json(

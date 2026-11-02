@@ -14,7 +14,11 @@ interface NoteGateway {
     suspend fun update(
         id: String,
         draft: NoteDraft,
+        version: Long,
     ): NoteResult
 
-    suspend fun delete(id: String): DeleteNoteResult
+    suspend fun delete(
+        id: String,
+        version: Long,
+    ): DeleteNoteResult
 }

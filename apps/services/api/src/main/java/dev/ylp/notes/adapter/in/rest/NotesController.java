@@ -19,6 +19,7 @@ import dev.ylp.notes.domain.Note;
 import dev.ylp.notes.domain.NoteId;
 import dev.ylp.notes.domain.PageRequest;
 import dev.ylp.notes.domain.Title;
+import dev.ylp.shared.concurrency.ETags;
 import java.net.URI;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -73,30 +74,37 @@ public class NotesController implements NotesApi {
             .buildAndExpand(note.id().value())
             .getPath();
     return ResponseEntity.created(URI.create(String.valueOf(path)))
+        .eTag(ETags.of(note.version()))
         .body(NoteRestMapper.toDto(note));
   }
 
   @Override
   public ResponseEntity<NoteDto> getNote(UUID noteId) {
     Note note = getNoteUseCase.execute(new GetNoteCommand(currentOwner.get(), new NoteId(noteId)));
-    return ResponseEntity.ok(NoteRestMapper.toDto(note));
+    return withETag(note);
   }
 
   @Override
-  public ResponseEntity<NoteDto> updateNote(UUID noteId, NoteRequestDto request) {
+  public ResponseEntity<NoteDto> updateNote(UUID noteId, String ifMatch, NoteRequestDto request) {
     Note note =
         updateNoteUseCase.execute(
             new UpdateNoteCommand(
                 currentOwner.get(),
                 new NoteId(noteId),
+                ETags.expected(ifMatch),
                 new Title(request.getTitle()),
                 new Content(request.getContent())));
-    return ResponseEntity.ok(NoteRestMapper.toDto(note));
+    return withETag(note);
   }
 
   @Override
-  public ResponseEntity<Void> deleteNote(UUID noteId) {
-    deleteNoteUseCase.execute(new DeleteNoteCommand(currentOwner.get(), new NoteId(noteId)));
+  public ResponseEntity<Void> deleteNote(UUID noteId, String ifMatch) {
+    deleteNoteUseCase.execute(
+        new DeleteNoteCommand(currentOwner.get(), new NoteId(noteId), ETags.expected(ifMatch)));
     return ResponseEntity.noContent().build();
+  }
+
+  private static ResponseEntity<NoteDto> withETag(Note note) {
+    return ResponseEntity.ok().eTag(ETags.of(note.version())).body(NoteRestMapper.toDto(note));
   }
 }

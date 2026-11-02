@@ -34,13 +34,17 @@ class FakeNoteGateway : NoteGateway {
     override suspend fun update(
         id: String,
         draft: NoteDraft,
+        version: Long,
     ): NoteResult {
-        calls += "update $id ${draft.title}"
+        calls += "update $id ${draft.title} at $version"
         return NoteResult.Success(NOTE)
     }
 
-    override suspend fun delete(id: String): DeleteNoteResult {
-        calls += "delete $id"
+    override suspend fun delete(
+        id: String,
+        version: Long,
+    ): DeleteNoteResult {
+        calls += "delete $id at $version"
         return DeleteNoteResult.Deleted
     }
 
@@ -52,6 +56,7 @@ class FakeNoteGateway : NoteGateway {
                 content = "Milk, eggs, bread",
                 createdAt = Instant.parse("2026-10-22T08:00:00Z"),
                 updatedAt = Instant.parse("2026-10-22T09:30:00Z"),
+                version = 2,
             )
     }
 }

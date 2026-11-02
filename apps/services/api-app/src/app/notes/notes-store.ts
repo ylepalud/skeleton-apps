@@ -1,9 +1,12 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import type { Note, NoteRequest } from '../api/generated';
-import { NotesClient, Problem } from './notes-client';
+import { NotesClient, Problem, VERSION_MISMATCH } from './notes-client';
 
 /** Number of notes shown per page. */
 export const PAGE_SIZE = 10;
+
+/** What the user reads when a note changed elsewhere between reading and saving it. */
+export const CHANGED_ELSEWHERE = 'This note was changed elsewhere. It now shows the latest version.';
 
 /** State of the notes screen: the current page of notes, and what is in progress or failed. */
 @Injectable()
@@ -39,21 +42,30 @@ export class NotesStore {
     }
   }
 
-  /** Writes a new note, or replaces an existing one; returns whether it succeeded. */
-  async save(noteId: string | undefined, request: NoteRequest): Promise<boolean> {
-    const outcome = noteId === undefined ? await this.client.create(request) : await this.client.update(noteId, request);
-    return this.reloadOr(outcome.ok ? undefined : outcome.problem, noteId === undefined ? 0 : this.page());
+  /**
+   * Writes a new note, or replaces `note` as it was read; returns whether it succeeded. A note
+   * changed elsewhere meanwhile is not overwritten: the page reloads to show its latest version.
+   */
+  async save(note: Note | undefined, request: NoteRequest): Promise<boolean> {
+    const outcome = note === undefined ? await this.client.create(request) : await this.client.update(note.id, note.version, request);
+    return this.reloadOr(outcome.ok ? undefined : outcome.problem, note === undefined ? 0 : this.page());
   }
 
-  /** Deletes a note; returns whether it succeeded. */
-  async remove(noteId: string): Promise<boolean> {
-    const outcome = await this.client.remove(noteId);
+  /** Deletes `note` as it was read; returns whether it succeeded. A note changed meanwhile is kept. */
+  async remove(note: Note): Promise<boolean> {
+    const outcome = await this.client.remove(note.id, note.version);
     // Deleting the last note of a page shows the previous one.
-    const page = this.notes().length === 1 && this.page() > 0 ? this.page() - 1 : this.page();
+    const page = outcome.ok && this.notes().length === 1 && this.page() > 0 ? this.page() - 1 : this.page();
     return this.reloadOr(outcome.ok ? undefined : outcome.problem, page);
   }
 
+  // The policy of notes for a concurrent change: refuse it, and show the latest version.
   private async reloadOr(problem: Problem | undefined, page: number): Promise<boolean> {
+    if (problem?.code === VERSION_MISMATCH) {
+      await this.load(page);
+      this.patch({ problem: { message: CHANGED_ELSEWHERE, code: VERSION_MISMATCH } });
+      return false;
+    }
     if (problem) {
       this.patch({ problem });
       return false;

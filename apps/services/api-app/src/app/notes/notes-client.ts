@@ -5,11 +5,15 @@ import type { Note, NotePage, NoteRequest, Problem as ProblemBody } from '../api
 /** The outcome of a call: its data, or the problem the API answered with. */
 export type Outcome<T> = { readonly ok: true; readonly data: T } | { readonly ok: false; readonly problem: Problem };
 
-/** What the user is told about a failed call. */
+/** What the user is told about a failed call, and the API's code for it when it gave one. */
 export interface Problem {
   readonly message: string;
   readonly hint?: string;
+  readonly code?: string;
 }
+
+/** The code of a change refused because the resource changed since it was read. */
+export const VERSION_MISMATCH = 'VERSION_MISMATCH';
 
 /** The notes operations of the generated client, as a seam that tests replace. */
 @Injectable({ providedIn: 'root' })
@@ -22,16 +26,23 @@ export class NotesClient {
     return outcome(await createNote({ body: request }));
   }
 
-  async update(noteId: string, request: NoteRequest): Promise<Outcome<Note>> {
-    return outcome(await updateNote({ path: { noteId }, body: request }));
+  /** Replaces a note, as read at `version`: a note changed since is refused. */
+  async update(noteId: string, version: number, request: NoteRequest): Promise<Outcome<Note>> {
+    return outcome(await updateNote({ path: { noteId }, headers: { 'If-Match': etag(version) }, body: request }));
   }
 
-  async remove(noteId: string): Promise<Outcome<void>> {
-    const result = await deleteNote({ path: { noteId } });
+  /** Deletes a note, as read at `version`: a note changed since is kept. */
+  async remove(noteId: string, version: number): Promise<Outcome<void>> {
+    const result = await deleteNote({ path: { noteId }, headers: { 'If-Match': etag(version) } });
     return result.error === undefined
       ? { ok: true, data: undefined }
       : { ok: false, problem: problemFrom(result.error) };
   }
+}
+
+/** The ETag of a version, as the API sends it. */
+export function etag(version: number): string {
+  return `"${version}"`;
 }
 
 function outcome<T>(result: { data?: T; error?: unknown }): Outcome<T> {
@@ -45,7 +56,7 @@ function outcome<T>(result: { data?: T; error?: unknown }): Outcome<T> {
 export function problemFrom(error: unknown): Problem {
   const problem = error as Partial<ProblemBody> | null | undefined;
   if (problem && typeof problem.detail === 'string') {
-    return { message: problem.detail, hint: problem.hint };
+    return { message: problem.detail, hint: problem.hint, code: problem.errorCode };
   }
   return { message: 'Something went wrong. Please try again.' };
 }

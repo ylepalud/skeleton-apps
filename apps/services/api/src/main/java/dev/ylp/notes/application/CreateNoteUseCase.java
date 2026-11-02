@@ -29,8 +29,7 @@ public class CreateNoteUseCase {
   public Note execute(CreateNoteCommand command) {
     Note note =
         Note.create(uuidGenerator, command.owner(), command.title(), command.content(), clock);
-    noteRepository.save(note);
-    return note;
+    return noteRepository.save(note);
   }
 
   /** The note to write. */

@@ -104,6 +104,28 @@ class NotesFlowTest {
     }
 
     @Test
+    fun aNoteChangedElsewhereIsReloadedInsteadOfOverwritten() {
+        val id = backend.add("Groceries", "Milk")
+        signIn()
+        compose.waitUntilText("Groceries")
+        compose.onNodeWithText("Groceries").performClick()
+        compose.waitUntilText("Milk")
+        backend.changeElsewhere(id, "From the browser", "Eggs")
+
+        compose.onNodeWithText("Groceries").performTextClearance()
+        compose.onNodeWithText("Title").performTextInput("From the phone")
+        compose.onNodeWithText("Save").performClick()
+
+        waitFor(CHANGED_ELSEWHERE)
+        waitFor("From the browser")
+        waitFor("Eggs")
+        assertEquals("From the browser" to "Eggs", backend.notes.getValue(id))
+
+        compose.onNodeWithText("Save").performClick()
+        waitFor("Your notes (1)")
+    }
+
+    @Test
     fun aNoteIsDeletedOnlyOnceConfirmed() {
         backend.add("Groceries")
         signIn()

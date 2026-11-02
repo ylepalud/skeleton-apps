@@ -48,24 +48,28 @@ class NoteEditorViewModel(
         private set
     var confirmingDelete by mutableStateOf(false)
 
-    init {
-        if (id != null) {
-            viewModelScope.launch {
-                when (val result = client.getNote.execute(id)) {
-                    is NoteResult.Success -> {
-                        title = result.note.title
-                        content = result.note.content
-                    }
+    /** The version of the note as read: the change is based on it. */
+    private var version = 0L
 
-                    is NoteResult.Failed -> fail(result.failure)
-                }
+    init {
+        if (id != null) viewModelScope.launch { load(id) }
+    }
+
+    private suspend fun load(id: String) {
+        when (val result = client.getNote.execute(id)) {
+            is NoteResult.Success -> {
+                title = result.note.title
+                content = result.note.content
+                version = result.note.version
             }
+
+            is NoteResult.Failed -> fail(result.failure)
         }
     }
 
     fun save() {
         viewModelScope.launch {
-            val result = if (id == null) client.createNote.execute(title, content) else client.updateNote.execute(id, title, content)
+            val result = if (id == null) client.createNote.execute(title, content) else client.updateNote.execute(id, title, content, version)
             when (result) {
                 is NoteResult.Success -> done = true
                 is NoteResult.Failed -> fail(result.failure)
@@ -77,14 +81,17 @@ class NoteEditorViewModel(
         val id = id ?: return
         confirmingDelete = false
         viewModelScope.launch {
-            when (val result = client.deleteNote.execute(id)) {
+            when (val result = client.deleteNote.execute(id, version)) {
                 DeleteNoteResult.Deleted -> done = true
                 is DeleteNoteResult.Failed -> fail(result.failure)
             }
         }
     }
 
-    private fun fail(failure: NoteFailure) {
+    // The policy of notes for a concurrent change: nothing is overwritten, the editor shows the
+    // latest version, and the user redoes the change.
+    private suspend fun fail(failure: NoteFailure) {
+        if (failure == NoteFailure.Changed && id != null) load(id)
         if (failure == NoteFailure.SignedOut) signedOut = true else problem = failure.message()
     }
 }

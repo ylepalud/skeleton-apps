@@ -2,7 +2,8 @@ import Foundation
 import Network
 
 /// The API and the identity provider on one local HTTP server, with notes kept in memory. It
-/// answers as the real API does: pages, 404 for an unknown note, 401 for an unknown token.
+/// answers as the real API does: pages, 404 for an unknown note, 401 for an unknown token, and
+/// versions: 428 for a change without If-Match, 412 for one based on an older version.
 nonisolated final class StubBackend: @unchecked Sendable {
     struct StoredNote: Equatable {
         var title: String
@@ -14,6 +15,7 @@ nonisolated final class StubBackend: @unchecked Sendable {
     private let lock = NSLock()
     private var ids: [String] = []
     private var stored: [String: StoredNote] = [:]
+    private var versions: [String: Int] = [:]
     private var received: [String] = []
     private var validToken = "valid-token"
     private var refuseRefresh = false
@@ -50,6 +52,16 @@ nonisolated final class StubBackend: @unchecked Sendable {
             stored[id] = StoredNote(title: title, content: content)
             return id
         }
+    }
+
+    /// Changes a note as another device would, so that the versions read before are stale.
+    func changeElsewhere(_ id: String, title: String, content: String = "") {
+        withLock { replace(id, with: StoredNote(title: title, content: content)) }
+    }
+
+    private func replace(_ id: String, with note: StoredNote) {
+        stored[id] = note
+        versions[id, default: 0] += 1
     }
 
     func remove(_ id: String) {
@@ -192,12 +204,22 @@ nonisolated final class StubBackend: @unchecked Sendable {
         guard path.hasPrefix("/notes/"), stored[id] != nil else {
             return Response(status: 404, body: ["type": "about:blank", "title": "Not Found", "status": 404])
         }
-        switch request.method {
-        case "GET":
+        if request.method == "GET" {
             return Response(status: 200, body: note(id))
+        }
+        guard let ifMatch = request.headers["if-match"] else {
+            return Response(status: 428, body: ["title": "Precondition Required", "status": 428])
+        }
+        guard ifMatch == "\"\(versions[id, default: 0])\"" else {
+            return Response(
+                status: 412, body: ["title": "Precondition Failed", "status": 412, "errorCode": "VERSION_MISMATCH"])
+        }
+        switch request.method {
         case "PUT":
-            stored[id] = StoredNote(
-                title: request.json["title"] as? String ?? "", content: request.json["content"] as? String ?? "")
+            replace(
+                id,
+                with: StoredNote(
+                    title: request.json["title"] as? String ?? "", content: request.json["content"] as? String ?? ""))
             return Response(status: 200, body: note(id))
         case "DELETE":
             ids.removeAll { $0 == id }
@@ -213,6 +235,7 @@ nonisolated final class StubBackend: @unchecked Sendable {
         return [
             "id": id, "title": note.title, "content": note.content,
             "createdAt": "2026-10-29T08:00:00Z", "updatedAt": "2026-10-29T09:00:00Z",
+            "version": versions[id, default: 0],
         ]
     }
 

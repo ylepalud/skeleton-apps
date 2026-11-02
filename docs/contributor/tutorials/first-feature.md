@@ -66,7 +66,7 @@ In `notes/domain/Note.java`, add the state and let the existing business methods
       UUIDGenerator uuidGenerator, OwnerId owner, Title title, Content content, boolean pinned, Clock clock) { ... }
 
   public static Note restore(
-      NoteId id, OwnerId owner, Title title, Content content, boolean pinned, Instant createdAt, Instant updatedAt) { ... }
+      NoteId id, OwnerId owner, Title title, Content content, boolean pinned, Instant createdAt, Instant updatedAt, long version) { ... }
 
   /** Replaces the title, content and pin, and records when the note was last changed. */
   public void edit(Title title, Content content, boolean pinned, Clock clock) { ... }
@@ -81,10 +81,13 @@ The use cases receive it through their commands:
 
 ```java
 public record CreateNoteCommand(OwnerId owner, Title title, Content content, boolean pinned) {}
-public record UpdateNoteCommand(OwnerId owner, NoteId noteId, Title title, Content content, boolean pinned) {}
+public record UpdateNoteCommand(
+    OwnerId owner, NoteId noteId, ExpectedVersion expectedVersion, Title title, Content content, boolean pinned) {}
 ```
 
 and pass `command.pinned()` to `Note.create` and `note.edit`. Update the Javadoc of `NoteRepository.findByOwner` and `ListNotesUseCase` to state the new order: the port's contract changes, not only its implementation.
+
+**Concurrency.** Pinning is a change like any other: it goes through `UpdateNoteUseCase`, which already checks `expectedVersion` before editing, so a pin based on an older version is refused like an edit. A new write use case on a versioned resource does the same: it takes an `ExpectedVersion`, calls `requireVersion` on the aggregate before changing it, and states its conflict policy in its Javadoc ([Optimistic concurrency](../../architecture/overview.md#optimistic-concurrency)).
 
 ## 5. Persistence
 
@@ -149,7 +152,7 @@ The compiler lists every test that builds a note or a command; add the new argum
 
 - `NoteTest`: a new note is not pinned, `edit` pins it.
 - `NoteRepositoryContractTest`: a new case, "pinned notes come first, whatever their update time", and `isPinned` in the round-trip assertions. Being a port contract, it runs against the PostgreSQL adapter in `PostgresNoteRepositoryTest`.
-- `NoteUseCasesTest` and `NotesControllerTest`: pass and check `pinned`.
+- `NoteUseCasesTest` and `NotesControllerTest`: pass and check `pinned`. Requests that change a note send `If-Match` with the version they are based on.
 
 ```bash
 ./gradlew spotlessApply
@@ -212,5 +215,6 @@ cd apps/bruno && npm ci && npm run smoke
 - A schema change is a new changeset, never an edited one.
 - The port's contract test proves the new ordering against the real database.
 - An optional field keeps existing clients working; NullAway made the default explicit.
+- A change names the version it is based on: a concurrent edit is refused, never silently overwritten.
 
 Commit with a Conventional Commit (`feat(notes): let users pin notes`) and open a pull request to `develop`.

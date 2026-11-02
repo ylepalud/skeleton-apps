@@ -13,6 +13,12 @@ sealed class NoteFailure {
     /** No valid session: the user has to sign in again. */
     data object SignedOut : NoteFailure()
 
+    /**
+     * The note changed since the version the change was based on: nothing was overwritten. What to
+     * do next is the policy of each screen; for notes, show the latest version.
+     */
+    data object Changed : NoteFailure()
+
     /** The API could not be reached, or answered with an unexpected error. */
     data class Unavailable(
         val message: String,
