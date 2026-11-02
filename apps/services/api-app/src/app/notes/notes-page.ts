@@ -49,14 +49,21 @@ export class NotesPage implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-    if (await this.store.save(this.editing()?.id, this.form.getRawValue())) {
+    const editing = this.editing();
+    if (await this.store.save(editing, this.form.getRawValue())) {
       this.cancelEdit();
+      return;
+    }
+    // Changed elsewhere meanwhile: the form takes the latest version, for the user to redo the change.
+    const latest = this.store.notes().find((note) => note.id === editing?.id);
+    if (editing && latest && latest.version !== editing.version) {
+      this.edit(latest);
     }
   }
 
-  protected async confirmDelete(noteId: string): Promise<void> {
+  protected async confirmDelete(note: Note): Promise<void> {
     this.confirmingDelete.set(undefined);
-    if (await this.store.remove(noteId) && this.editing()?.id === noteId) {
+    if (await this.store.remove(note) && this.editing()?.id === note.id) {
       this.cancelEdit();
     }
   }

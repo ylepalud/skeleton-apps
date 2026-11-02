@@ -7,6 +7,7 @@ import dev.ylp.notes.domain.NoteId;
 import dev.ylp.notes.domain.NoteRepository;
 import dev.ylp.notes.domain.OwnerId;
 import dev.ylp.notes.domain.Title;
+import dev.ylp.shared.concurrency.ExpectedVersion;
 import java.time.Clock;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,8 +24,12 @@ public class UpdateNoteUseCase {
   }
 
   /**
-   * Edits and stores the note, then returns it. Raises {@link NoteErrorReason#NOTE_NOT_FOUND} if it
-   * does not exist or belongs to another user.
+   * Edits and stores the note, then returns it at its new version. Raises {@link
+   * NoteErrorReason#NOTE_NOT_FOUND} if it does not exist or belongs to another user.
+   *
+   * <p>Conflict policy: a note changed since the caller read it is not overwritten. The change is
+   * refused with {@code VERSION_MISMATCH}, and the caller shows the latest version to the user, who
+   * applies the change again.
    */
   @Transactional
   public Note execute(UpdateNoteCommand command) {
@@ -32,11 +37,16 @@ public class UpdateNoteUseCase {
         noteRepository
             .findByIdAndOwner(command.noteId(), command.owner())
             .orElseThrow(() -> NoteErrorReason.noteNotFound(command.noteId()));
+    note.requireVersion(command.expectedVersion());
     note.edit(command.title(), command.content(), clock);
-    noteRepository.save(note);
-    return note;
+    return noteRepository.save(note);
   }
 
-  /** The note to edit, who edits it, and its new title and content. */
-  public record UpdateNoteCommand(OwnerId owner, NoteId noteId, Title title, Content content) {}
+  /** The note to edit, the version the change is based on, who edits it, and its new content. */
+  public record UpdateNoteCommand(
+      OwnerId owner,
+      NoteId noteId,
+      ExpectedVersion expectedVersion,
+      Title title,
+      Content content) {}
 }

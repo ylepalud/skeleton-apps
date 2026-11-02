@@ -41,8 +41,17 @@ examples:
           value: application/json
       body:
         type: json
-        data: ""
+        data: |-
+          {
+            "id": "3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "title": "Groceries",
+            "content": "Milk, eggs, bread",
+            "createdAt": "2026-10-22T08:00:00Z",
+            "updatedAt": "2026-10-22T09:30:00Z",
+            "version": 0
+          }
   - name: 401 Response
+    description: The bearer token is missing, invalid or expired.
     request:
       url: "{{baseUrl}}/notes/:noteId"
       method: GET
@@ -75,8 +84,18 @@ examples:
           value: application/problem+json
       body:
         type: json
-        data: ""
+        data: |-
+          {
+            "type": "urn:problem:note_not_found",
+            "title": "Not Found",
+            "status": 404,
+            "detail": "Note not found: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "instance": "/api/v1/notes/3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "errorCode": "NOTE_NOT_FOUND",
+            "hint": "Check the note id: it does not exist, or it belongs to another user."
+          }
   - name: 500 Response
+    description: An unexpected error occurred.
     request:
       url: "{{baseUrl}}/notes/:noteId"
       method: GET
@@ -88,6 +107,18 @@ examples:
     response:
       status: 500
       statusText: Internal Server Error
+      headers:
+        - name: Content-Type
+          value: application/problem+json
       body:
-        type: text
-        data: ""
+        type: json
+        data: |-
+          {
+            "type": "urn:problem:note_not_found",
+            "title": "Not Found",
+            "status": 404,
+            "detail": "Note not found: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "instance": "/api/v1/notes/3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "errorCode": "NOTE_NOT_FOUND",
+            "hint": "Check the note id: it does not exist, or it belongs to another user."
+          }

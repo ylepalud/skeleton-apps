@@ -20,9 +20,10 @@ const collectionDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const work = mkdtempSync(join(tmpdir(), 'bruno-collection-'));
 
 try {
-  // Bruno's importer does not follow references to other files: bundle the contract first.
+  // Bruno's importer follows no reference, not even within one file: it would drop shared
+  // headers, parameters and error examples. Inline every reference first.
   const bundled = join(work, 'openapi.json');
-  writeFileSync(bundled, JSON.stringify(await $RefParser.bundle(contract), null, 2));
+  writeFileSync(bundled, JSON.stringify(await $RefParser.dereference(contract), null, 2));
   const generatedDir = join(work, 'collection');
   execFileSync(
     join(collectionDir, 'node_modules', '.bin', 'bru'),

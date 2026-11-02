@@ -17,6 +17,8 @@ Locally, the provider is a mock that accepts any username: see [Run the Android 
 | change a note | tap it, change it, then **Save**; the system back button leaves it as it was |
 | delete a note | tap it, **Delete**, then confirm with **Delete**, or **Keep** it; a deleted note cannot be restored |
 
+If the note was changed elsewhere since you opened it, on another device or in another tab, your change is not saved: the app says so and shows the latest version, and you make your change again on it.
+
 When the API cannot be reached, the app says so and offers **Retry**.
 
 ## Sign out

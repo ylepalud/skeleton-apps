@@ -51,7 +51,16 @@ examples:
         type: json
         data: |-
           {
-            "items": [],
+            "items": [
+              {
+                "id": "3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+                "title": "Groceries",
+                "content": "Milk, eggs, bread",
+                "createdAt": "2026-10-22T08:00:00Z",
+                "updatedAt": "2026-10-22T09:30:00Z",
+                "version": 0
+              }
+            ],
             "page": 0,
             "size": 20,
             "totalItems": 1,
@@ -131,4 +140,13 @@ examples:
           value: application/problem+json
       body:
         type: json
-        data: ""
+        data: |-
+          {
+            "type": "urn:problem:note_not_found",
+            "title": "Not Found",
+            "status": 404,
+            "detail": "Note not found: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "instance": "/api/v1/notes/3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "errorCode": "NOTE_NOT_FOUND",
+            "hint": "Check the note id: it does not exist, or it belongs to another user."
+          }

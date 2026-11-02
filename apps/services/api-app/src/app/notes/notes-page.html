@@ -64,7 +64,7 @@
           <div class="mt-3 flex items-center gap-2">
             @if (confirmingDelete() === note.id) {
               <span class="text-sm text-slate-700">Delete this note?</span>
-              <button type="button" class="btn-danger" (click)="confirmDelete(note.id)">Delete</button>
+              <button type="button" class="btn-danger" (click)="confirmDelete(note)">Delete</button>
               <button type="button" class="btn-secondary" (click)="confirmingDelete.set(undefined)">Keep</button>
             } @else {
               <button type="button" class="btn-secondary" (click)="edit(note)">Edit</button>

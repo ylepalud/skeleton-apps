@@ -2,6 +2,8 @@
 .gradle/
 build/
 .kotlin/
+# Where Gradle finds the Android SDK on this machine.
+local.properties
 
 # Documentation: generated API reference and domain model, Zensical cache
 docs/product/api-reference.html

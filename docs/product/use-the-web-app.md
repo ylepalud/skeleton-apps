@@ -17,6 +17,8 @@ Locally, the provider is a mock that accepts any username: see [Run locally](../
 | change a note | **Edit**, change it, then **Save**; **Cancel** leaves it as it was |
 | delete a note | **Delete**, then confirm with **Delete**, or **Keep** it; a deleted note cannot be restored |
 
+If the note was changed elsewhere since the page showed it, on another device or in another tab, your change is not saved: the app says so, and the form shows the latest version for you to make your change again.
+
 When the API refuses a request, the app shows its message and, when there is one, a hint on what to do.
 
 ## Sign out

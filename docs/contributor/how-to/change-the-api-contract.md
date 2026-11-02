@@ -2,7 +2,7 @@
 
 The contract changes first; everything else follows. Background: [Contract first](../../architecture/contract-first.md).
 
-1. **Edit the contract** in `apps/contracts/api`: the module's file (`notes.yaml`) for its paths and schemas, `common.yaml` for shared building blocks. Give every request body an `example`: the Bruno requests are generated from it, and stay empty without one. Mirror the domain's limits (`maxLength`, `minimum`...) in the schema.
+1. **Edit the contract** in `apps/contracts/api`: the module's file (`notes.yaml`) for its paths and schemas, `common.yaml` for shared building blocks. Give every request body an `example`: the Bruno requests are generated from it, and stay empty without one. Mirror the domain's limits (`maxLength`, `minimum`...) in the schema. A new write on a versioned resource takes `common.yaml`'s `IfMatch` parameter, answers its `ETag`, and declares the 412 and 428 responses.
 2. **Regenerate the collection** and commit the result:
 
    ```bash

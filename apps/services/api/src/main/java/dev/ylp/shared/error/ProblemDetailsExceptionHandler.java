@@ -1,5 +1,6 @@
 package dev.ylp.shared.error;
 
+import dev.ylp.shared.concurrency.VersionConflictReason;
 import dev.ylp.shared.error.business.BusinessException;
 import dev.ylp.shared.error.business.ErrorCategory;
 import dev.ylp.shared.error.technical.TechnicalException;
@@ -12,12 +13,18 @@ import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /**
@@ -76,6 +83,28 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
     return respond(HttpStatus.BAD_REQUEST, problem);
   }
 
+  /**
+   * Answers a change without If-Match with a 428 (RFC 6585) rather than Spring MVC's 400 for a
+   * missing header: the caller has to read the resource first, not fix a malformed request.
+   */
+  @Override
+  protected @Nullable ResponseEntity<Object> handleServletRequestBindingException(
+      ServletRequestBindingException exception,
+      HttpHeaders headers,
+      HttpStatusCode status,
+      WebRequest request) {
+    if (exception instanceof MissingRequestHeaderException missing
+        && HttpHeaders.IF_MATCH.equalsIgnoreCase(missing.getHeaderName())
+        && request instanceof ServletWebRequest servlet) {
+      ResponseEntity<ProblemDetail> problem =
+          handleBusiness(
+              VersionConflictReason.required("This change needs an If-Match header."),
+              servlet.getRequest());
+      return new ResponseEntity<>(problem.getBody(), problem.getHeaders(), problem.getStatusCode());
+    }
+    return super.handleServletRequestBindingException(exception, headers, status, request);
+  }
+
   /** Answers any unexpected error with a 500 that reveals nothing about the cause. */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ProblemDetail> handleUnexpected(
@@ -100,6 +129,8 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
       case INVALID -> HttpStatus.BAD_REQUEST;
       case CONFLICT -> HttpStatus.CONFLICT;
       case RULE_VIOLATION -> HttpStatus.UNPROCESSABLE_CONTENT;
+      case STALE_VERSION -> HttpStatus.PRECONDITION_FAILED;
+      case VERSION_REQUIRED -> HttpStatus.PRECONDITION_REQUIRED;
     };
   }
 

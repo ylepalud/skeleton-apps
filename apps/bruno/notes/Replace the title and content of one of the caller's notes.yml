@@ -8,6 +8,10 @@ info:
 http:
   method: PUT
   url: "{{baseUrl}}/notes/:noteId"
+  headers:
+    - name: If-Match
+      value: '"0"'
+      description: The ETag of the version the change is based on, as last read. A resource changed since answers 412; `*` matches any version.
   params:
     - name: noteId
       value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
@@ -35,6 +39,10 @@ examples:
     request:
       url: "{{baseUrl}}/notes/:noteId"
       method: PUT
+      headers:
+        - name: If-Match
+          value: '"0"'
+          description: The ETag of the version the change is based on, as last read. A resource changed since answers 412; `*` matches any version.
       params:
         - name: noteId
           value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
@@ -55,11 +63,24 @@ examples:
           value: application/json
       body:
         type: json
-        data: ""
+        data: |-
+          {
+            "id": "3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "title": "Groceries",
+            "content": "Milk, eggs, bread",
+            "createdAt": "2026-10-22T08:00:00Z",
+            "updatedAt": "2026-10-22T09:30:00Z",
+            "version": 0
+          }
   - name: 400 Response
+    description: The request is malformed or violates a constraint.
     request:
       url: "{{baseUrl}}/notes/:noteId"
       method: PUT
+      headers:
+        - name: If-Match
+          value: '"0"'
+          description: The ETag of the version the change is based on, as last read. A resource changed since answers 412; `*` matches any version.
       params:
         - name: noteId
           value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
@@ -75,13 +96,30 @@ examples:
     response:
       status: 400
       statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/problem+json
       body:
-        type: text
-        data: ""
+        type: json
+        data: |-
+          {
+            "type": "urn:problem:note_not_found",
+            "title": "Not Found",
+            "status": 404,
+            "detail": "Note not found: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "instance": "/api/v1/notes/3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "errorCode": "NOTE_NOT_FOUND",
+            "hint": "Check the note id: it does not exist, or it belongs to another user."
+          }
   - name: 401 Response
+    description: The bearer token is missing, invalid or expired.
     request:
       url: "{{baseUrl}}/notes/:noteId"
       method: PUT
+      headers:
+        - name: If-Match
+          value: '"0"'
+          description: The ETag of the version the change is based on, as last read. A resource changed since answers 412; `*` matches any version.
       params:
         - name: noteId
           value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
@@ -101,9 +139,14 @@ examples:
         type: text
         data: ""
   - name: 404 Response
+    description: The resource does not exist or belongs to another user.
     request:
       url: "{{baseUrl}}/notes/:noteId"
       method: PUT
+      headers:
+        - name: If-Match
+          value: '"0"'
+          description: The ETag of the version the change is based on, as last read. A resource changed since answers 412; `*` matches any version.
       params:
         - name: noteId
           value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
@@ -119,13 +162,69 @@ examples:
     response:
       status: 404
       statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/problem+json
       body:
-        type: text
-        data: ""
-  - name: 413 Response
+        type: json
+        data: |-
+          {
+            "type": "urn:problem:note_not_found",
+            "title": "Not Found",
+            "status": 404,
+            "detail": "Note not found: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "instance": "/api/v1/notes/3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "errorCode": "NOTE_NOT_FOUND",
+            "hint": "Check the note id: it does not exist, or it belongs to another user."
+          }
+  - name: 412 Response
+    description: The resource changed since the version named in If-Match.
     request:
       url: "{{baseUrl}}/notes/:noteId"
       method: PUT
+      headers:
+        - name: If-Match
+          value: '"0"'
+          description: The ETag of the version the change is based on, as last read. A resource changed since answers 412; `*` matches any version.
+      params:
+        - name: noteId
+          value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+          type: path
+          description: Id of the note.
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries for the weekend",
+            "content": "Milk, eggs, bread, coffee"
+          }
+    response:
+      status: 412
+      statusText: Precondition Failed
+      headers:
+        - name: Content-Type
+          value: application/problem+json
+      body:
+        type: json
+        data: |-
+          {
+            "type": "urn:problem:note_not_found",
+            "title": "Not Found",
+            "status": 404,
+            "detail": "Note not found: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "instance": "/api/v1/notes/3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "errorCode": "NOTE_NOT_FOUND",
+            "hint": "Check the note id: it does not exist, or it belongs to another user."
+          }
+  - name: 413 Response
+    description: The request body exceeds the accepted size.
+    request:
+      url: "{{baseUrl}}/notes/:noteId"
+      method: PUT
+      headers:
+        - name: If-Match
+          value: '"0"'
+          description: The ETag of the version the change is based on, as last read. A resource changed since answers 412; `*` matches any version.
       params:
         - name: noteId
           value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
@@ -141,13 +240,69 @@ examples:
     response:
       status: 413
       statusText: Payload Too Large
+      headers:
+        - name: Content-Type
+          value: application/problem+json
       body:
-        type: text
-        data: ""
-  - name: 500 Response
+        type: json
+        data: |-
+          {
+            "type": "urn:problem:note_not_found",
+            "title": "Not Found",
+            "status": 404,
+            "detail": "Note not found: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "instance": "/api/v1/notes/3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "errorCode": "NOTE_NOT_FOUND",
+            "hint": "Check the note id: it does not exist, or it belongs to another user."
+          }
+  - name: 428 Response
+    description: The request changes a versioned resource but has no If-Match header.
     request:
       url: "{{baseUrl}}/notes/:noteId"
       method: PUT
+      headers:
+        - name: If-Match
+          value: '"0"'
+          description: The ETag of the version the change is based on, as last read. A resource changed since answers 412; `*` matches any version.
+      params:
+        - name: noteId
+          value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
+          type: path
+          description: Id of the note.
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Groceries for the weekend",
+            "content": "Milk, eggs, bread, coffee"
+          }
+    response:
+      status: 428
+      statusText: Precondition Required
+      headers:
+        - name: Content-Type
+          value: application/problem+json
+      body:
+        type: json
+        data: |-
+          {
+            "type": "urn:problem:note_not_found",
+            "title": "Not Found",
+            "status": 404,
+            "detail": "Note not found: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "instance": "/api/v1/notes/3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "errorCode": "NOTE_NOT_FOUND",
+            "hint": "Check the note id: it does not exist, or it belongs to another user."
+          }
+  - name: 500 Response
+    description: An unexpected error occurred.
+    request:
+      url: "{{baseUrl}}/notes/:noteId"
+      method: PUT
+      headers:
+        - name: If-Match
+          value: '"0"'
+          description: The ETag of the version the change is based on, as last read. A resource changed since answers 412; `*` matches any version.
       params:
         - name: noteId
           value: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c
@@ -163,6 +318,18 @@ examples:
     response:
       status: 500
       statusText: Internal Server Error
+      headers:
+        - name: Content-Type
+          value: application/problem+json
       body:
-        type: text
-        data: ""
+        type: json
+        data: |-
+          {
+            "type": "urn:problem:note_not_found",
+            "title": "Not Found",
+            "status": 404,
+            "detail": "Note not found: 3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "instance": "/api/v1/notes/3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c",
+            "errorCode": "NOTE_NOT_FOUND",
+            "hint": "Check the note id: it does not exist, or it belongs to another user."
+          }

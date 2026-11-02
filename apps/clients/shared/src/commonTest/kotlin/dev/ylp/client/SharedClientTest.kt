@@ -101,10 +101,11 @@ class SharedClientTest {
 
             assertEquals(NoteResult.Success(NOTE), client.createNote.execute("Groceries", "Milk"))
             assertEquals(NoteResult.Success(NOTE), client.getNote.execute(NOTE.id))
-            assertEquals(NoteResult.Success(NOTE), client.updateNote.execute(NOTE.id, "Groceries", "Milk"))
-            assertEquals(DeleteNoteResult.Deleted, client.deleteNote.execute(NOTE.id))
+            assertEquals(NoteResult.Success(NOTE), client.updateNote.execute(NOTE.id, "Groceries", "Milk", version = 4))
+            assertEquals(DeleteNoteResult.Deleted, client.deleteNote.execute(NOTE.id, version = 4))
 
             assertEquals(listOf(HttpMethod.Post, HttpMethod.Get, HttpMethod.Put, HttpMethod.Delete), requests.map { it.method })
+            assertEquals(listOf(null, null, "\"4\"", "\"4\""), requests.map { it.headers[HttpHeaders.IfMatch] })
             assertEquals(
                 """{"title":"Groceries","content":"Milk"}""",
                 requests
@@ -122,6 +123,16 @@ class SharedClientTest {
             val client = client { problem(HttpStatusCode.NotFound, "Note not found") }
 
             assertEquals(NoteResult.Failed(NoteFailure.NotFound), client.getNote.execute(NOTE.id))
+        }
+
+    @Test
+    fun `a note changed since the version a change is based on reports the change`() =
+        runTest {
+            store.save(Tokens("access", "refresh", null))
+            val client = client { problem(HttpStatusCode.PreconditionFailed, "Note is at version 5, not 4") }
+
+            assertEquals(NoteResult.Failed(NoteFailure.Changed), client.updateNote.execute(NOTE.id, "Groceries", "Milk", version = 4))
+            assertEquals(DeleteNoteResult.Failed(NoteFailure.Changed), client.deleteNote.execute(NOTE.id, version = 4))
         }
 
     @Test
@@ -144,7 +155,7 @@ class SharedClientTest {
 
             assertEquals(
                 NoteResult.Failed(NoteFailure.Invalid(listOf(Violation(null, "Invalid request")))),
-                client.updateNote.execute(NOTE.id, "Groceries", "Milk"),
+                client.updateNote.execute(NOTE.id, "Groceries", "Milk", version = 0),
             )
         }
 
@@ -185,7 +196,10 @@ class SharedClientTest {
             store.save(Tokens("access", "refresh", null))
             val client = client { problem(HttpStatusCode.InternalServerError, "boom") }
 
-            assertEquals(DeleteNoteResult.Failed(NoteFailure.Unavailable("Internal Server Error")), client.deleteNote.execute(NOTE.id))
+            assertEquals(
+                DeleteNoteResult.Failed(NoteFailure.Unavailable("Internal Server Error")),
+                client.deleteNote.execute(NOTE.id, version = 0),
+            )
         }
 
     @Test
@@ -283,10 +297,11 @@ class SharedClientTest {
                 content = "Milk",
                 createdAt = Instant.parse("2026-10-22T08:00:00Z"),
                 updatedAt = Instant.parse("2026-10-22T09:30:00Z"),
+                version = 4,
             )
         const val NOTE_JSON =
             """{"id": "3f0c1e6a-8b2d-4f7e-9a1c-5d6e7f8a9b0c", "title": "Groceries", "content": "Milk",
-                "createdAt": "2026-10-22T08:00:00Z", "updatedAt": "2026-10-22T09:30:00Z"}"""
+                "createdAt": "2026-10-22T08:00:00Z", "updatedAt": "2026-10-22T09:30:00Z", "version": 4}"""
         const val PAGE = """{"items": [$NOTE_JSON], "page": 1, "size": 5, "totalItems": 6, "hasNext": false}"""
     }
 }

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { FakeNotesClient } from './notes-client.fake';
 import { NotesClient } from './notes-client';
 import { NotesPage, TITLE_MAX_LENGTH } from './notes-page';
+import { CHANGED_ELSEWHERE } from './notes-store';
 
 describe('NotesPage', () => {
   async function renderPage(client: FakeNotesClient): Promise<void> {
@@ -56,6 +57,26 @@ describe('NotesPage', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(await screen.findByRole('heading', { name: 'Renamed' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'New note' })).toBeInTheDocument();
+  });
+
+  it('shows the latest version of a note changed elsewhere, for the user to redo the change', async () => {
+    const user = userEvent.setup();
+    const client = new FakeNotesClient().withNotes(1);
+    await renderPage(client);
+    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    client.changeElsewhere(client.notes[0].id, { title: 'From the phone', content: 'Milk' });
+
+    await user.clear(screen.getByLabelText('Title'));
+    await user.type(screen.getByLabelText('Title'), 'From the browser');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(CHANGED_ELSEWHERE);
+    expect(screen.getByLabelText('Title')).toHaveValue('From the phone');
+    expect(screen.getByLabelText('Content')).toHaveValue('Milk');
+    expect(client.notes[0].title).toBe('From the phone');
+
+    await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(screen.getByRole('heading', { name: 'New note' })).toBeInTheDocument();
   });
 

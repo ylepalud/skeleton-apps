@@ -12,5 +12,9 @@ public enum ErrorCategory {
   /** The operation clashes with the current state of the target. */
   CONFLICT,
   /** The operation breaks a business rule. */
-  RULE_VIOLATION
+  RULE_VIOLATION,
+  /** The change is based on a version of the target that is no longer the current one. */
+  STALE_VERSION,
+  /** The change targets a versioned resource without naming the version it is based on. */
+  VERSION_REQUIRED
 }

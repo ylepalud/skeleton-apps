@@ -38,7 +38,9 @@ class ProblemDetailsExceptionHandlerTest {
     "NOT_FOUND, NOT_FOUND",
     "INVALID, BAD_REQUEST",
     "CONFLICT, CONFLICT",
-    "RULE_VIOLATION, UNPROCESSABLE_CONTENT"
+    "RULE_VIOLATION, UNPROCESSABLE_CONTENT",
+    "STALE_VERSION, PRECONDITION_FAILED",
+    "VERSION_REQUIRED, PRECONDITION_REQUIRED"
   })
   @DisplayName("Each error category maps to its HTTP status")
   void eachErrorCategoryMapsToItsHttpStatus(ErrorCategory category, HttpStatus status) {

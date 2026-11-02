@@ -15,6 +15,7 @@ public final class NoteTestDataBuilder {
   private Content content = new Content("Milk, eggs");
   private Instant createdAt = CREATED_AT;
   private Instant updatedAt = CREATED_AT;
+  private long version;
 
   private NoteTestDataBuilder() {}
 
@@ -47,8 +48,14 @@ public final class NoteTestDataBuilder {
     return this;
   }
 
+  /** Sets the stored version. */
+  public NoteTestDataBuilder withVersion(long version) {
+    this.version = version;
+    return this;
+  }
+
   /** Builds the note. */
   public Note build() {
-    return Note.restore(id, owner, title, content, createdAt, updatedAt);
+    return Note.restore(id, owner, title, content, createdAt, updatedAt, version);
   }
 }
