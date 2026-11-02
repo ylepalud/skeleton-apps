@@ -13,9 +13,15 @@ public interface NoteRepository {
   /** Returns a page of this owner's notes, most recently updated first. */
   Page<Note> findByOwner(OwnerId owner, PageRequest request);
 
-  /** Inserts or updates the note. */
-  void save(Note note);
+  /**
+   * Inserts or updates the note, and returns it as stored, at its new version. Raises {@code
+   * VERSION_MISMATCH} if the stored note changed since this one was read.
+   */
+  Note save(Note note);
 
-  /** Deletes the note. */
+  /**
+   * Deletes the note. Raises {@code VERSION_MISMATCH} if the stored note changed since this one was
+   * read.
+   */
   void delete(Note note);
 }

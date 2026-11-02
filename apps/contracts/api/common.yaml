@@ -1,5 +1,23 @@
 # Building blocks shared by every module of the contract.
 components:
+  parameters:
+    # Optimistic concurrency: a write on a versioned resource names the version it read.
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: >-
+        The ETag of the version the change is based on, as last read. A resource changed since
+        answers 412; `*` matches any version.
+      schema:
+        type: string
+      example: '"0"'
+  headers:
+    ETag:
+      description: The version of the resource, to send back in If-Match when changing it.
+      schema:
+        type: string
+      example: '"0"'
   schemas:
     Problem:
       type: object
@@ -48,6 +66,18 @@ components:
             $ref: "#/components/schemas/Problem"
     PayloadTooLarge:
       description: The request body exceeds the accepted size.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    PreconditionFailed:
+      description: The resource changed since the version named in If-Match.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    PreconditionRequired:
+      description: The request changes a versioned resource but has no If-Match header.
       content:
         application/problem+json:
           schema:

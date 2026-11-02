@@ -3,7 +3,10 @@ package dev.ylp.notes.domain;
 import static dev.ylp.notes.domain.NoteTestDataBuilder.CREATED_AT;
 import static dev.ylp.notes.domain.NoteTestDataBuilder.aNote;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import dev.ylp.shared.concurrency.VersionConflictReason;
+import dev.ylp.shared.error.business.BusinessException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.ZoneOffset;
@@ -109,6 +112,61 @@ public abstract class NoteRepositoryContractTest {
 
     // Then
     assertThat(repository().findByIdAndOwner(note.id(), note.owner())).isEmpty();
+  }
+
+  @Test
+  @DisplayName("A note is stored at version 0, and each stored change adds one")
+  void noteIsStoredAtVersion0AndEachStoredChangeAddsOne() {
+    // Given
+    Note note = aNote().build();
+
+    // When
+    Note created = repository().save(note);
+    created.edit(new Title("Shopping"), new Content("Bread"), Clock.systemUTC());
+    Note edited = repository().save(created);
+
+    // Then
+    assertThat(created.version()).isZero();
+    assertThat(edited.version()).isEqualTo(1);
+    assertThat(repository().findByIdAndOwner(note.id(), note.owner()))
+        .hasValueSatisfying(stored -> assertThat(stored.version()).isEqualTo(1));
+  }
+
+  @Test
+  @DisplayName("Saving a note read before a change stored since fails and keeps that change")
+  void savingNoteReadBeforeChangeStoredSinceFailsAndKeepsThatChange() {
+    // Given
+    Note note = repository().save(aNote().build());
+    Note first = repository().findByIdAndOwner(note.id(), note.owner()).orElseThrow();
+    Note second = repository().findByIdAndOwner(note.id(), note.owner()).orElseThrow();
+    first.edit(new Title("First"), new Content(""), Clock.systemUTC());
+    repository().save(first);
+    second.edit(new Title("Second"), new Content(""), Clock.systemUTC());
+
+    // When / Then
+    assertThatThrownBy(() -> repository().save(second))
+        .isInstanceOfSatisfying(BusinessException.class, NoteRepositoryContractTest::assertStale);
+    assertThat(repository().findByIdAndOwner(note.id(), note.owner()))
+        .hasValueSatisfying(stored -> assertThat(stored.title()).isEqualTo(new Title("First")));
+  }
+
+  @Test
+  @DisplayName("Deleting a note read before a change stored since fails and keeps it")
+  void deletingNoteReadBeforeChangeStoredSinceFailsAndKeepsIt() {
+    // Given
+    Note note = repository().save(aNote().build());
+    Note stale = repository().findByIdAndOwner(note.id(), note.owner()).orElseThrow();
+    note.edit(new Title("Changed"), new Content(""), Clock.systemUTC());
+    repository().save(note);
+
+    // When / Then
+    assertThatThrownBy(() -> repository().delete(stale))
+        .isInstanceOfSatisfying(BusinessException.class, NoteRepositoryContractTest::assertStale);
+    assertThat(repository().findByIdAndOwner(note.id(), note.owner())).isPresent();
+  }
+
+  private static void assertStale(BusinessException exception) {
+    assertThat(exception.reason()).isEqualTo(VersionConflictReason.VERSION_MISMATCH);
   }
 
   // An entity's equals() compares ids only; a round trip must keep every field.

@@ -57,6 +57,8 @@ paths:
               description: URL of the new note.
               schema:
                 type: string
+            ETag:
+              $ref: "./common.yaml#/components/headers/ETag"
           content:
             application/json:
               schema:
@@ -86,6 +88,9 @@ paths:
       responses:
         "200":
           description: The note.
+          headers:
+            ETag:
+              $ref: "./common.yaml#/components/headers/ETag"
           content:
             application/json:
               schema:
@@ -100,6 +105,8 @@ paths:
       tags: [notes]
       operationId: updateNote
       summary: Replace the title and content of one of the caller's notes.
+      parameters:
+        - $ref: "./common.yaml#/components/parameters/IfMatch"
       requestBody:
         required: true
         content:
@@ -112,6 +119,9 @@ paths:
       responses:
         "200":
           description: The updated note.
+          headers:
+            ETag:
+              $ref: "./common.yaml#/components/headers/ETag"
           content:
             application/json:
               schema:
@@ -124,12 +134,18 @@ paths:
           $ref: "./common.yaml#/components/responses/NotFound"
         "413":
           $ref: "./common.yaml#/components/responses/PayloadTooLarge"
+        "412":
+          $ref: "./common.yaml#/components/responses/PreconditionFailed"
+        "428":
+          $ref: "./common.yaml#/components/responses/PreconditionRequired"
         "500":
           $ref: "./common.yaml#/components/responses/InternalError"
     delete:
       tags: [notes]
       operationId: deleteNote
       summary: Delete one of the caller's notes.
+      parameters:
+        - $ref: "./common.yaml#/components/parameters/IfMatch"
       responses:
         "204":
           description: The note was deleted.
@@ -137,6 +153,10 @@ paths:
           $ref: "./common.yaml#/components/responses/Unauthorized"
         "404":
           $ref: "./common.yaml#/components/responses/NotFound"
+        "412":
+          $ref: "./common.yaml#/components/responses/PreconditionFailed"
+        "428":
+          $ref: "./common.yaml#/components/responses/PreconditionRequired"
         "500":
           $ref: "./common.yaml#/components/responses/InternalError"
 components:
@@ -157,7 +177,7 @@ components:
           example: Milk, eggs, bread
     Note:
       type: object
-      required: [id, title, content, createdAt, updatedAt]
+      required: [id, title, content, createdAt, updatedAt, version]
       properties:
         id:
           type: string
@@ -177,6 +197,13 @@ components:
           type: string
           format: date-time
           example: "2026-10-22T09:30:00Z"
+        version:
+          type: integer
+          format: int64
+          description: >-
+            Grows by one at every change. The ETag of the note carries it, quoted; a change
+            names it in If-Match.
+          example: 0
     NotePage:
       type: object
       required: [items, page, size, totalItems, hasNext]

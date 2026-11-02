@@ -33,6 +33,8 @@ import dev.ylp.notes.domain.OwnerId;
 import dev.ylp.notes.domain.Page;
 import dev.ylp.notes.domain.PageRequest;
 import dev.ylp.notes.domain.Title;
+import dev.ylp.shared.concurrency.ExpectedVersion;
+import dev.ylp.shared.concurrency.VersionConflictReason;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -96,6 +98,8 @@ class NotesControllerTest {
                 .content(body("Ideas", "Text")))
         .andExpect(status().isCreated())
         .andExpect(header().string("Location", "/api/v1/notes/" + note.id().value()))
+        .andExpect(header().string("ETag", "\"0\""))
+        .andExpect(jsonPath("$.version").value(0))
         .andExpect(jsonPath("$.id").value(note.id().value().toString()))
         .andExpect(jsonPath("$.title").value("Ideas"));
   }
@@ -140,6 +144,21 @@ class NotesControllerTest {
         .andExpect(status().isBadRequest())
         .andExpect(header().string("Content-Type", MediaType.APPLICATION_PROBLEM_JSON_VALUE))
         .andExpect(jsonPath("$.detail").value("size must be less than or equal to 100"));
+  }
+
+  @Test
+  @DisplayName("Reading a note returns it with its version as ETag")
+  void readingNoteReturnsItWithItsVersionAsETag() throws Exception {
+    // Given
+    Note note = aNote().withOwner(ADA).withVersion(7).build();
+    when(getNoteUseCase.execute(new GetNoteCommand(ADA, note.id()))).thenReturn(note);
+
+    // When / Then
+    mockMvc
+        .perform(asAda(get("/api/v1/notes/{noteId}", note.id().value())))
+        .andExpect(status().isOk())
+        .andExpect(header().string("ETag", "\"7\""))
+        .andExpect(jsonPath("$.version").value(7));
   }
 
   @Test
@@ -198,33 +217,111 @@ class NotesControllerTest {
   }
 
   @Test
-  @DisplayName("Updating a note returns the updated note")
-  void updatingNoteReturnsTheUpdatedNote() throws Exception {
+  @DisplayName("Updating a note at the version read returns it at its new version")
+  void updatingNoteAtTheVersionReadReturnsItAtItsNewVersion() throws Exception {
     // Given
-    Note note = aNote().withOwner(ADA).withTitle("New").build();
-    var command = new UpdateNoteCommand(ADA, note.id(), new Title("New"), new Content("Body"));
+    Note note = aNote().withOwner(ADA).withTitle("New").withVersion(3).build();
+    var command =
+        new UpdateNoteCommand(
+            ADA, note.id(), ExpectedVersion.of(2), new Title("New"), new Content("Body"));
     when(updateNoteUseCase.execute(command)).thenReturn(note);
 
     // When / Then
     mockMvc
         .perform(
             asAda(put("/api/v1/notes/{noteId}", note.id().value()))
+                .header("If-Match", "\"2\"")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body("New", "Body")))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.title").value("New"));
+        .andExpect(header().string("ETag", "\"3\""))
+        .andExpect(jsonPath("$.title").value("New"))
+        .andExpect(jsonPath("$.version").value(3));
   }
 
   @Test
-  @DisplayName("Deleting a note returns 204")
-  void deletingNoteReturns204() throws Exception {
+  @DisplayName("If-Match * updates whatever the version")
+  void ifMatchStarUpdatesWhateverTheVersion() throws Exception {
+    // Given
+    Note note = aNote().withOwner(ADA).withTitle("New").build();
+    var command =
+        new UpdateNoteCommand(
+            ADA, note.id(), ExpectedVersion.ANY, new Title("New"), new Content("Body"));
+    when(updateNoteUseCase.execute(command)).thenReturn(note);
+
+    // When / Then
+    mockMvc
+        .perform(
+            asAda(put("/api/v1/notes/{noteId}", note.id().value()))
+                .header("If-Match", "*")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body("New", "Body")))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  @DisplayName("A change without If-Match is rejected with 428 before any use case runs")
+  void changeWithoutIfMatchIsRejectedWith428BeforeAnyUseCaseRuns() throws Exception {
     // Given
     NoteId id = new NoteId(UUID.randomUUID());
 
     // When / Then
     mockMvc
+        .perform(
+            asAda(put("/api/v1/notes/{noteId}", id.value()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body("New", "Body")))
+        .andExpect(status().isPreconditionRequired())
+        .andExpect(jsonPath("$.errorCode").value("VERSION_REQUIRED"));
+    mockMvc
         .perform(asAda(delete("/api/v1/notes/{noteId}", id.value())))
+        .andExpect(status().isPreconditionRequired());
+    verify(updateNoteUseCase, never()).execute(any());
+    verify(deleteNoteUseCase, never()).execute(any());
+  }
+
+  @Test
+  @DisplayName("A change based on an older version is rejected with 412")
+  void changeBasedOnOlderVersionIsRejectedWith412() throws Exception {
+    // Given
+    NoteId id = new NoteId(UUID.randomUUID());
+    when(updateNoteUseCase.execute(any()))
+        .thenThrow(VersionConflictReason.mismatch("Note is at version 3, not 2"));
+
+    // When / Then
+    mockMvc
+        .perform(
+            asAda(put("/api/v1/notes/{noteId}", id.value()))
+                .header("If-Match", "\"2\"")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body("New", "Body")))
+        .andExpect(status().isPreconditionFailed())
+        .andExpect(jsonPath("$.errorCode").value("VERSION_MISMATCH"));
+  }
+
+  @Test
+  @DisplayName("An If-Match that names no version of this API is rejected with 412")
+  void ifMatchThatNamesNoVersionIsRejectedWith412() throws Exception {
+    // Given
+    NoteId id = new NoteId(UUID.randomUUID());
+
+    // When / Then
+    mockMvc
+        .perform(asAda(delete("/api/v1/notes/{noteId}", id.value())).header("If-Match", "W/\"2\""))
+        .andExpect(status().isPreconditionFailed());
+    verify(deleteNoteUseCase, never()).execute(any());
+  }
+
+  @Test
+  @DisplayName("Deleting a note at the version read returns 204")
+  void deletingNoteAtTheVersionReadReturns204() throws Exception {
+    // Given
+    NoteId id = new NoteId(UUID.randomUUID());
+
+    // When / Then
+    mockMvc
+        .perform(asAda(delete("/api/v1/notes/{noteId}", id.value())).header("If-Match", "\"4\""))
         .andExpect(status().isNoContent());
-    verify(deleteNoteUseCase).execute(new DeleteNoteCommand(ADA, id));
+    verify(deleteNoteUseCase).execute(new DeleteNoteCommand(ADA, id, ExpectedVersion.of(4)));
   }
 }

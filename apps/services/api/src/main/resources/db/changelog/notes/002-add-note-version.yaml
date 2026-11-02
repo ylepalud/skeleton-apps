@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: notes-002-add-note-version
+      author: ylp
+      comment: Optimistic concurrency. Existing notes start at version 0.
+      changes:
+        - addColumn:
+            schemaName: notes
+            tableName: notes
+            columns:
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

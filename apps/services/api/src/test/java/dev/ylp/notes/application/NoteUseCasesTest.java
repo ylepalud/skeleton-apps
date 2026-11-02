@@ -4,6 +4,7 @@ import static dev.ylp.notes.domain.NoteTestDataBuilder.CREATED_AT;
 import static dev.ylp.notes.domain.NoteTestDataBuilder.aNote;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,6 +23,8 @@ import dev.ylp.notes.domain.OwnerId;
 import dev.ylp.notes.domain.Page;
 import dev.ylp.notes.domain.PageRequest;
 import dev.ylp.notes.domain.Title;
+import dev.ylp.shared.concurrency.ExpectedVersion;
+import dev.ylp.shared.concurrency.VersionConflictReason;
 import dev.ylp.shared.error.business.BusinessException;
 import dev.ylp.shared.id.UUIDGenerator;
 import java.time.Clock;
@@ -63,8 +66,17 @@ class NoteUseCasesTest {
     when(noteRepository.findByIdAndOwner(note.id(), OWNER)).thenReturn(Optional.of(note));
   }
 
+  // The repository answers what it stored, as an adapter does.
+  private void givenSavesReturnTheNote() {
+    when(noteRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+  }
+
   private static void assertNotFound(BusinessException exception) {
     assertThat(exception.reason()).isEqualTo(NoteErrorReason.NOTE_NOT_FOUND);
+  }
+
+  private static void assertStale(BusinessException exception) {
+    assertThat(exception.reason()).isEqualTo(VersionConflictReason.VERSION_MISMATCH);
   }
 
   @Nested
@@ -76,6 +88,7 @@ class NoteUseCasesTest {
       // Given
       UUID generated = UUID.randomUUID();
       when(uuidGenerator.generate()).thenReturn(generated);
+      givenSavesReturnTheNote();
       var useCase = new CreateNoteUseCase(noteRepository, uuidGenerator, clock);
 
       // When
@@ -86,6 +99,7 @@ class NoteUseCasesTest {
       assertThat(note.id()).isEqualTo(new NoteId(generated));
       assertThat(note.owner()).isEqualTo(OWNER);
       assertThat(note.createdAt()).isEqualTo(NOW);
+      assertThat(note.version()).isZero();
       verify(noteRepository).save(note);
     }
   }
@@ -149,12 +163,18 @@ class NoteUseCasesTest {
     void updatingOwnedNoteEditsItStoresItAndReturnsIt() {
       // Given
       givenStored(stored);
+      givenSavesReturnTheNote();
       var useCase = new UpdateNoteUseCase(noteRepository, clock);
 
       // When
       Note note =
           useCase.execute(
-              new UpdateNoteCommand(OWNER, stored.id(), new Title("New"), new Content("Body")));
+              new UpdateNoteCommand(
+                  OWNER,
+                  stored.id(),
+                  ExpectedVersion.of(stored.version()),
+                  new Title("New"),
+                  new Content("Body")));
 
       // Then
       assertThat(note.title()).isEqualTo(new Title("New"));
@@ -170,12 +190,50 @@ class NoteUseCasesTest {
       NoteId id = new NoteId(UUID.randomUUID());
       givenNoStoredNote(id);
       var useCase = new UpdateNoteUseCase(noteRepository, clock);
-      var command = new UpdateNoteCommand(OWNER, id, new Title("New"), new Content(""));
+      var command =
+          new UpdateNoteCommand(OWNER, id, ExpectedVersion.ANY, new Title("New"), new Content(""));
 
       // When / Then
       assertThatThrownBy(() -> useCase.execute(command))
           .isInstanceOfSatisfying(BusinessException.class, NoteUseCasesTest::assertNotFound);
-      verify(noteRepository, never()).save(org.mockito.ArgumentMatchers.any());
+      verify(noteRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Updating a note changed since it was read fails and leaves it as it was")
+    void updatingNoteChangedSinceItWasReadFailsAndLeavesItAsItWas() {
+      // Given
+      Note changed = aNote().withOwner(OWNER).withVersion(3).build();
+      givenStored(changed);
+      var useCase = new UpdateNoteUseCase(noteRepository, clock);
+      var command =
+          new UpdateNoteCommand(
+              OWNER, changed.id(), ExpectedVersion.of(2), new Title("New"), new Content(""));
+
+      // When / Then
+      assertThatThrownBy(() -> useCase.execute(command))
+          .isInstanceOfSatisfying(BusinessException.class, NoteUseCasesTest::assertStale);
+      assertThat(changed.title()).isEqualTo(new Title("Groceries"));
+      verify(noteRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Updating with any version overwrites whatever the note became")
+    void updatingWithAnyVersionOverwritesWhateverTheNoteBecame() {
+      // Given
+      Note changed = aNote().withOwner(OWNER).withVersion(3).build();
+      givenStored(changed);
+      givenSavesReturnTheNote();
+      var useCase = new UpdateNoteUseCase(noteRepository, clock);
+
+      // When
+      Note note =
+          useCase.execute(
+              new UpdateNoteCommand(
+                  OWNER, changed.id(), ExpectedVersion.ANY, new Title("New"), new Content("")));
+
+      // Then
+      assertThat(note.title()).isEqualTo(new Title("New"));
     }
   }
 
@@ -189,7 +247,8 @@ class NoteUseCasesTest {
       givenStored(stored);
 
       // When
-      new DeleteNoteUseCase(noteRepository).execute(new DeleteNoteCommand(OWNER, stored.id()));
+      new DeleteNoteUseCase(noteRepository)
+          .execute(new DeleteNoteCommand(OWNER, stored.id(), ExpectedVersion.of(stored.version())));
 
       // Then
       verify(noteRepository).delete(stored);
@@ -204,9 +263,25 @@ class NoteUseCasesTest {
       var useCase = new DeleteNoteUseCase(noteRepository);
 
       // When / Then
-      assertThatThrownBy(() -> useCase.execute(new DeleteNoteCommand(OWNER, id)))
+      assertThatThrownBy(
+              () -> useCase.execute(new DeleteNoteCommand(OWNER, id, ExpectedVersion.ANY)))
           .isInstanceOfSatisfying(BusinessException.class, NoteUseCasesTest::assertNotFound);
-      verify(noteRepository, never()).delete(org.mockito.ArgumentMatchers.any());
+      verify(noteRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("Deleting a note changed since it was read fails and keeps it")
+    void deletingNoteChangedSinceItWasReadFailsAndKeepsIt() {
+      // Given
+      Note changed = aNote().withOwner(OWNER).withVersion(3).build();
+      givenStored(changed);
+      var useCase = new DeleteNoteUseCase(noteRepository);
+      var command = new DeleteNoteCommand(OWNER, changed.id(), ExpectedVersion.of(2));
+
+      // When / Then
+      assertThatThrownBy(() -> useCase.execute(command))
+          .isInstanceOfSatisfying(BusinessException.class, NoteUseCasesTest::assertStale);
+      verify(noteRepository, never()).delete(any());
     }
   }
 }

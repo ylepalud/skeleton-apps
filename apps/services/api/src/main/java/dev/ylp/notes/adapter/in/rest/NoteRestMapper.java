@@ -18,7 +18,8 @@ public final class NoteRestMapper {
         note.title().value(),
         note.content().value(),
         note.createdAt().atOffset(ZoneOffset.UTC),
-        note.updatedAt().atOffset(ZoneOffset.UTC));
+        note.updatedAt().atOffset(ZoneOffset.UTC),
+        note.version());
   }
 
   /** Returns the transport form of a page of notes. */
