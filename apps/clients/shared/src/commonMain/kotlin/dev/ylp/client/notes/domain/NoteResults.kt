@@ -55,3 +55,23 @@ sealed class DeleteNoteResult {
         val failure: NoteFailure,
     ) : DeleteNoteResult()
 }
+
+/** The outcome of reading the conflict of a note. */
+sealed class NoteConflictResult {
+    data class Found(
+        val conflict: NoteConflict,
+    ) : NoteConflictResult()
+
+    data class Failed(
+        val failure: NoteFailure,
+    ) : NoteConflictResult()
+}
+
+/** The outcome of resolving a conflict. */
+sealed class ResolutionResult {
+    data object Resolved : ResolutionResult()
+
+    data class Failed(
+        val failure: NoteFailure,
+    ) : ResolutionResult()
+}

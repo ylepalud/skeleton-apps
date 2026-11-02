@@ -3,9 +3,10 @@ package dev.ylp.client.notes.domain
 import kotlin.time.Instant
 
 /**
- * A note of the signed-in user, as the API returns it. [version] grows at every stored change: a
- * change or deletion names the version it is based on, and fails with [NoteFailure.Changed] if the
- * note changed since.
+ * A note of the signed-in user, as this device knows it. [id] is stable from the moment the note
+ * is written, even offline. [version] is the API version the note is based on: it grows at every
+ * stored change, and a change based on an older one is refused. [sync] tells whether the API has
+ * the note as shown.
  */
 data class Note(
     val id: String,
@@ -14,13 +15,30 @@ data class Note(
     val createdAt: Instant,
     val updatedAt: Instant,
     val version: Long,
+    val sync: SyncState = SyncState.SYNCED,
 )
 
-/** One page of the user's notes, most recently updated first. */
+/** Whether the API has a note as this device shows it. */
+enum class SyncState {
+    /** The API has it as shown. */
+    SYNCED,
+
+    /** Changed on this device; the change is queued until the API can be reached. */
+    PENDING,
+
+    /** The API refused the change because of a change made elsewhere: the user resolves it. */
+    CONFLICTING,
+}
+
+/**
+ * One page of the user's notes, most recently updated first. [offline] tells that the API could
+ * not be reached: the page shows the notes kept on this device.
+ */
 data class NotePage(
     val notes: List<Note>,
     val page: Int,
     val size: Int,
     val totalNotes: Long,
     val hasNext: Boolean,
+    val offline: Boolean = false,
 )

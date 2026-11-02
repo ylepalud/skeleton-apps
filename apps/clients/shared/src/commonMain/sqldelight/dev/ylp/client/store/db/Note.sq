@@ -1,0 +1,76 @@
+-- The notes as this device knows them: the API's state, with the user's changes not yet sent on
+-- top. [id] is the local id the screens use; [server_id] is null until a note created here has
+-- been stored by the API. [version] is the API version the local state is based on.
+CREATE TABLE note (
+    id TEXT NOT NULL PRIMARY KEY,
+    server_id TEXT UNIQUE,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    version INTEGER NOT NULL,
+    sync TEXT NOT NULL,
+    deleted INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX note_updated_at ON note(updated_at);
+
+-- What the API holds for a note whose change was refused: the other side of a conflict.
+-- [kind] is CHANGED_ELSEWHERE, DELETED_ELSEWHERE (no other side) or REJECTED.
+CREATE TABLE note_conflict (
+    note_id TEXT NOT NULL PRIMARY KEY,
+    kind TEXT NOT NULL,
+    title TEXT,
+    content TEXT,
+    created_at INTEGER,
+    updated_at INTEGER,
+    version INTEGER
+);
+
+byId:
+SELECT * FROM note WHERE id = ?;
+
+byServerId:
+SELECT * FROM note WHERE server_id = ?;
+
+-- A note deleted here stays listed while its deletion is in conflict: the user resolves it.
+page:
+SELECT * FROM note WHERE deleted = 0 OR sync = 'CONFLICTING' ORDER BY updated_at DESC, id LIMIT :size OFFSET :offset;
+
+countVisible:
+SELECT count(*) FROM note WHERE deleted = 0 OR sync = 'CONFLICTING';
+
+-- Notes written here that the API does not have yet: listed first, above the API's pages.
+localOnly:
+SELECT * FROM note WHERE server_id IS NULL AND deleted = 0 ORDER BY updated_at DESC, id;
+
+countDeletedHere:
+SELECT count(*) FROM note WHERE deleted = 1 AND sync != 'CONFLICTING' AND server_id IS NOT NULL;
+
+-- The synced notes of a fetched page's range: those the page no longer holds were deleted elsewhere.
+syncedInRange:
+SELECT * FROM note
+WHERE sync = 'SYNCED' AND server_id IS NOT NULL AND updated_at <= :newest AND updated_at >= :oldest;
+
+upsert:
+INSERT OR REPLACE INTO note(id, server_id, title, content, created_at, updated_at, version, sync, deleted)
+VALUES ?;
+
+remove:
+DELETE FROM note WHERE id = ?;
+
+conflictOf:
+SELECT * FROM note_conflict WHERE note_id = ?;
+
+putConflict:
+INSERT OR REPLACE INTO note_conflict(note_id, kind, title, content, created_at, updated_at, version)
+VALUES ?;
+
+removeConflict:
+DELETE FROM note_conflict WHERE note_id = ?;
+
+clearConflicts:
+DELETE FROM note_conflict;
+
+clear:
+DELETE FROM note;

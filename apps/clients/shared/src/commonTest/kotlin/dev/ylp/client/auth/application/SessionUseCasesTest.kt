@@ -8,24 +8,26 @@ import kotlin.test.assertNull
 
 class SessionUseCasesTest {
     private val store = InMemoryTokenStore()
+    private val deviceData = FakeDeviceData()
 
     @Test
     fun `signing in opens the provider's page and keeps the tokens`() =
         runTest {
             val browser = FakeBrowser("app://callback?code=c&state=state")
 
-            val result = SignIn(FakeIdentityProvider(), browser, store, "app://callback").execute()
+            val result = SignIn(FakeIdentityProvider(), browser, store, deviceData, "app://callback").execute()
 
             assertEquals(SignInResult.SignedIn, result)
             assertEquals("https://idp/authorize", browser.opened)
             assertEquals(FakeIdentityProvider.TOKENS, store.load())
             assertEquals(Session.SignedIn, CurrentSession(store).execute())
+            assertEquals(listOf("claim alice"), deviceData.calls)
         }
 
     @Test
     fun `closing the browser cancels the sign-in`() =
         runTest {
-            val result = SignIn(FakeIdentityProvider(), FakeBrowser(null), store, "app://callback").execute()
+            val result = SignIn(FakeIdentityProvider(), FakeBrowser(null), store, deviceData, "app://callback").execute()
 
             assertEquals(SignInResult.Cancelled, result)
             assertNull(store.load())
@@ -34,7 +36,14 @@ class SessionUseCasesTest {
     @Test
     fun `a refusal of the provider fails the sign-in`() =
         runTest {
-            val result = SignIn(FakeIdentityProvider("access_denied"), FakeBrowser("app://callback"), store, "app://callback").execute()
+            val result =
+                SignIn(
+                    FakeIdentityProvider("access_denied"),
+                    FakeBrowser("app://callback"),
+                    store,
+                    deviceData,
+                    "app://callback",
+                ).execute()
 
             assertEquals(SignInResult.Failed("access_denied"), result)
             assertEquals(Session.SignedOut, CurrentSession(store).execute())
@@ -45,8 +54,9 @@ class SessionUseCasesTest {
         runTest {
             store.save(FakeIdentityProvider.TOKENS)
 
-            SignOut(store).execute()
+            SignOut(store, deviceData).execute()
 
             assertEquals(Session.SignedOut, CurrentSession(store).execute())
+            assertEquals(listOf("clear"), deviceData.calls)
         }
 }

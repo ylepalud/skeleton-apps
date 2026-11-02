@@ -2,6 +2,7 @@ package dev.ylp.client.auth.adapter.out.oidc
 
 import dev.ylp.client.auth.domain.AuthConfig
 import dev.ylp.client.auth.domain.AuthenticationException
+import dev.ylp.client.auth.domain.Authorization
 import dev.ylp.client.auth.domain.AuthorizationRequest
 import dev.ylp.client.auth.domain.IdentityProvider
 import dev.ylp.client.auth.domain.Tokens
@@ -17,6 +18,9 @@ import io.ktor.http.parameters
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.kotlincrypto.hash.sha2.SHA256
 import org.kotlincrypto.random.CryptoRand
 import kotlin.io.encoding.Base64
@@ -56,24 +60,26 @@ internal class KtorIdentityProvider(
     override suspend fun completeAuthorization(
         request: AuthorizationRequest,
         redirectUrl: String,
-    ): Tokens {
+    ): Authorization {
         val redirect = Url(redirectUrl).parameters
         redirect["error"]?.let { throw AuthenticationException(redirect["error_description"] ?: it) }
         // A state that differs means the redirect does not answer this request: a forged one.
         if (redirect["state"] != request.state) throw AuthenticationException("The sign-in answer does not match the request")
         val code = redirect["code"] ?: throw AuthenticationException("The sign-in answer has no code")
-        return requestTokens(
-            parameters {
-                append("grant_type", "authorization_code")
-                append("code", code)
-                append("redirect_uri", config.redirectUri)
-                append("client_id", config.clientId)
-                append("code_verifier", request.codeVerifier)
-            },
-            previousRefreshToken = null,
-        )
+        val response =
+            requestTokens(
+                parameters {
+                    append("grant_type", "authorization_code")
+                    append("code", code)
+                    append("redirect_uri", config.redirectUri)
+                    append("client_id", config.clientId)
+                    append("code_verifier", request.codeVerifier)
+                },
+            )
+        return Authorization(response.toTokens(previousRefreshToken = null), response.idToken?.let(::subjectOf))
     }
 
+    // A provider may keep the refresh token and not send it again.
     override suspend fun refresh(refreshToken: String): Tokens =
         requestTokens(
             parameters {
@@ -81,26 +87,23 @@ internal class KtorIdentityProvider(
                 append("refresh_token", refreshToken)
                 append("client_id", config.clientId)
             },
-            // A provider may keep the refresh token and not send it again.
-            previousRefreshToken = refreshToken,
-        )
+        ).toTokens(previousRefreshToken = refreshToken)
 
-    private suspend fun requestTokens(
-        form: io.ktor.http.Parameters,
-        previousRefreshToken: String?,
-    ): Tokens {
+    private suspend fun requestTokens(form: io.ktor.http.Parameters): TokenResponse {
         val response = call { http.submitForm(discover().tokenEndpoint, form) }
         if (!response.status.isSuccess()) {
             val error = runCatching { response.body<TokenError>() }.getOrNull()
             throw AuthenticationException(error?.description ?: error?.error ?: "Token request failed: ${response.status.value}")
         }
-        val body = response.body<TokenResponse>()
-        return Tokens(
-            accessToken = body.accessToken,
-            refreshToken = body.refreshToken ?: previousRefreshToken,
-            expiresAt = body.expiresIn?.let { clock.now() + it.seconds },
-        )
+        return response.body<TokenResponse>()
     }
+
+    private fun TokenResponse.toTokens(previousRefreshToken: String?) =
+        Tokens(
+            accessToken = accessToken,
+            refreshToken = refreshToken ?: previousRefreshToken,
+            expiresAt = expiresIn?.let { clock.now() + it.seconds },
+        )
 
     private suspend fun discover(): Discovery =
         discovery ?: run {
@@ -130,6 +133,7 @@ internal class KtorIdentityProvider(
         @SerialName("access_token") val accessToken: String,
         @SerialName("refresh_token") val refreshToken: String? = null,
         @SerialName("expires_in") val expiresIn: Long? = null,
+        @SerialName("id_token") val idToken: String? = null,
     )
 
     @Serializable
@@ -143,6 +147,22 @@ internal class KtorIdentityProvider(
         private const val VERIFIER_BYTES = 32
         private const val STATE_BYTES = 16
         private val base64Url = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT)
+
+        private val base64UrlLenient = Base64.UrlSafe.withPadding(Base64.PaddingOption.PRESENT_OPTIONAL)
+
+        /**
+         * The user an ID token names. It only tells whose data the device holds: the token comes
+         * straight from the token endpoint, and the API checks every access token itself.
+         */
+        fun subjectOf(idToken: String): String? =
+            runCatching {
+                val payload = base64UrlLenient.decode(idToken.split('.')[1]).decodeToString()
+                Json
+                    .parseToJsonElement(payload)
+                    .jsonObject["sub"]
+                    ?.jsonPrimitive
+                    ?.content
+            }.getOrNull()
 
         private fun randomToken(bytes: Int): String = base64Url.encode(CryptoRand.Default.nextBytes(ByteArray(bytes)))
 

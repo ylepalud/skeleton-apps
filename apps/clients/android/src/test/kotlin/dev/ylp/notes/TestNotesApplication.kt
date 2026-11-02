@@ -4,14 +4,16 @@ import dev.ylp.client.SharedClient
 import dev.ylp.client.auth.adapter.out.memory.InMemoryTokenStore
 import dev.ylp.client.auth.domain.AuthConfig
 import dev.ylp.client.auth.domain.AuthorizationBrowser
+import dev.ylp.client.openLocalStore
 import io.ktor.http.Url
 
-/** The app wired to [backend], with a browser that signs in at once and tokens kept in memory. */
+/** The app wired to [backend], with a browser that signs in at once, tokens and notes kept in memory. */
 class TestNotesApplication : NotesApplication() {
     override fun createClient(): SharedClient = SharedClient(
         apiBaseUrl = backend.url("/api/v1"),
         auth = AuthConfig(backend.url("/idp"), "api-mobile", REDIRECT_URI),
         browser = signInBrowser,
+        localStore = openLocalStore(this, name = null),
         tokenStore = tokens,
     )
 

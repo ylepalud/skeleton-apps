@@ -34,6 +34,7 @@ class PlatformAdapterTest {
                     "https://api.example/api/v1",
                     AuthConfig("https://idp.example/default", "app", "app://callback"),
                     Browser(),
+                    testStore(),
                     store,
                 )
 
