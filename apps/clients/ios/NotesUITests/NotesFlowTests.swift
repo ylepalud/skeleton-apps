@@ -80,6 +80,29 @@ final class NotesFlowTests: XCTestCase {
         XCTAssertEqual(backend.notes, [.init(title: "Weekend groceries", content: "Milk")])
     }
 
+    func testANoteChangedElsewhereIsReloadedInsteadOfOverwritten() {
+        let id = backend.add("Groceries", content: "Milk")
+        signIn()
+        waitFor("Groceries").tap()
+        waitFor("Edit note")
+        let title = app.textFields["Title"]
+        expectation(for: NSPredicate(format: "value == %@", "Groceries"), evaluatedWith: title)
+        waitForExpectations(timeout: Self.timeout)
+        backend.changeElsewhere(id, title: "From the browser", content: "Eggs")
+
+        title.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        title.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "Groceries".count) + "From the phone")
+        app.buttons["Save"].tap()
+
+        waitFor("This note was changed elsewhere. It now shows the latest version.")
+        expectation(for: NSPredicate(format: "value == %@", "From the browser"), evaluatedWith: title)
+        waitForExpectations(timeout: Self.timeout)
+        XCTAssertEqual(backend.notes, [.init(title: "From the browser", content: "Eggs")])
+
+        app.buttons["Save"].tap()
+        waitFor("Your notes (1)")
+    }
+
     func testANoteIsDeletedOnlyOnceConfirmed() {
         backend.add("Groceries")
         signIn()

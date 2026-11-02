@@ -9,9 +9,15 @@ extension NoteFailure {
             invalid.value.violations.map { [$0.field, $0.message].compactMap(\.self).joined(separator: ": ") }
                 .joined(separator: "\n")
         case .signedOut: "Your session has ended."
+        case .changed: Self.changedElsewhere
         case .unavailable: Self.unreachable
         }
     }
+
+    var changedMeanwhile: Bool { self is NoteFailure.Changed }
+
+    /// What the editor says when the note changed elsewhere between reading and saving it.
+    static let changedElsewhere = "This note was changed elsewhere. It now shows the latest version."
 
     var endsSession: Bool { self is NoteFailure.SignedOut }
 

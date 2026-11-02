@@ -13,6 +13,8 @@ final class NoteEditorModel {
     let editing: Bool
     private let id: String?
     private let client: SharedClient
+    /// The version of the note as read: a save or a deletion is based on it.
+    private var version: Int64 = 0
 
     init(client: SharedClient, id: String?) {
         self.client = client
@@ -24,13 +26,14 @@ final class NoteEditorModel {
         guard let id, let note = await note(from: { try await self.client.getNote.execute(id: id) }) else { return }
         title = note.title
         content = note.content
+        version = note.version
     }
 
     func save() async {
-        let (id, title, content) = (id, title, content)
+        let (id, title, content, version) = (id, title, content, version)
         let saved = await note {
             if let id {
-                try await self.client.updateNote.execute(id: id, title: title, content: content)
+                try await self.client.updateNote.execute(id: id, title: title, content: content, version: version)
             } else {
                 try await self.client.createNote.execute(title: title, content: content)
             }
@@ -42,9 +45,9 @@ final class NoteEditorModel {
         guard let id else { return }
         confirmingDelete = false
         do {
-            switch try await client.deleteNote.execute(id: id).sealedType() {
+            switch try await client.deleteNote.execute(id: id, version: version).sealedType() {
             case .deleted: done = true
-            case .failed(let failed): fail(failed.value.failure)
+            case .failed(let failed): await fail(failed.value.failure)
             }
         } catch {
             problem = NoteFailure.unreachable
@@ -56,7 +59,7 @@ final class NoteEditorModel {
         do {
             switch try await call().sealedType() {
             case .success(let success): return success.value.note
-            case .failed(let failed): fail(failed.value.failure)
+            case .failed(let failed): await fail(failed.value.failure)
             }
         } catch {
             problem = NoteFailure.unreachable
@@ -64,8 +67,11 @@ final class NoteEditorModel {
         return nil
     }
 
-    private func fail(_ failure: NoteFailure) {
+    // The policy of notes for a concurrent change: nothing is overwritten, the editor shows the
+    // latest version, and the user redoes the change.
+    private func fail(_ failure: NoteFailure) async {
         if failure.endsSession { signedOut = true } else { problem = failure.message }
+        if failure.changedMeanwhile { await load() }
     }
 }
 
