@@ -184,7 +184,7 @@ private fun ConflictPanel(
         if (!conflict.mineDeleted) Side("Yours", conflict.mine)
         conflict.theirs?.let { Side("Theirs", it) }
         problem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        conflict.resolutions.forEach { resolution ->
+        Resolution.entries.filter(conflict::allows).forEach { resolution ->
             OutlinedButton(onClick = { onResolve(resolution) }, modifier = Modifier.fillMaxWidth()) { Text(conflict.label(resolution)) }
         }
     }

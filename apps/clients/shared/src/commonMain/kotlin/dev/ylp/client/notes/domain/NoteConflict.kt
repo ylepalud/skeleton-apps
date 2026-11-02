@@ -2,7 +2,7 @@ package dev.ylp.client.notes.domain
 
 /**
  * A change of a note the API refused, and what the API holds instead: the notes strategy for
- * concurrent changes. Nothing is lost: the user picks one of [resolutions].
+ * concurrent changes. Nothing is lost: the user picks one of the resolutions it [allows].
  */
 data class NoteConflict(
     /** The note as changed on this device. */
@@ -13,7 +13,11 @@ data class NoteConflict(
     val theirs: Note?,
     val kind: ConflictKind,
 ) {
-    val resolutions: List<Resolution> =
+    /** Whether [resolution] settles this conflict. */
+    fun allows(resolution: Resolution): Boolean = resolution in resolutions
+
+    // Swift export cannot yet hand a list of enum constants to Swift: the list stays inside.
+    internal val resolutions: List<Resolution> =
         when (kind) {
             ConflictKind.CHANGED_ELSEWHERE -> {
                 if (mineDeleted) {
