@@ -168,7 +168,7 @@ export function summarizeChecks(rollup) {
   };
 }
 
-const LOG_SIGNAL = /(##\[error\]|\berror\b|\bErrors?:|FAILED|FAILURE|Exception|✗|✘|\bfailed\b|AssertionError|expected:|What went wrong)/i;
+const LOG_SIGNAL = /(##\[error\]|\berror\b|\bErrors?:|FAILED|FAILURE|Exception|^\s*fail\s|✖|✗|✘|\bfailed\b|AssertionError|expected:|What went wrong)/i;
 const LOG_NOISE = /(Gradle Enterprise|Develocity|--scan|Run with --|Get more help|BUILD FAILED in|deprecated Gradle features|continue-on-failure|[Cc]ache[- ]cleanup|^\s*$)/;
 
 /** The lines of a failed log that say why, deduplicated and capped. */
@@ -251,13 +251,14 @@ export const coveringCommand = (command, registry = REGISTRY) => coveringCommand
 
 // ---------------------------------------------------------------- git and GitHub context
 
+/** The branch pull requests target, or null in a checkout without it (CI's shallow clone). */
 function baseBranch() {
   const head = run('git', ['symbolic-ref', '--quiet', '--short', 'refs/remotes/origin/HEAD'], { allowFail: true }).trim();
   if (head) return head;
   for (const candidate of ['origin/develop', 'origin/main', 'develop', 'main']) {
     if (run('git', ['rev-parse', '--verify', '--quiet', candidate], { allowFail: true }).trim()) return candidate;
   }
-  throw new Unavailable('no base branch: neither origin/HEAD, develop nor main');
+  return null;
 }
 
 const PR_FIELDS = 'number,title,state,isDraft,mergeable,mergeStateStatus,reviewDecision,baseRefName,headRefName,url,statusCheckRollup';
@@ -276,8 +277,9 @@ function statusCommand() {
   const base = baseBranch();
   const branch = run('git', ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
   const upstream = run('git', ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'], { allowFail: true }).trim() || null;
-  const [behind, ahead] = run('git', ['rev-list', '--left-right', '--count', `${base}...HEAD`]).trim().split(/\s+/).map(Number);
   const dirty = run('git', ['status', '--porcelain']).split('\n').filter(Boolean).map((l) => l.trimStart());
+  if (!base) return { branch, upstream, base, ahead: null, behind: null, dirty, commits: [], diff: 'no base branch' };
+  const [behind, ahead] = run('git', ['rev-list', '--left-right', '--count', `${base}...HEAD`]).trim().split(/\s+/).map(Number);
   const commits = run('git', ['log', '--format=%h %s', '-20', `${base}..HEAD`]).split('\n').filter(Boolean);
   const diff = run('git', ['diff', '--shortstat', `${base}...HEAD`]).trim() || 'no change';
   return { branch, upstream, base, ahead, behind, dirty, commits, diff };
@@ -285,7 +287,7 @@ function statusCommand() {
 
 function statusText(d) {
   return [
-    `branch ${d.branch} upstream=${d.upstream ?? '-'} base=${d.base} ahead=${d.ahead} behind=${d.behind}`,
+    `branch ${d.branch} upstream=${d.upstream ?? '-'} base=${d.base ?? '-'} ahead=${d.ahead ?? '-'} behind=${d.behind ?? '-'}`,
     `diff ${d.diff}`,
     `dirty ${d.dirty.length}${d.dirty.length ? `: ${d.dirty.join(' | ')}` : ''}`,
     ...d.commits.map((c) => `commit ${c}`),
