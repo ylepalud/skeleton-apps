@@ -9,6 +9,9 @@ final class NotesModel {
     private(set) var loading = false
     private(set) var problem: String?
     private(set) var signedOut = false
+    private(set) var offline = false
+    /// The changes a sign-out would lose, while the user confirms it.
+    var confirmingSignOut: Int64?
     private var page: Int32 = 0
     private let client: SharedClient
 
@@ -21,7 +24,14 @@ final class NotesModel {
 
     func loadMore() async { await load(page + 1) }
 
+    /// Signs out at once, or first asks when changes not sent yet would be lost.
     func signOut() async {
+        let pending = (try? await client.countPendingChanges.execute()) ?? 0
+        if pending > 0 { confirmingSignOut = pending } else { await signOutAnyway() }
+    }
+
+    func signOutAnyway() async {
+        confirmingSignOut = nil
         try? await client.signOut.execute()
         signedOut = true
     }
@@ -39,6 +49,7 @@ final class NotesModel {
                 notes = page == 0 ? loaded.notes : notes + loaded.notes
                 totalNotes = loaded.totalNotes
                 hasNext = loaded.hasNext
+                offline = loaded.offline
                 problem = nil
             case .failed(let failed):
                 if failed.value.failure.endsSession { signedOut = true } else { problem = failed.value.failure.message }
@@ -75,6 +86,12 @@ struct NotesView: View {
                     Button("Retry") { Task { await model.refresh() } }
                 }
             }
+            if model.offline {
+                Section {
+                    Text(SyncState.offline)
+                    Button("Retry") { Task { await model.refresh() } }
+                }
+            }
             if !model.loading && model.problem == nil && model.notes.isEmpty {
                 Text("No notes yet.")
             }
@@ -86,6 +103,9 @@ struct NotesView: View {
                         Text(note.title).font(.headline)
                         if !note.content.isEmpty {
                             Text(note.content).lineLimit(3).foregroundStyle(.secondary)
+                        }
+                        if let label = note.sync.label {
+                            Text(label).font(.caption).foregroundStyle(.orange)
                         }
                     }
                 }
@@ -105,6 +125,14 @@ struct NotesView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("New note", action: onNew)
             }
+        }
+        .alert(
+            "Changes not synced yet: \(model.confirmingSignOut ?? 0). Signing out loses them.",
+            isPresented: Binding(
+                get: { model.confirmingSignOut != nil }, set: { if !$0 { model.confirmingSignOut = nil } })
+        ) {
+            Button("Sign out anyway", role: .destructive) { Task { await model.signOutAnyway() } }
+            Button("Stay", role: .cancel) {}
         }
         .onAppear { Task { await model.refresh() } }
         .onChange(of: model.signedOut) { if model.signedOut { onSignedOut() } }

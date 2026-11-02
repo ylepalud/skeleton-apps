@@ -14,10 +14,8 @@ extension NoteFailure {
         }
     }
 
-    var changedMeanwhile: Bool { self is NoteFailure.Changed }
-
-    /// What the editor says when the note changed elsewhere between reading and saving it.
-    static let changedElsewhere = "This note was changed elsewhere. It now shows the latest version."
+    /// Shown only if a change reaches the API outside the queue, which resolves conflicts itself.
+    static let changedElsewhere = "This note was changed elsewhere."
 
     var endsSession: Bool { self is NoteFailure.SignedOut }
 
