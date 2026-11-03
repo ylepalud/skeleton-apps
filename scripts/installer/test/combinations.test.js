@@ -53,7 +53,7 @@ describe.each(combinations.map((clients) => [clients.join(','), clients]))('the 
   const clients = new Set(list);
   const answers = { name: 'demo-app', owner: 'example', packageName: 'dev.example.demo', clientId: 'demo-app-web', clients };
   const project = transformTree(template, answers);
-  project.set(PROVENANCE_PATH, { content: new TextEncoder().encode('# Template\n'), mode: 0o644 });
+  project.set(PROVENANCE_PATH, { content: Buffer.from('# Template\n'), mode: 0o644 });
   const decoder = new TextDecoder();
   const texts = [...project]
     .filter(([, file]) => !file.content.subarray(0, 8000).includes(0))
@@ -79,6 +79,14 @@ describe.each(combinations.map((clients) => [clients.join(','), clients]))('the 
           .map((target) => `${path} -> ${target}`),
       );
     expect(broken).toEqual([]);
+  });
+
+  it('lists in the site navigation only the pages it has', () => {
+    const navigation = texts.find(([path]) => path === 'mkdocs.yml')?.[1] ?? '';
+    const missing = [...navigation.matchAll(/^\s*-\s+(?:[^:\n]+:\s+)?([\w./-]+\.md)/gm)]
+      .map((match) => `docs/${match[1]}`)
+      .filter((page) => !project.has(page));
+    expect(missing).toEqual([]);
   });
 
   it('includes only the Gradle projects it has', () => {

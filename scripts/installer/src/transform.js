@@ -29,6 +29,7 @@ const EXCLUDED = [
   /^\.github\/workflows\/installer\.yml$/,
   /^CHANGELOG\.md$/,
   /^docs\/template\//,
+  /^docs\/architecture\/decisions\/0031-installer-clients-as-marked-blocks\.md$/,
 ];
 
 /** Where a generated project records the template it came from, in place of the template's own guide. */
@@ -67,9 +68,10 @@ export function isBinary(content) {
 /**
  * Text that only makes sense in the template, kept out of generated projects:
  * a marked block (Markdown comments `template-only:start` / `template-only:end`),
+ * a marked line, such as a table row (`<!-- template-only -->` in it),
  * and references to the template's own issues, like " (issue #12)".
  */
-const TEMPLATE_ONLY = [/<!-- template-only:start -->[\s\S]*?<!-- template-only:end -->\n?/g, / \(issue #\d+\)|, issue #\d+(?=\))/g];
+const TEMPLATE_ONLY = [/<!-- template-only:start -->[\s\S]*?<!-- template-only:end -->\n?/g, /^.*<!-- template-only -->.*\n/gm, / \(issue #\d+\)|, issue #\d+(?=\))/g];
 
 /** @param {string} value */
 function escapeRegExp(value) {
@@ -122,6 +124,22 @@ export function transformText(path, text, answers) {
 }
 
 /**
+ * The documentation site's navigation without the pages the project does not have: the template's
+ * own guide, and the pages of the clients it left out.
+ * @param {string} text mkdocs.yml
+ * @param {(page: string) => boolean} exists whether a page under docs/ is in the project
+ */
+export function pruneNavigation(text, exists) {
+  return text
+    .split('\n')
+    .filter((line) => {
+      const page = /^\s*-\s+(?:[^:]+:\s+)?([\w./-]+\.md)\s*(?:#.*)?$/.exec(line)?.[1];
+      return page === undefined || exists(page);
+    })
+    .join('\n');
+}
+
+/**
  * The generated project's files from the template's. File modes are kept as they are.
  * @template {{ content: Uint8Array }} F
  * @param {Map<string, F>} files template paths to files
@@ -144,6 +162,13 @@ export function transformTree(files, answers) {
     }
     const text = transformText(path, decoder.decode(file.content), answers);
     result.set(target, { ...file, content: encoder.encode(text) });
+  }
+  const navigation = result.get('mkdocs.yml');
+  if (navigation) {
+    // The provenance page replaces the template's guide: its README stays.
+    const exists = (/** @type {string} */ page) => result.has(`docs/${page}`) || `docs/${page}` === PROVENANCE_PATH;
+    const pruned = pruneNavigation(decoder.decode(navigation.content), exists);
+    result.set('mkdocs.yml', { ...navigation, content: encoder.encode(pruned) });
   }
   return result;
 }
