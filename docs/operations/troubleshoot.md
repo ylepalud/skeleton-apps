@@ -14,6 +14,7 @@ rm -rf build-logic/build .gradle/configuration-cache
 rm -rf ~/.gradle/caches/build-cache-1   # only if the problem comes back
 ```
 
+<!-- client:mobile:start -->
 ## SDK location not found
 
 The Android Gradle Plugin configures `apps/clients/shared` in every build, so a missing Android SDK fails even `./gradlew :apps:services:api:check`. Install the command-line tools and point `ANDROID_HOME` at them, for example on macOS:
@@ -45,7 +46,9 @@ Xcode builds the Kotlin code through `embedSwiftExportForXcode`. If the app's Sw
 ## The iOS app does not link: "_sqlite3_" symbols not found
 
 The local store of `apps/clients/shared` uses the system's SQLite, which Swift export does not link by itself. `apps/clients/ios/project.yml` passes `-lsqlite3` in the `Notes` target's `OTHER_LDFLAGS`; an Xcode project made by hand, or a target added to `project.yml`, needs the same flag.
+<!-- client:mobile:end -->
 
+<!-- client:cli:start -->
 ## A Linux binary does not link: "unable to find library"
 
 The CLI and the shared module's Linux tests link against the runtime library of the system's SQLite, `libsqlite3.so.0`, from `/usr/lib/x86_64-linux-gnu` or `/usr/lib64`. Install it if the system lacks it (`sudo apt-get install libsqlite3-0` on Debian and Ubuntu), then build again; on a Mac, the Linux binaries are skipped.
@@ -53,11 +56,15 @@ The CLI and the shared module's Linux tests link against the runtime library of 
 ## notes login waits forever, or says the port is in use
 
 Without the device flow, `notes login` waits for the provider's redirect on `127.0.0.1:8770`. Another program on that port, or a provider that does not allow that redirect, stops it: pick another port with `NOTES_OIDC_REDIRECT_PORT`, and allow `http://127.0.0.1:<port>/callback` for the CLI's client. If the browser did not open, copy the address `login` prints.
+<!-- client:cli:end -->
 
+<!-- client:native:start -->
 ## The app shows notes that are no longer on the server
 
 The native apps keep notes on the device and show them when the API cannot be reached; the list then says "Offline". A note labelled **Not synced** waits for the network; one labelled **Conflict** waits for you to choose ([Native clients, offline](../architecture/clients.md#offline)). To start from an empty device, sign out, or clear the app's storage.
+<!-- client:native:end -->
 
+<!-- client:mobile:start -->
 ## iosTest fails with "Failed to install or launch the test runner"
 
 A simulator booted for the first time can take longer than xcodebuild waits, and a simulator that has run many test sessions can stop answering. Boot it first, or erase it if that is not enough, then run the tests again:
@@ -69,6 +76,7 @@ xcrun simctl erase "iPhone 17"       # only if it keeps failing: shut it down fi
 ```
 
 `-PiosSimulator="<name>"` picks another simulator; `xcrun simctl list devices available` lists them.
+<!-- client:mobile:end -->
 
 ## docker is not found
 
@@ -94,6 +102,6 @@ Spring Boot does not start compose services when some of them already run. Start
 docker compose up -d --wait
 ```
 
-## The web app signs in but the API answers 401
+## A client signs in but the API answers 401
 
 The token's issuer or audience does not match what the API expects. Decode the token (its middle part is base64 JSON) and compare `iss` with the configured issuer and `aud` with `api`. In the local stack, the issuer must be `http://localhost:8090/default`.

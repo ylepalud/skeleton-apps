@@ -1,6 +1,6 @@
 # Use the CLI
 
-The `notes` command keeps the same personal notes as the web app and the mobile apps, from a terminal on macOS or Linux.
+The `notes` command keeps the user's personal notes, from a terminal on macOS or Linux, the same as on every other client of the API.
 
 ## Sign in
 

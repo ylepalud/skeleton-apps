@@ -16,6 +16,7 @@ Fixed in `application.yml`: the token audience `api`, port 8080 for the API and 
 
 Under the `local` profile, which `bootRun` uses, Docker Compose provides the database and the issuer is `http://localhost:8090/default`.
 
+<!-- client:web:start -->
 ## Web app image (`apps/services/api-app`)
 
 | Variable | Example | Purpose |
@@ -26,3 +27,4 @@ Under the `local` profile, which `bootRun` uses, Docker Compose provides the dat
 | `OIDC_ORIGIN` | `https://id.example.com` | Origin of the identity provider, allowed by the content security policy |
 
 The app reads `/config.json` at startup, so one image runs in every environment. The development server serves `apps/services/api-app/public/config.json`, which points to the local mock.
+<!-- client:web:end -->

@@ -1,6 +1,6 @@
 # Native clients
 
-The Android app, the iOS app and the command-line client share one Kotlin Multiplatform library, `apps/clients/shared` (`:apps:clients:shared`). It holds everything that talks to the API: the client generated from the contract, the OpenID Connect sign-in, the use cases, and the local store that lets the apps work offline. The apps implement their UI and a few platform adapters, nothing else.
+The native clients share one Kotlin Multiplatform library, `apps/clients/shared` (`:apps:clients:shared`). It holds everything that talks to the API: the client generated from the contract, the OpenID Connect sign-in, the use cases, and the local store that lets the apps work offline. The apps implement their UI and a few platform adapters, nothing else.
 
 ## A hexagon, like an API module
 
@@ -36,13 +36,33 @@ The SQL schema lives in `src/commonMain/sqldelight`; SQLDelight generates its qu
 
 ## What a platform provides
 
-| Port | Role | Android | iOS | CLI |
-| --- | --- | --- | --- | --- |
-| `AuthorizationBrowser` | Opens the provider's sign-in page and returns the redirect URL, or null when the user cancels | `CustomTabsBrowser`: a Custom Tab, the redirect back through `dev.ylp.notes://callback` | `WebAuthenticationBrowser`: `ASWebAuthenticationSession`, the same redirect | `LoopbackBrowser`: the user's browser, the redirect back to a one-shot server on `127.0.0.1` (RFC 8252); used when the provider has no device flow |
-| `LocalStore` | The database of notes and pending changes | `openLocalStore(context)`: the app's databases folder | `openLocalStore(name:)`: Application Support | `openLocalStore(directory)`: `$XDG_DATA_HOME/notes` |
-| `TokenStore` | Keeps the tokens between launches | `KeystoreTokenStore`: AES-GCM with a key of the AndroidKeyStore, excluded from backups | `KeychainTokenStore`: one Keychain item, this device only, available after the first unlock | `CommandTokenStore`: the Keychain through `security`, or libsecret through `secret-tool`, the secret on their standard input; `FileTokenStore`, mode `0600`, without a secret store |
+| Port | Role |
+| --- | --- |
+| `AuthorizationBrowser` | Opens the provider's sign-in page and returns the redirect URL, or null when the user cancels |
+| `LocalStore` | The database of notes and pending changes |
+| `TokenStore` | Keeps the tokens between launches |
 
-The Android app (`apps/clients/android`), the iOS app (`apps/clients/ios`) and the CLI (`apps/clients/cli`) implement their columns: see [Run the Android app](../contributor/how-to/run-the-android-app.md), [Run the iOS app](../contributor/how-to/run-the-ios-app.md) and [Run the CLI](../contributor/how-to/run-the-cli.md).
+<!-- client:mobile:start -->
+The Android app (`apps/clients/android`, see [Run the Android app](../contributor/how-to/run-the-android-app.md)):
+
+- `CustomTabsBrowser`: a Custom Tab, the redirect back through `dev.ylp.notes://callback`;
+- `openLocalStore(context)`: the app's databases folder;
+- `KeystoreTokenStore`: AES-GCM with a key of the AndroidKeyStore, excluded from backups.
+
+The iOS app (`apps/clients/ios`, see [Run the iOS app](../contributor/how-to/run-the-ios-app.md)):
+
+- `WebAuthenticationBrowser`: `ASWebAuthenticationSession`, the same redirect;
+- `openLocalStore(name:)`: Application Support;
+- `KeychainTokenStore`: one Keychain item, this device only, available after the first unlock.
+<!-- client:mobile:end -->
+
+<!-- client:cli:start -->
+The CLI (`apps/clients/cli`, see [Run the CLI](../contributor/how-to/run-the-cli.md)):
+
+- `LoopbackBrowser`: the user's browser, the redirect back to a one-shot server on `127.0.0.1` (RFC 8252), used when the provider has no device flow;
+- `openLocalStore(directory)`: `$XDG_DATA_HOME/notes`;
+- `CommandTokenStore`: the Keychain through `security`, or libsecret through `secret-tool`, the secret on their standard input; `FileTokenStore`, mode `0600`, without a secret store.
+<!-- client:cli:end -->
 
 `InMemoryTokenStore` is the default: tokens live as long as the process. An app then builds the client once:
 
@@ -87,7 +107,8 @@ sequenceDiagram
 
 ### The device flow
 
-A client without a browser of its own, such as the CLI, signs in with `SignInOnDevice` (RFC 8628): the provider gives a short code, the client shows it through its `DeviceCodeDisplay`, and the user types it on any device while the client polls the token endpoint at the interval the provider names, 5 seconds slower after each `slow_down`. A provider whose discovery document has no `device_authorization_endpoint`, such as the local mock-oauth2-server, answers `Unsupported`: the client then uses `SignIn` with a browser ([ADR 0030](decisions/0030-native-cli-with-the-device-flow-and-the-system-secret-store.md)).
+A client without a browser of its own signs in with `SignInOnDevice` (RFC 8628): the provider gives a short code, the client shows it through its `DeviceCodeDisplay`, and the user types it on any device while the client polls the token endpoint at the interval the provider names, 5 seconds slower after each `slow_down`. A provider whose discovery document has no `device_authorization_endpoint`, such as the local mock-oauth2-server, answers `Unsupported`: the client then uses `SignIn` with a browser.
+The CLI signs in this way, and falls back to a browser on the same computer ([ADR 0030](decisions/0030-native-cli-with-the-device-flow-and-the-system-secret-store.md)). <!-- client:cli -->
 
 ## Offline
 
@@ -105,7 +126,7 @@ flowchart LR
 - **Reads**: `ListNotes` and `GetNote` read the API when it answers and keep what it returns; otherwise they read the device, and the page says `offline`. Notes the API does not have yet come first, notes deleted here are hidden, and synced notes the API no longer lists are forgotten.
 - **Writes**: a note written offline gets a local `id`, and shows under the API's id once stored; on this device, both ids keep finding it, so a screen that held the local one still works. `Note.sync` says `SYNCED`, `PENDING` or `CONFLICTING`.
 - **The queue**: one change per entity, merged with the next one (create then update is one create; create then delete is nothing); changes replay in the order of their first change, each based on the version the device last saw. The replay stops when the API cannot be reached or the session ends, and skips a conflict without holding the other notes back.
-- **When it replays**: before a list, after each write or resolution, and when an app calls `SyncChanges`. Android does so when `ConnectivityManager` reports a network, iOS when `NWPathMonitor` does.
+- **When it replays**: before a list, after each write or resolution, and when an app calls `SyncChanges`, such as when the system reports a network.
 - **Signing out** wipes the store, changes not sent included: the apps ask first when `CountPendingChanges` is not 0. Signing in as another user (the ID token's `sub`) starts from an empty store; the same user keeps their pending changes.
 
 ### Conflicts: the notes strategy
@@ -125,9 +146,11 @@ A deletion of a note also deleted elsewhere is no conflict: both sides agree.
 
 `dev.ylp.client.sync` knows no entity. An entity that works offline adds its tables in `src/commonMain/sqldelight`, a store port and adapter, and a `ChangeReplayer` registered in `SharedClient`: it sends one queued change, stores the answer, and turns a refusal into the entity's own conflict, resolved by its own use case. That strategy is a decision, stated in the replayer's KDoc like a use case's [conflict policy](overview.md#optimistic-concurrency).
 
+<!-- client:cli:start -->
 ## The command line
 
 `apps/clients/cli` is a Kotlin/Native binary, `notes`, for macOS and Linux: Clikt commands in `commonMain` over `SharedClient`, the platform adapters in `nativeMain`, `macosMain` and `linuxMain`. Its `jvm` target ships nowhere: it runs the commands' tests with Kover at 80%. The tests start a fake API and identity provider on a local Ktor server, and replace the secret tools with scripts. See [Run the CLI](../contributor/how-to/run-the-cli.md) and [Use the CLI](../product/use-the-cli.md).
+<!-- client:cli:end -->
 
 ## Errors
 
@@ -139,6 +162,7 @@ A deletion of a note also deleted elsewhere is no conflict: both sides agree.
 | 400, 413 | `NoteFailure.Invalid`, with the problem's `detail` |
 | Anything else, or no network | `NoteFailure.Unavailable`; a list or a note already read comes from the device instead |
 
+<!-- client:mobile:start -->
 ## Within Swift export's limits
 
 The iOS app reaches the library through Kotlin's Swift export, still in Alpha. It supports `final` classes inheriting from `Any`, sealed classes (as Swift enums), `suspend` functions (as `async`) and `Flow` (as `AsyncSequence`), but not generic types or functions. Hence the public API:
@@ -165,6 +189,7 @@ case .success(let success): show(success.value.page.notes)
 case .failed(let failed): show(failed.value.failure)
 }
 ```
+<!-- client:mobile:end -->
 
 ## The generated client
 
@@ -179,9 +204,9 @@ A contract change regenerates the client, and the HTTP adapter stops compiling w
 
 | Target | Used by | Tests |
 | --- | --- | --- |
-| `android` | the Android app | `commonTest` on the host JVM |
-| `iosArm64`, `iosSimulatorArm64` | the iOS app, through Swift export | `commonTest` on the simulator, macOS with Xcode only |
-| `macosArm64`, `linuxX64` | the CLI | `commonTest`, on macOS on a Mac, on Linux in the `cli` CI job (the Linux binaries link against the system's SQLite, on a Linux host only) |
+| `android` | the Android app | `commonTest` on the host JVM <!-- client:mobile --> |
+| `iosArm64`, `iosSimulatorArm64` | the iOS app, through Swift export | `commonTest` on the simulator, macOS with Xcode only <!-- client:mobile --> |
+| `macosArm64`, `linuxX64` | the CLI | `commonTest`, on macOS on a Mac, on Linux in the `cli` CI job (the Linux binaries link against the system's SQLite, on a Linux host only) <!-- client:cli --> |
 | `jvm` | nothing shipped | `commonTest`, `ArchitectureTest`, Kover |
 
-Tests use Ktor's `MockEngine` for the API and the provider, and a real SQLite database in memory: JDBC SQLite on the JVM and the Android host, the native driver on the simulator, macOS and Linux (`testStore()`). The offline scenarios run the use cases over `FakeNoteApi`, an API in memory that checks versions and can go offline. See the [testing strategy](testing-strategy.md).
+Tests use Ktor's `MockEngine` for the API and the provider, and a real SQLite database in memory: JDBC SQLite on the JVM targets, the native driver on the native ones (`testStore()`). The offline scenarios run the use cases over `FakeNoteApi`, an API in memory that checks versions and can go offline. See the [testing strategy](testing-strategy.md).

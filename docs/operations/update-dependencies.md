@@ -6,8 +6,8 @@
 
 - pull requests target `develop`, seven days after a version is released;
 - patch, minor and digest updates merge automatically once CI passes;
-- Spring, Angular, `angular-auth-oidc-client`, PostgreSQL and every major update wait for review;
-- updates are grouped: Spring, Angular, GitHub Actions, Bruno tooling.
+- Spring, Angular, `angular-auth-oidc-client`, PostgreSQL and every major update wait for review; <!-- client:web -->
+- updates are grouped: Spring, GitHub Actions, Bruno tooling, and Angular for the web app.
 
 Renovate also updates what Gradle and npm do not declare: versions in `gradle.properties` that carry a `# renovate:` comment, the Jib base image digest, the images in `compose.yaml`, and the images started by Testcontainers.
 
@@ -26,7 +26,9 @@ Then run `./gradlew check`; for an image or a base image, also `./gradlew startL
 
 ## npm overrides
 
-`apps/services/api-app/package.json` and `apps/bruno/package.json` force patched versions of a few transitive dependencies through `overrides`, because their direct dependencies pin vulnerable versions. Remove each override once the direct dependency ships the fix (issue #15), and check that `npm audit` stays clean.
+`apps/bruno/package.json` forces patched versions of a few transitive dependencies through `overrides`, because their direct dependencies pin vulnerable versions.
+So does `apps/services/api-app/package.json`. <!-- client:web -->
+ Remove each override once the direct dependency ships the fix (issue #15), and check that `npm audit` stays clean.
 
 ## When the scan blocks
 

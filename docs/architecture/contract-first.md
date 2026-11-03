@@ -7,9 +7,9 @@ The OpenAPI contract in `apps/contracts/api` is written before the code and is t
 | Consumer | Generator | Effect |
 | --- | --- | --- |
 | The API | openapi-generator (`interfaceOnly`), in the `:apps:contracts:api` project | `NotesApi` and the `*Dto` models; `NotesController implements NotesApi`, so the API stops compiling when it drifts from the contract |
-| The web app | hey-api (`@hey-api/client-angular`) | A typed client that goes through Angular's `HttpClient` |
+| The web app | hey-api (`@hey-api/client-angular`) | A typed client that goes through Angular's `HttpClient` <!-- client:web --> |
 | The Bruno collection | `bru import openapi` | One request per operation, with the contract's examples |
-| The native clients | openapi-generator (`kotlin`, `multiplatform`), in `:apps:clients:shared` | An internal Ktor client behind the library's HTTP adapter, which stops compiling when it drifts from the contract (see [Native clients](clients.md)) |
+| The native clients | openapi-generator (`kotlin`, `multiplatform`), in `:apps:clients:shared` | An internal Ktor client behind the library's HTTP adapter, which stops compiling when it drifts from the contract (see [Native clients](clients.md)) <!-- client:native --> |
 
 ## Why
 

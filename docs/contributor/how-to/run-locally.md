@@ -1,6 +1,8 @@
 # Run locally
 
-Three ways to run the API and the web app, from the most faithful to the fastest to iterate with, then the Android and iOS apps on top of the full stack. All of them use Docker for PostgreSQL and the mock identity provider; see [Local stack](../reference/local-stack.md) for ports and accounts.
+Ways to run the API and its clients, from the most faithful to the fastest to iterate with.
+The native clients run on top of the full stack. <!-- client:native -->
+All of them use Docker for PostgreSQL and the mock identity provider; see [Local stack](../reference/local-stack.md) for ports and accounts.
 
 ## The full stack, as in production
 
@@ -8,7 +10,9 @@ Three ways to run the API and the web app, from the most faithful to the fastest
 ./gradlew startLocalStack
 ```
 
-It builds the API image (Jib) and the web app image (nginx), starts everything from `compose.yaml` and waits until the API is ready. Open <http://localhost:8088> and sign in with any username.
+It builds the API image (Jib), starts everything from `compose.yaml` and waits until the API is ready.
+It also builds the web app image (nginx): open <http://localhost:8088> and sign in with any username. <!-- client:web -->
+The API answers on <http://localhost:8088/api/v1>. <!-- client:!web -->
 
 After a change, run it again: only the containers whose image changed are recreated. `./gradlew stopLocalStack` stops everything and keeps the data; `./gradlew resetDatabase` also deletes the database.
 
@@ -30,6 +34,7 @@ Or use the Bruno collection in `apps/bruno/` with the `BootRun` environment.
 
 Do not run the API in `bootRun` and the full stack at the same time.
 
+<!-- client:web:start -->
 ## The web app with live reload
 
 With the API in `bootRun`:
@@ -42,14 +47,16 @@ npm start
 ```
 
 Open <http://localhost:4200>. The development server proxies `/api` to `localhost:8080` and reads `public/config.json`, which points to the local identity provider.
+<!-- client:web:end -->
 
 ## Check it works end to end
 
 ```bash
-E2E_BASE_URL=http://localhost:8088 ./gradlew :apps:services:api-app:npmRunE2e -PrunE2e=true
+E2E_BASE_URL=http://localhost:8088 ./gradlew :apps:services:api-app:npmRunE2e -PrunE2e=true  # client:web
 cd apps/bruno && npm ci && npm run smoke
 ```
 
+<!-- client:mobile:start -->
 ## The Android app on an emulator
 
 With the full stack running:
@@ -71,3 +78,4 @@ On a Mac with Xcode and XcodeGen, with the full stack running:
 ```
 
 The simulator shares the machine's network: no port mapping is needed. Opening the project in Xcode and targeting another environment: [Run the iOS app](run-the-ios-app.md).
+<!-- client:mobile:end -->

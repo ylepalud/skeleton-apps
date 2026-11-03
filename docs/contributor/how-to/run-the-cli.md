@@ -14,7 +14,7 @@ The binary is `apps/clients/cli/build/bin/<target>/releaseExecutable/notes.kexe`
 ## Every time
 
 ```bash
-./gradlew startLocalStack             # API, web app and identity provider
+./gradlew startLocalStack             # API and identity provider
 notes login                           # opens the sign-in page in your browser
 notes add --title Groceries --content "Milk, eggs"
 notes list
