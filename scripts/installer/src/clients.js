@@ -104,12 +104,22 @@ export function isLeftOut(path, clients) {
   );
 }
 
-/** A marker line, in any comment style: `# client:web:start`, `// client:!web:end`, `<!-- client:cli:start -->`. */
-const MARKER = /^[ \t]*(?:#|\/\/|<!--)[ \t]*client:(!?[a-z]+):(start|end)[ \t]*(?:-->)?[ \t]*$/;
+/**
+ * A marker line, in any comment style: `# client:web:start`, `// client:!web:end`,
+ * `<!-- client:cli:start -->`, or `%% client:web:start` in a Mermaid diagram.
+ */
+const MARKER = /^[ \t]*(?:#|\/\/|<!--|%%)[ \t]*client:(!?[a-z]+):(start|end)[ \t]*(?:-->)?[ \t]*$/;
 
 /**
- * The text without the blocks of the markers that do not hold for the selection, and without any
- * marker line. Blocks may nest.
+ * A marker at the end of a line, for that line alone: a table row (inside its last cell, before
+ * the closing pipe), a list item or one sentence of a paragraph written a sentence per line,
+ * where a marker line of its own would break the Markdown.
+ */
+const LINE_MARKER = /[ \t]*(?:<!--[ \t]*client:(!?[a-z]+)[ \t]*-->([ \t]*\|)?|(?:#|\/\/)[ \t]*client:(!?[a-z]+))[ \t]*$/;
+
+/**
+ * The text without the blocks and the marked lines of the markers that do not hold for the
+ * selection, and without any marker. Blocks may nest.
  * @param {string} text
  * @param {ReadonlySet<Client>} clients
  * @param {string} [path] for error messages
@@ -128,7 +138,13 @@ export function stripClientBlocks(text, clients, path = 'text') {
   lines.forEach((line, index) => {
     const marker = MARKER.exec(line);
     if (!marker) {
-      if (skipping === 0) kept.push(line);
+      const lineMarker = LINE_MARKER.exec(line);
+      if (skipping > 0) return;
+      if (!lineMarker) {
+        kept.push(line);
+      } else if (holds(lineMarker[1] ?? lineMarker[3], clients)) {
+        kept.push(line.slice(0, lineMarker.index) + (lineMarker[2] ? ' |' : ''));
+      }
       return;
     }
     const [, name, edge] = marker;

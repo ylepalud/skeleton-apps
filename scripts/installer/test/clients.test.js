@@ -80,6 +80,12 @@ describe('stripClientBlocks', () => {
     expect(() => stripClientBlocks('# client:web:start\n# client:cli:end', only('web'))).toThrow('client:cli:end without its start');
   });
 
+  it('keeps or drops a single marked line, without its marker', () => {
+    const lines = ['| a | b <!-- client:mobile --> |', '  - use-the-cli.md  # client:cli', 'Plain.', 'With web. // client:!web'].join('\n');
+    expect(stripClientBlocks(lines, only('mobile'))).toBe(['| a | b |', 'Plain.', 'With web.'].join('\n'));
+    expect(stripClientBlocks(lines, only('web', 'cli'))).toBe(['  - use-the-cli.md', 'Plain.'].join('\n'));
+  });
+
   it('leaves text without markers untouched', () => {
     expect(stripClientBlocks('a client: b', only('web'))).toBe('a client: b');
   });
