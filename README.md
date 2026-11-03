@@ -26,8 +26,8 @@ Building and testing for iOS needs macOS with Xcode and XcodeGen; elsewhere thos
 ./gradlew docsServe        # preview the documentation site on http://localhost:8000
 ```
 
-Then open <http://localhost:8088> and sign in with any username: locally, a mock identity provider accepts everyone. <!-- client:web -->
-The API then answers on <http://localhost:8088/api/v1>, and the clients sign in with any username: locally, a mock identity provider accepts everyone. <!-- client:!web -->
+The API then answers on <http://localhost:8088/api/v1>, and every client signs in with any username: locally, a mock identity provider accepts everyone.
+Open <http://localhost:8088> for the web app. <!-- client:web -->
 `./gradlew stopLocalStack` stops the stack.
 
 <!-- client:mobile:start -->
@@ -84,8 +84,7 @@ The installer asks which clients to keep (web, CLI, mobile), renames the project
 | `apps/clients/shared` | Kotlin Multiplatform library of the native clients: generated API client, sign-in, use cases, offline store and sync <!-- client:native --> |
 | `apps/bruno` | API collection generated from the contract |
 | `build-logic` | Gradle convention plugins shared by every project |
-| `compose.yaml` | Local stack: Postgres, a mock identity provider, the API and the web app <!-- client:web --> |
-| `compose.yaml` | Local stack: Postgres, a mock identity provider and the API <!-- client:!web --> |
+| `compose.yaml` | Local stack: Postgres, a mock identity provider, the API, and the web app in front of it when the project has one |
 | `.github` | CI, image publication, nightly mutation testing, releases |
 
 Details: [Repository layout](docs/contributor/reference/repository-layout.md).

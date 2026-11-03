@@ -119,7 +119,9 @@ const LINE_MARKER = /[ \t]*(?:<!--[ \t]*client:(!?[a-z]+)[ \t]*-->([ \t]*\|)?|(?
 
 /**
  * The text without the blocks and the marked lines of the markers that do not hold for the
- * selection, and without any marker. Blocks may nest.
+ * selection, and without any marker. Blocks may nest. A negated block (`!web`) holds what only a
+ * project without that client needs: the template keeps its lines commented out, and a project
+ * that keeps the block gets them uncommented.
  * @param {string} text
  * @param {ReadonlySet<Client>} clients
  * @param {string} [path] for error messages
@@ -135,13 +137,15 @@ export function stripClientBlocks(text, clients, path = 'text') {
   /** @type {string[]} */
   const kept = [];
   let skipping = 0;
+  // Inside a kept negated block: its lines are commented out in the template, which never needs them.
+  let negated = 0;
   lines.forEach((line, index) => {
     const marker = MARKER.exec(line);
     if (!marker) {
       const lineMarker = LINE_MARKER.exec(line);
       if (skipping > 0) return;
       if (!lineMarker) {
-        kept.push(line);
+        kept.push(negated > 0 ? uncomment(line) : line);
       } else if (holds(lineMarker[1] ?? lineMarker[3], clients)) {
         kept.push(line.slice(0, lineMarker.index) + (lineMarker[2] ? ' |' : ''));
       }
@@ -152,6 +156,7 @@ export function stripClientBlocks(text, clients, path = 'text') {
     if (edge === 'start') {
       open.push({ name, line: index + 1 });
       if (skipping > 0 || !holds(name, clients)) skipping++;
+      else if (name.startsWith('!')) negated++;
       return;
     }
     const last = open.pop();
@@ -159,10 +164,19 @@ export function stripClientBlocks(text, clients, path = 'text') {
       throw new Error(`${path}:${index + 1}: client:${name}:end without its start`);
     }
     if (skipping > 0) skipping--;
+    else if (name.startsWith('!')) negated--;
   });
   if (open.length > 0) {
     const last = open[open.length - 1];
     throw new Error(`${path}:${last.line}: client:${last.name}:start without its end`);
   }
   return kept.join('\n');
+}
+
+/**
+ * A line commented out in the template: the same line without its first comment token.
+ * @param {string} line
+ */
+function uncomment(line) {
+  return line.replace(/^([ \t]*)(?:#|\/\/) ?/, '$1');
 }

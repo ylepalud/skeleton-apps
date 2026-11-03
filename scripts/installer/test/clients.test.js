@@ -54,7 +54,7 @@ describe('stripClientBlocks', () => {
     'web',
     '# client:web:end',
     '// client:!web:start',
-    'no web',
+    '// no web',
     '// client:!web:end',
     '<!-- client:native:start -->',
     'native',
@@ -72,6 +72,12 @@ describe('stripClientBlocks', () => {
   it('drops the others, nested ones included', () => {
     expect(stripClientBlocks(text, only('mobile'))).toBe(['all', 'no web', 'native', 'mobile', 'end'].join('\n'));
     expect(stripClientBlocks(text, only('web'))).toBe(['all', 'web', 'end'].join('\n'));
+  });
+
+  it('uncomments a kept negated block, which the template keeps commented out', () => {
+    const yaml = ['    ports:', '      # client:!web:start', '      # - "8088:8080"', '      # client:!web:end', '      - "8091:8081"'].join('\n');
+    expect(stripClientBlocks(yaml, only('cli'))).toBe(['    ports:', '      - "8088:8080"', '      - "8091:8081"'].join('\n'));
+    expect(stripClientBlocks(yaml, only('web'))).toBe(['    ports:', '      - "8091:8081"'].join('\n'));
   });
 
   it('refuses a block left open or closed twice', () => {

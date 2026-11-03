@@ -12,7 +12,7 @@ All of them use Docker for PostgreSQL and the mock identity provider; see [Local
 
 It builds the API image (Jib), starts everything from `compose.yaml` and waits until the API is ready.
 It also builds the web app image (nginx): open <http://localhost:8088> and sign in with any username. <!-- client:web -->
-The API answers on <http://localhost:8088/api/v1>. <!-- client:!web -->
+The API answers on <http://localhost:8088/api/v1>.
 
 After a change, run it again: only the containers whose image changed are recreated. `./gradlew stopLocalStack` stops everything and keeps the data; `./gradlew resetDatabase` also deletes the database.
 

@@ -13,8 +13,8 @@ One `compose.yaml` at the root, compose project `skeleton-apps`. Services withou
 
 | URL | What |
 | --- | --- |
-| <http://localhost:8088> | The web app, and the API under `/api/v1` <!-- client:web --> |
-| <http://localhost:8088/api/v1> | The API <!-- client:!web --> |
+| <http://localhost:8088> | The web app <!-- client:web --> |
+| <http://localhost:8088/api/v1> | The API |
 | <http://localhost:8090/default/.well-known/openid-configuration> | The identity provider's discovery document |
 | <http://localhost:8091/actuator/health/readiness> | Readiness of the API container |
 | <http://localhost:8080/api/v1> | The API in `bootRun` |

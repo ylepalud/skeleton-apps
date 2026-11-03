@@ -8,7 +8,9 @@ A client's own folders and files are listed in `scripts/installer/src/clients.js
 
 ## Passages in shared files
 
-Everything else, in a file every project keeps, is a marked block or line. The names are `web`, `cli`, `mobile`, and `native` for the shared module (kept with the CLI or mobile); `!web` keeps a passage only without the web app.
+Everything else, in a file every project keeps, is a marked block or line. The names are `web`, `cli`, `mobile`, and `native` for the shared module (kept with the CLI or mobile).
+
+A negated block, `!web`, holds what only a project without the web app needs, such as the API publishing port 8088 itself. The template never needs it, so its lines stay commented out there, in the file's comment syntax; the installer uncomments them when it keeps the block. Markdown has no negated passages: write a sentence that is true either way.
 
 | Where | Block | One line |
 | --- | --- | --- |
