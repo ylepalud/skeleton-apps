@@ -48,11 +48,12 @@ class OfflineNotesTest : NotesFixture() {
         }
 
     @Test
-    fun `a note written offline waits then reaches the API under the same id`() =
+    fun `a note written offline waits then shows under its API id which its local id still finds`() =
         runTest {
             api.offline = true
             val note = createNote.execute("Groceries", "Milk").note()
             assertEquals(SyncState.PENDING, note.sync)
+            assertEquals("local-1", note.id)
             assertEquals(listOf("Groceries"), titles())
             assertEquals(1, pending.execute())
 
@@ -66,10 +67,12 @@ class OfflineNotesTest : NotesFixture() {
                     .title,
             )
             assertEquals(0, pending.execute())
+            assertEquals(listOf("s1"), page().notes.map { it.id })
             val synced = getNote.execute(note.id).note()
-            assertEquals(note.id, synced.id)
+            assertEquals("s1", synced.id)
             assertEquals(SyncState.SYNCED, synced.sync)
-            assertEquals("get s1", api.calls.last())
+            assertEquals(SyncState.SYNCED, updateNote.execute("s1", "Food", "").note().sync)
+            assertEquals("update s1 Food at 0", api.calls.last())
         }
 
     @Test

@@ -20,7 +20,7 @@ class NoteUseCasesTest : NotesFixture() {
             val note = createNote.execute("Groceries", "Milk").note()
 
             assertEquals(SyncState.SYNCED, note.sync)
-            assertEquals("local-1", note.id)
+            assertEquals("s1", note.id)
             assertEquals(listOf("create Groceries"), api.calls)
             assertEquals(
                 "Milk",

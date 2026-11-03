@@ -46,6 +46,14 @@ Xcode builds the Kotlin code through `embedSwiftExportForXcode`. If the app's Sw
 
 The local store of `apps/clients/shared` uses the system's SQLite, which Swift export does not link by itself. `apps/clients/ios/project.yml` passes `-lsqlite3` in the `Notes` target's `OTHER_LDFLAGS`; an Xcode project made by hand, or a target added to `project.yml`, needs the same flag.
 
+## A Linux binary does not link: "unable to find library"
+
+The CLI and the shared module's Linux tests link against the runtime library of the system's SQLite, `libsqlite3.so.0`, from `/usr/lib/x86_64-linux-gnu` or `/usr/lib64`. Install it if the system lacks it (`sudo apt-get install libsqlite3-0` on Debian and Ubuntu), then build again; on a Mac, the Linux binaries are skipped.
+
+## notes login waits forever, or says the port is in use
+
+Without the device flow, `notes login` waits for the provider's redirect on `127.0.0.1:8770`. Another program on that port, or a provider that does not allow that redirect, stops it: pick another port with `NOTES_OIDC_REDIRECT_PORT`, and allow `http://127.0.0.1:<port>/callback` for the CLI's client. If the browser did not open, copy the address `login` prints.
+
 ## The app shows notes that are no longer on the server
 
 The native apps keep notes on the device and show them when the API cannot be reached; the list then says "Offline". A note labelled **Not synced** waits for the network; one labelled **Conflict** waits for you to choose ([Native clients, offline](../architecture/clients.md#offline)). To start from an empty device, sign out, or clear the app's storage.

@@ -4,6 +4,8 @@ import dev.ylp.client.auth.domain.AuthConfig
 import dev.ylp.client.auth.domain.AuthenticationException
 import dev.ylp.client.auth.domain.Authorization
 import dev.ylp.client.auth.domain.AuthorizationRequest
+import dev.ylp.client.auth.domain.DeviceAuthorization
+import dev.ylp.client.auth.domain.DevicePoll
 import dev.ylp.client.auth.domain.IdentityProvider
 import dev.ylp.client.auth.domain.Tokens
 import io.ktor.client.HttpClient
@@ -28,8 +30,8 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Authorization Code with PKCE (RFC 7636, S256) and refresh against an OpenID Connect provider,
- * whose endpoints come from its discovery document.
+ * Authorization Code with PKCE (RFC 7636, S256), the device flow (RFC 8628) and refresh against
+ * an OpenID Connect provider, whose endpoints come from its discovery document.
  *
  * [http] must decode JSON; it carries no user token.
  */
@@ -89,13 +91,63 @@ internal class KtorIdentityProvider(
             },
         ).toTokens(previousRefreshToken = refreshToken)
 
+    override suspend fun startDeviceAuthorization(): DeviceAuthorization? {
+        val endpoint = discover().deviceAuthorizationEndpoint ?: return null
+        val response =
+            call {
+                http.submitForm(
+                    endpoint,
+                    parameters {
+                        append("client_id", config.clientId)
+                        append("scope", config.scopes.joinToString(" "))
+                    },
+                )
+            }
+        if (!response.status.isSuccess()) throw failure(response)
+        val body = response.body<DeviceAuthorizationResponse>()
+        return DeviceAuthorization(
+            deviceCode = body.deviceCode,
+            userCode = body.userCode,
+            verificationUri = body.verificationUri,
+            verificationUriComplete = body.verificationUriComplete,
+            intervalSeconds = body.interval ?: DEFAULT_DEVICE_INTERVAL,
+        )
+    }
+
+    override suspend fun pollDeviceToken(authorization: DeviceAuthorization): DevicePoll {
+        val response =
+            call {
+                http.submitForm(
+                    discover().tokenEndpoint,
+                    parameters {
+                        append("grant_type", DEVICE_CODE_GRANT)
+                        append("device_code", authorization.deviceCode)
+                        append("client_id", config.clientId)
+                    },
+                )
+            }
+        if (response.status.isSuccess()) {
+            val body = response.body<TokenResponse>()
+            return DevicePoll.Granted(Authorization(body.toTokens(previousRefreshToken = null), body.idToken?.let(::subjectOf)))
+        }
+        return when (runCatching { response.body<TokenError>() }.getOrNull()?.error) {
+            "authorization_pending" -> DevicePoll.Pending
+            "slow_down" -> DevicePoll.SlowDown
+            "access_denied" -> DevicePoll.Denied
+            "expired_token" -> DevicePoll.Expired
+            else -> throw failure(response)
+        }
+    }
+
     private suspend fun requestTokens(form: io.ktor.http.Parameters): TokenResponse {
         val response = call { http.submitForm(discover().tokenEndpoint, form) }
-        if (!response.status.isSuccess()) {
-            val error = runCatching { response.body<TokenError>() }.getOrNull()
-            throw AuthenticationException(error?.description ?: error?.error ?: "Token request failed: ${response.status.value}")
-        }
+        if (!response.status.isSuccess()) throw failure(response)
         return response.body<TokenResponse>()
+    }
+
+    private suspend fun failure(response: HttpResponse): AuthenticationException {
+        val error = runCatching { response.body<TokenError>() }.getOrNull()
+        return AuthenticationException(error?.description ?: error?.error ?: "Token request failed: ${response.status.value}")
     }
 
     private fun TokenResponse.toTokens(previousRefreshToken: String?) =
@@ -126,6 +178,16 @@ internal class KtorIdentityProvider(
     private data class Discovery(
         @SerialName("authorization_endpoint") val authorizationEndpoint: String,
         @SerialName("token_endpoint") val tokenEndpoint: String,
+        @SerialName("device_authorization_endpoint") val deviceAuthorizationEndpoint: String? = null,
+    )
+
+    @Serializable
+    private data class DeviceAuthorizationResponse(
+        @SerialName("device_code") val deviceCode: String,
+        @SerialName("user_code") val userCode: String,
+        @SerialName("verification_uri") val verificationUri: String,
+        @SerialName("verification_uri_complete") val verificationUriComplete: String? = null,
+        val interval: Long? = null,
     )
 
     @Serializable
@@ -146,6 +208,10 @@ internal class KtorIdentityProvider(
         // 32 bytes give a 43-character verifier, the shortest RFC 7636 accepts.
         private const val VERIFIER_BYTES = 32
         private const val STATE_BYTES = 16
+        private const val DEVICE_CODE_GRANT = "urn:ietf:params:oauth:grant-type:device_code"
+
+        // RFC 8628: 5 seconds when the provider names no interval.
+        private const val DEFAULT_DEVICE_INTERVAL = 5L
         private val base64Url = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT)
 
         private val base64UrlLenient = Base64.UrlSafe.withPadding(Base64.PaddingOption.PRESENT_OPTIONAL)

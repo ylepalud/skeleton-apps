@@ -97,6 +97,8 @@ kotlin {
         androidMain.dependencies { implementation(library("ktor-client-okhttp")) }
         jvmMain.dependencies { implementation(library("ktor-client-okhttp")) }
         iosMain.dependencies { implementation(library("ktor-client-darwin")) }
+        macosMain.dependencies { implementation(library("ktor-client-darwin")) }
+        linuxMain.dependencies { implementation(library("ktor-client-curl")) }
         commonTest.dependencies { implementation(library("ktor-client-mock")) }
     }
 }

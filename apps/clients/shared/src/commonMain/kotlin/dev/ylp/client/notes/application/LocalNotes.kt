@@ -41,9 +41,13 @@ internal class LocalNotes(
 ) : ChangeReplayer {
     override val entity = "note"
 
-    suspend fun find(id: String): LocalNote? = store.byId(id)?.takeUnless { it.hidden }
+    suspend fun find(id: String): LocalNote? = row(id)?.takeUnless { it.hidden }
 
-    suspend fun deletedHere(id: String): Boolean = store.byId(id)?.hidden == true
+    suspend fun deletedHere(id: String): Boolean = row(id)?.hidden == true
+
+    // A note is found by the id it showed with: its local id while the API did not have it, its
+    // API id since; both keep finding it on this device.
+    private suspend fun row(id: String): LocalNote? = store.byId(id) ?: store.byServerId(id)
 
     suspend fun create(draft: NoteDraft): Note =
         lock.withLock {
@@ -63,7 +67,7 @@ internal class LocalNotes(
             val note = find(id) ?: return@withLock null
             val changed = note.copy(title = draft.title, content = draft.content, updatedAt = clock.now(), sync = note.sync.afterChange())
             store.save(changed)
-            changes.record(entity, id, ChangeOperation.UPDATE)
+            changes.record(entity, note.id, ChangeOperation.UPDATE)
             changed.toNote()
         }
 
@@ -72,8 +76,8 @@ internal class LocalNotes(
         lock.withLock {
             val note = find(id) ?: return@withLock false
             // A note the API never had leaves at once: nothing is left to send.
-            when (changes.record(entity, id, ChangeOperation.DELETE)) {
-                null -> store.remove(id)
+            when (changes.record(entity, note.id, ChangeOperation.DELETE)) {
+                null -> store.remove(note.id)
                 else -> store.save(note.copy(deleted = true, sync = note.sync.afterChange()))
             }
             true
@@ -109,8 +113,8 @@ internal class LocalNotes(
     /** Forgets a note the API no longer has, unless it changed here. */
     suspend fun forget(id: String) {
         lock.withLock {
-            val note = store.byId(id)
-            if (note != null && note.sync == SyncState.SYNCED) store.remove(id)
+            val note = row(id)
+            if (note != null && note.sync == SyncState.SYNCED) store.remove(note.id)
         }
     }
 
@@ -136,9 +140,10 @@ internal class LocalNotes(
     }
 
     suspend fun conflictOf(id: String): NoteConflict? {
-        val note = store.byId(id) ?: return null
-        val conflict = store.conflictOf(id) ?: return null
-        return NoteConflict(note.toNote(), note.deleted, conflict.theirs?.copy(id = id), conflict.kind)
+        val note = row(id) ?: return null
+        val conflict = store.conflictOf(note.id) ?: return null
+        val mine = note.toNote()
+        return NoteConflict(mine, note.deleted, conflict.theirs?.copy(id = mine.id), conflict.kind)
     }
 
     /** Null when the note has no conflict, or [resolution] does not apply to it. */
@@ -147,9 +152,9 @@ internal class LocalNotes(
         resolution: Resolution,
     ): Unit? =
         lock.withLock {
-            val note = store.byId(id) ?: return@withLock null
+            val note = row(id) ?: return@withLock null
             val conflict = conflictOf(id) ?: return@withLock null
-            val change = changes.find(entity, id) ?: return@withLock null
+            val change = changes.find(entity, note.id) ?: return@withLock null
             if (resolution !in conflict.resolutions) return@withLock null
             val theirs = conflict.theirs
             when (resolution) {
@@ -184,7 +189,7 @@ internal class LocalNotes(
                     takeTheirs(note, theirs, change)
                 }
             }
-            store.removeConflict(id)
+            store.removeConflict(note.id)
         }
 
     private suspend fun takeTheirs(

@@ -11,5 +11,3 @@ fun openLocalStore(name: String = DEFAULT_STORE_NAME): LocalStore = LocalStore(N
 fun deleteLocalStore(name: String = DEFAULT_STORE_NAME) {
     DatabaseFileContext.deleteDatabase(name)
 }
-
-const val DEFAULT_STORE_NAME = "client.db"

@@ -3,8 +3,8 @@ package dev.ylp.client.notes.domain
 import kotlin.time.Instant
 
 /**
- * A note of the signed-in user, as this device knows it. [id] is stable from the moment the note
- * is written, even offline. [version] is the API version the note is based on: it grows at every
+ * A note of the signed-in user, as this device knows it. [id] is the API's id, or, for a note
+ * written offline and not sent yet, a local one; on this device, both keep finding the note. [version] is the API version the note is based on: it grows at every
  * stored change, and a change based on an older one is refused. [sync] tells whether the API has
  * the note as shown.
  */

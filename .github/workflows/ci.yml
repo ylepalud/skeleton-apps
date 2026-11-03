@@ -3,8 +3,9 @@
 # coverage, static analysis, the web app, the Bruno collection, end-to-end tests
 # against the full stack, a scan of the images that stack runs, a dependency
 # and configuration scan, and the documentation: Markdown lint and a strict
-# build of the site. The Android and iOS apps have their own workflows,
-# android.yml and ios.yml, run only when a change can affect them.
+# build of the site. The Android app, the iOS app and the command-line client
+# have their own workflows, android.yml, ios.yml and cli.yml, run only when a
+# change can affect them.
 name: CI
 
 on:
@@ -33,8 +34,24 @@ jobs:
           distribution: temurin
           java-version: "25"
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
-      # The Android app is checked by the android job.
-      - run: ./gradlew check -x :apps:clients:android:check
+      # The convention plugins' tests link a small Linux binary: Kotlin/Native
+      # is restored, and kept when this job downloads it.
+      - name: Restore Kotlin/Native
+        id: konan
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-
+      # The Android app, the CLI and the shared module's Linux tests are checked
+      # by their own jobs.
+      - run: ./gradlew check -x :apps:clients:android:check -x :apps:clients:cli:check -x :apps:clients:shared:linuxX64Test
+      - name: Keep Kotlin/Native
+        if: always() && steps.konan.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: ${{ steps.konan.outputs.cache-primary-key }}
       - name: Keep the reports
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -45,8 +62,8 @@ jobs:
             **/build/test-results/
           retention-days: 7
 
-  # Which mobile apps a change can affect; the others are skipped, and the
-  # mobile job below reports for both.
+  # Which client apps a change can affect; the others are skipped, and the
+  # mobile job below reports for all of them.
   changes:
     name: changes
     runs-on: ubuntu-26.04
@@ -54,6 +71,7 @@ jobs:
     outputs:
       android: ${{ steps.diff.outputs.android }}
       ios: ${{ steps.diff.outputs.ios }}
+      cli: ${{ steps.diff.outputs.cli }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -62,8 +80,8 @@ jobs:
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          # Both apps: the client library, the contract it is generated from and
-          # this workflow.
+          # Every client: the client library, the contract it is generated from
+          # and this workflow.
           shared='^(apps/clients/shared/|apps/contracts/api/|\.github/workflows/ci\.yml$)'
           # Android also follows the whole build: its job is short. The iOS job
           # takes a macOS runner for a quarter of an hour: it follows only the
@@ -71,15 +89,19 @@ jobs:
           # as a dependency upgrade.
           build='^(build-logic/|gradle/|[^/]*\.gradle\.kts$|gradle\.properties$|\.github/workflows/android\.yml$)'
           ios_build='^(build-logic/src/main/kotlin/(xcode-app|kotlin-multiplatform-convention|openapi-kotlin-client)\.gradle\.kts$|\.github/workflows/ios\.yml$)'
+          # The CLI follows the conventions it builds with and the version catalog.
+          cli_build='^(build-logic/src/main/kotlin/(kotlin-native-cli-convention|kotlin-multiplatform-convention|openapi-kotlin-client)\.gradle\.kts$|gradle/libs\.versions\.toml$|\.github/workflows/cli\.yml$)'
           if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-            # No base to compare with, such as a new branch: check everything.
-            files="apps/clients/android/ apps/clients/ios/"
+            # No base to compare with, such as a new branch: check everything,
+            # one path per line as git diff lists them.
+            files=$'apps/clients/android/\napps/clients/ios/\napps/clients/cli/'
           else
             files=$(git diff --name-only "$BASE" "$GITHUB_SHA")
           fi
           affects() { grep -Eq "$shared|$1" <<<"$files" && echo true || echo false; }
           echo "android=$(affects "^apps/clients/android/|$build")" >> "$GITHUB_OUTPUT"
           echo "ios=$(affects "^apps/clients/ios/|$ios_build")" >> "$GITHUB_OUTPUT"
+          echo "cli=$(affects "^apps/clients/cli/|$cli_build")" >> "$GITHUB_OUTPUT"
           cat "$GITHUB_OUTPUT"
 
   android:
@@ -94,25 +116,33 @@ jobs:
     if: needs.changes.outputs.ios == 'true'
     uses: ./.github/workflows/ios.yml
 
-  # The required check for the mobile apps: a skipped job, or one run through a
-  # reusable workflow, reports under a name that changes with what happened.
-  # This one always reports, and fails if either app job failed.
+  cli:
+    name: cli
+    needs: changes
+    if: needs.changes.outputs.cli == 'true'
+    uses: ./.github/workflows/cli.yml
+
+  # The required check for the client apps (named before the CLI joined them): a
+  # skipped job, or one run through a reusable workflow, reports under a name
+  # that changes with what happened. This one always reports, and fails if any
+  # client job failed.
   mobile:
     name: mobile
-    needs: [changes, android, ios]
+    needs: [changes, android, ios, cli]
     if: always()
     runs-on: ubuntu-26.04
     timeout-minutes: 5
     steps:
-      # A failed changes job skips both app jobs: it must fail this one too.
+      # A failed changes job skips every client job: it must fail this one too.
       - env:
           CHANGES: ${{ needs.changes.result }}
           ANDROID: ${{ needs.android.result }}
           IOS: ${{ needs.ios.result }}
+          CLI: ${{ needs.cli.result }}
         run: |
-          echo "changes: $CHANGES, android: $ANDROID, ios: $IOS"
+          echo "changes: $CHANGES, android: $ANDROID, ios: $IOS, cli: $CLI"
           [ "$CHANGES" = success ] || exit 1
-          for result in "$ANDROID" "$IOS"; do
+          for result in "$ANDROID" "$IOS" "$CLI"; do
             case "$result" in success|skipped) ;; *) exit 1 ;; esac
           done
 

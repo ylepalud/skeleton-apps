@@ -9,5 +9,3 @@ fun openLocalStore(
     context: Context,
     name: String? = DEFAULT_STORE_NAME,
 ): LocalStore = LocalStore(AndroidSqliteDriver(ClientDatabase.Schema, context, name))
-
-const val DEFAULT_STORE_NAME = "client.db"
