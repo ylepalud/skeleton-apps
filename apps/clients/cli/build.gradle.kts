@@ -13,6 +13,11 @@ kotlin {
         }
         // The local store of the shared module runs on the system's SQLite: the CLI and its tests link it.
         linkSystemSqlite()
+        // Clikt and its Mordant module both define one internal helper, the same in each: lld, unlike
+        // Apple's linker, refuses the second one unless told to keep the first.
+        if (konanTarget.family == org.jetbrains.kotlin.konan.target.Family.LINUX) {
+            binaries.configureEach { linkerOpts("--allow-multiple-definition") }
+        }
     }
     sourceSets {
         commonMain.dependencies {
