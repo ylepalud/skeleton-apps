@@ -1,12 +1,19 @@
-# The project installer (scripts/installer): unit tests, type checking, then a
-# real generation from this commit, whose result must build on its own. Runs on
-# every pull request, without path filter, because the develop ruleset requires
-# it. This workflow belongs to the template and is left out of generated projects.
+# The project installer (scripts/installer): unit tests, type checking, then
+# real generations from this commit, whose results must build on their own.
+# Its unit tests check every combination of clients in memory; a pull request
+# also builds three of them for real: all the clients, the web app alone (no
+# native code) and the native clients alone (no web app). Every week, and on
+# demand, all seven are built. Runs on every pull request, without path filter,
+# because the develop ruleset requires the installer check. This workflow
+# belongs to the template and is left out of generated projects.
 name: Installer
 
 on:
   pull_request:
     branches: [develop, main]
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,10 +23,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  installer:
-    name: installer
+  tests:
+    name: tests
     runs-on: ubuntu-26.04
-    timeout-minutes: 40
+    timeout-minutes: 10
+    outputs:
+      clients: ${{ steps.matrix.outputs.clients }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -29,14 +38,45 @@ jobs:
       - run: npm ci
       - run: npm run installer:typecheck
       - run: npm run installer:test
+      - name: Combinations to build
+        id: matrix
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" = pull_request ]; then
+            echo 'clients=["web,cli,mobile","web","cli,mobile"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'clients=["web,cli,mobile","web","cli","mobile","web,cli","web,mobile","cli,mobile"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  generate:
+    name: generate (${{ matrix.clients }})
+    needs: tests
+    runs-on: ubuntu-26.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        clients: ${{ fromJSON(needs.tests.outputs.clients) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "26"
+          cache: npm
+      - run: npm ci
       - name: Generate a project from this commit
+        env:
+          CLIENTS: ${{ matrix.clients }}
         run: |
           mkdir -p "$RUNNER_TEMP/out"
           node scripts/installer/src/cli.js --source . --ref HEAD --name demo-app \
-            --package dev.example.demo --owner example --dest "$RUNNER_TEMP/out" --yes
+            --package dev.example.demo --owner example --clients "$CLIENTS" --dest "$RUNNER_TEMP/out" --yes
           unzip -q "$RUNNER_TEMP/out/demo-app.zip" -d "$RUNNER_TEMP/out"
       - name: Inspect the generated project
         working-directory: ${{ runner.temp }}/out/demo-app
+        env:
+          CLIENTS: ${{ matrix.clients }}
         run: |
           test "$(git rev-list --count HEAD)" = 1
           test "$(git log --format=%s)" = Init
@@ -51,11 +91,45 @@ jobs:
             echo "::error::Template names left in the generated project"
             exit 1
           fi
+          if grep -rIn --exclude-dir=.git -E 'client:!?[a-z]+(:start|:end)?' .; then
+            echo "::error::Client markers left in the generated project"
+            exit 1
+          fi
+          # Each client's folder is there exactly when it was chosen.
+          for pair in web:apps/services/api-app cli:apps/clients/cli mobile:apps/clients/android mobile:apps/clients/ios; do
+            client=${pair%%:*} folder=${pair#*:}
+            if [[ ",$CLIENTS," == *",$client,"* ]]; then test -d "$folder"; else test ! -e "$folder"; fi
+          done
+      # A stripped block must leave valid workflows. actionlint does not know
+      # the ubuntu-26.04 runner yet.
+      - name: Lint the generated workflows
+        working-directory: ${{ runner.temp }}/out/demo-app
+        run: >-
+          docker run --rm -v "$PWD:/repo" --workdir /repo
+          rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+          -shellcheck= -ignore 'label "ubuntu-26.04" is unknown'
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: "25"
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
-      - name: Build the generated project
+      - name: Build the generated project and its documentation
         working-directory: ${{ runner.temp }}/out/demo-app
-        run: ./gradlew check
+        run: ./gradlew check docsDomainModel docsLint docsBuild
+
+  # The required check: the matrix jobs report under names that follow the
+  # combinations. This one always reports, and fails if anything before failed.
+  installer:
+    name: installer
+    needs: [tests, generate]
+    if: always()
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    env:
+      TESTS: ${{ needs.tests.result }}
+      GENERATE: ${{ needs.generate.result }}
+    steps:
+      - name: Every job passed
+        run: |
+          echo "tests: $TESTS, generate: $GENERATE"
+          [ "$TESTS" = success ] && [ "$GENERATE" = success ]
