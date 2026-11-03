@@ -8,7 +8,7 @@ The build is a Kotlin DSL monorepo. Every project applies one or more convention
 | --- | --- |
 | Libraries and Gradle plugins | `gradle/libs.versions.toml` |
 | Build tools (JaCoCo, google-java-format, PIT, Node, Jib base image) | `gradle.properties`, each with a `# renovate:` comment |
-| Android SDK levels (`androidCompileSdk`, `androidMinSdk`, `androidTargetSdk`) | `gradle.properties` |
+| Android SDK levels (`androidCompileSdk`, `androidMinSdk`, `androidTargetSdk`) | `gradle.properties` <!-- client:mobile --> |
 | Libraries managed by the Spring Boot BOM | declared without a version |
 | JDK of the Gradle daemon | `gradle/gradle-daemon-jvm.properties` (Temurin 25) |
 
@@ -23,20 +23,20 @@ The build is a Kotlin DSL monorepo. Every project applies one or more convention
 | `spring` | the API | Spring Boot with the Boot, Modulith and jMolecules BOMs as Gradle platforms; web, validation, JPA, Liquibase, OAuth2 resource server, Actuator, Prometheus; Modulith, jMolecules, Testcontainers and security test support; `bootRun` on the `local` profile |
 | `container-image` | the API | Jib image on the distroless Java 25 `nonroot` base pinned by digest, production classpath only, named `<root project>/<project>`; CI sets the repository, the tag and the source label |
 | `openapi-server` | `apps/contracts/api` | Generates Spring MVC interfaces and `*Dto` models from the contract (JSpecify annotations, bean validation) into a library the API depends on |
-| `frontend-convention` | the web app | Pinned Node downloaded by the build, `npm ci`, API client generation from the contract, `lint` and `test` in `check`, `build` in `assemble`, Playwright behind `-PrunE2e=true` |
-| `kotlin-multiplatform-convention` | `apps/clients/shared` | Kotlin Multiplatform with the `android`, `iosArm64`, `iosSimulatorArm64`, `macosArm64`, `linuxX64` and `jvm` targets, the common tests run on each (the JVM target ships nowhere: it carries the architecture tests and the coverage), warnings as errors, kotlinx.serialization, ktlint, Kover at 80% of lines and branches in `check` |
-| `openapi-kotlin-client` | `apps/clients/shared` | Generates an internal Ktor client and models from the contract into `commonMain` (`openApiClient { contract; packageName }`), with one HTTP engine per platform; the generated package is out of coverage |
-| `kotlin-native-cli-convention` | `apps/clients/cli` | A Kotlin/Native executable for `macosArm64` and `linuxX64`, plus a `jvm` target that runs the common tests and Kover at 80% in `check`; warnings as errors, kotlinx.serialization, ktlint; the Linux binaries link on a Linux host only |
-| `android-app-convention` | `apps/clients/android` | Android application with Compose (AGP 9, built-in Kotlin), SDK levels from `gradle.properties`, lint warnings as errors in `check`, JVM tests on the JUnit platform (Jupiter, and Vintage for the JUnit 4 API Robolectric needs) on the debug variant only, Kover at 80% |
-| `xcode-app` | the root build, for `apps/clients/ios` | Drives an Xcode app that is not a Gradle project (`xcodeApp { projectDir; scheme; bundleId }`): XcodeGen generates the project from `project.yml`, `iosLint` runs swift-format, `iosTest` runs xcodebuild on a simulator (`-PiosSimulator`, a name or a UDID, default `iPhone 17`), `iosVerifyCoverage` requires 80% of the app's lines, `iosRun` launches it; lint and coverage in `check`, every task skipped without Xcode |
+| `frontend-convention` | the web app | Pinned Node downloaded by the build, `npm ci`, API client generation from the contract, `lint` and `test` in `check`, `build` in `assemble`, Playwright behind `-PrunE2e=true` <!-- client:web --> |
+| `kotlin-multiplatform-convention` | `apps/clients/shared` | Kotlin Multiplatform with the `android`, `iosArm64`, `iosSimulatorArm64`, `macosArm64`, `linuxX64` and `jvm` targets, the common tests run on each (the JVM target ships nowhere: it carries the architecture tests and the coverage), warnings as errors, kotlinx.serialization, ktlint, Kover at 80% of lines and branches in `check` <!-- client:native --> |
+| `openapi-kotlin-client` | `apps/clients/shared` | Generates an internal Ktor client and models from the contract into `commonMain` (`openApiClient { contract; packageName }`), with one HTTP engine per platform; the generated package is out of coverage <!-- client:native --> |
+| `kotlin-native-cli-convention` | `apps/clients/cli` | A Kotlin/Native executable for `macosArm64` and `linuxX64`, plus a `jvm` target that runs the common tests and Kover at 80% in `check`; warnings as errors, kotlinx.serialization, ktlint; the Linux binaries link on a Linux host only <!-- client:cli --> |
+| `android-app-convention` | `apps/clients/android` | Android application with Compose (AGP 9, built-in Kotlin), SDK levels from `gradle.properties`, lint warnings as errors in `check`, JVM tests on the JUnit platform (Jupiter, and Vintage for the JUnit 4 API Robolectric needs) on the debug variant only, Kover at 80% <!-- client:mobile --> |
+| `xcode-app` | the root build, for `apps/clients/ios` | Drives an Xcode app that is not a Gradle project (`xcodeApp { projectDir; scheme; bundleId }`): XcodeGen generates the project from `project.yml`, `iosLint` runs swift-format, `iosTest` runs xcodebuild on a simulator (`-PiosSimulator`, a name or a UDID, default `iPhone 17`), `iosVerifyCoverage` requires 80% of the app's lines, `iosRun` launches it; lint and coverage in `check`, every task skipped without Xcode <!-- client:mobile --> |
 | `bruno-collection` | `apps/bruno` | Regenerates the requests from the contract (`updateCollection`) and fails `check` when they drift (`verifyCollection`) |
 
 ## Rules worth knowing
 
 - **Configuration cache is on.** A task action must not capture the build script: copy what it needs into local values first. TestKit tests run with the configuration cache, so they catch this.
 - **Docker is resolved from the caller's `PATH`** (`dev.ylp.buildlogic.dockerExecutable`): a long-lived Gradle daemon may have a minimal `PATH`.
-- **The Android SDK is a prerequisite** of every build: the Android Gradle Plugin configures `apps/clients/shared` even when only the API is built. Set `ANDROID_HOME`.
+- **The Android SDK is a prerequisite** of every build: the Android Gradle Plugin configures `apps/clients/shared` even when only the API is built. Set `ANDROID_HOME`. <!-- client:mobile -->
 - **Linux binaries link on Linux only.** Code that uses the local store links against the system's SQLite through `linkSystemSqlite()` (`build-logic`); on Linux that is the runtime library `libsqlite3.so.0` from `/usr/lib/x86_64-linux-gnu`, which a Mac does not have: the Linux binaries and their tests are skipped elsewhere.
-- **iOS needs macOS with Xcode.** Elsewhere, Kotlin skips the iOS targets and the `ios*` tasks are skipped. The iOS app also needs XcodeGen (`brew install xcodegen`).
-- **`apps/clients/shared` also applies SQLDelight** in its own build: the local store's schema lives in `src/commonMain/sqldelight`, and the build makes the generated queries `internal`, like the API client, so Swift export never publishes them.
+- **iOS needs macOS with Xcode.** Elsewhere, Kotlin skips the iOS targets and the `ios*` tasks are skipped. The iOS app also needs XcodeGen (`brew install xcodegen`). <!-- client:mobile -->
+- **`apps/clients/shared` also applies SQLDelight** in its own build: the local store's schema lives in `src/commonMain/sqldelight`, and the build makes the generated queries `internal`, like the API client, so Swift export never publishes them. <!-- client:native -->
 - **A change to a convention plugin comes with a TestKit test.**

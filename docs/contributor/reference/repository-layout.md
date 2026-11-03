@@ -12,7 +12,7 @@ skeleton-apps/
 ├── gradle.properties            build tool versions (JaCoCo, PIT, Node, images...)
 ├── settings.gradle.kts          repositories and the list of projects
 ├── build.gradle.kts             local stack and documentation tasks
-├── apps/                        all product code, one Gradle project each (the iOS app will be the only exception)
+├── apps/                        all product code, one Gradle project each
 │   ├── contracts/api/           OpenAPI contract and the :apps:contracts:api project
 │   │   ├── openapi.yaml         entry point: info, servers, security, paths
 │   │   ├── common.yaml          Problem schema and shared responses
@@ -30,16 +30,21 @@ skeleton-apps/
 │   │       ├── main/resources/  application.yml, Liquibase changelogs
 │   │       ├── test/            unit tests, architecture tests, port contract tests
 │   │       └── integrationTest/ Testcontainers tests, end to end
+# client:web:start
 │   ├── services/api-app/        Angular web app (:apps:services:api-app)
 │   │   ├── src/app/             one folder per feature (notes, auth)
 │   │   ├── e2e/                 Playwright tests
 │   │   ├── nginx/               nginx configuration template of the image
 │   │   └── Dockerfile
+# client:web:end
+# client:native:start
 │   ├── clients/shared/          Kotlin Multiplatform library of the native clients (:apps:clients:shared)
 │   │   └── src/
 │   │       ├── commonMain/kotlin/dev/ylp/client/   SharedClient, notes/ and auth/, each domain, application, adapter
-│   │       ├── commonTest/      tests run on the JVM and the iOS simulator
+│   │       ├── commonTest/      tests run on every target
 │   │       └── jvmTest/         ArchitectureTest (Konsist)
+# client:native:end
+# client:mobile:start
 │   ├── clients/android/         Android app (:apps:clients:android): Compose screens, Custom Tabs and Keystore adapters
 │   │   └── src/test/            Robolectric tests of the screens against a mock backend
 │   ├── clients/ios/             iOS app, not a Gradle project (driven by the root build's xcode-app plugin)
@@ -48,6 +53,10 @@ skeleton-apps/
 │   │   ├── NotesTests/          unit tests of the adapters and the configuration
 │   │   ├── NotesUITests/        XCUITest of the notes flow
 │   │   └── TestSupport/         stub backend shared by both test targets
+# client:mobile:end
+# client:cli:start
+│   ├── clients/cli/             command-line client (:apps:clients:cli): Clikt commands, token stores, a fake backend in its tests
+# client:cli:end
 │   └── bruno/                   API collection (:apps:bruno)
 │       ├── opencollection.yml   hand-written: auth, shared test
 │       ├── environments/        hand-written: Stack, BootRun
@@ -68,4 +77,6 @@ skeleton-apps/
 Template only, left out of generated projects: `scripts/installer/` (the project installer), the root `package.json` and `package-lock.json` (its dependencies), `.github/workflows/installer.yml` and `docs/template/`, which the installer replaces with a page naming the template version.
 
 <!-- template-only:end -->
-Generated and ignored: `apps/services/api-app/src/app/api/generated` (web client), `apps/contracts/api/build/generated` (server code), `apps/clients/shared/build/generated` (native client code), every `build/` and `node_modules/`.
+Generated and ignored: `apps/contracts/api/build/generated` (server code), every `build/` and `node_modules/`.
+The web client is generated in `apps/services/api-app/src/app/api/generated`. <!-- client:web -->
+The native client code is generated in `apps/clients/shared/build/generated`. <!-- client:native -->

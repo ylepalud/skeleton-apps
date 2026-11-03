@@ -20,9 +20,11 @@ kotlin {
             implementation(libs.kotlincrypto.sha2)
             implementation(libs.kotlincrypto.random)
         }
+        // client:mobile:start
         androidMain.dependencies {
             implementation(libs.sqldelight.android.driver)
         }
+        // client:mobile:end
         nativeMain.dependencies {
             implementation(libs.sqldelight.native.driver)
         }
@@ -34,9 +36,11 @@ kotlin {
         jvmTest.dependencies {
             implementation(libs.konsist)
         }
+        // client:mobile:start
         getByName("androidHostTest").dependencies {
             implementation(libs.sqldelight.sqlite.driver)
         }
+        // client:mobile:end
     }
 }
 
@@ -77,6 +81,7 @@ kover {
     }
 }
 
+// client:mobile:start
 // The iOS app reads the module as Swift: one `Shared` module, built and embedded by Xcode through
 // `embedSwiftExportForXcode`. Swift export is Alpha; ADR 0027 says when to fall back to SKIE.
 kotlin {
@@ -94,3 +99,4 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile>().configur
         compilerOptions.allWarningsAsErrors = false
     }
 }
+// client:mobile:end

@@ -5,7 +5,7 @@ The API is meant to be public. Security therefore means exposing everything prop
 ## Identity
 
 - **An OpenID Connect provider issues the tokens.** Locally it is `mock-oauth2-server`; in production a real provider (Zitadel is planned). Switching only changes configuration: see [Switch the identity provider](../contributor/how-to/switch-identity-provider.md).
-- **The web app signs in with Authorization Code and PKCE** (angular-auth-oidc-client), and renews with refresh tokens rather than a hidden iframe, so the content security policy never allows framing the provider. Its interceptor attaches the token to `/api/` requests only.
+- **The web app signs in with Authorization Code and PKCE** (angular-auth-oidc-client), and renews with refresh tokens rather than a hidden iframe, so the content security policy never allows framing the provider. Its interceptor attaches the token to `/api/` requests only. <!-- client:web -->
 - **The API is a pure resource server.** It checks the token's signature, issuer and audience (`api`) on every request and keeps no session, so there is no cookie and nothing for CSRF to abuse. A backend-for-frontend is a possible evolution (issue #20).
 
 ## Authorization
@@ -17,15 +17,18 @@ The API is meant to be public. Security therefore means exposing everything prop
 
 | Control | Where |
 | --- | --- |
-| Same origin for the app and the API, no CORS configuration | nginx proxies `/api/` |
-| Content security policy without `unsafe-inline` or `unsafe-eval`, `frame-ancestors 'none'` | nginx template |
-| Request bodies limited to 64 KiB, before authentication | `RequestSizeLimitFilter` (413) and nginx `client_max_body_size` |
+| Same origin for the app and the API, no CORS configuration | nginx proxies `/api/` <!-- client:web --> |
+| Content security policy without `unsafe-inline` or `unsafe-eval`, `frame-ancestors 'none'` | nginx template <!-- client:web --> |
+| Request bodies limited to 64 KiB, before authentication | `RequestSizeLimitFilter` (413) |
+| The same limit in front of the web app | nginx `client_max_body_size` <!-- client:web --> |
 | Input validated twice: shape by the contract, meaning by the domain | generated interfaces, value objects |
 | Errors never leak internals | `ProblemDetailsExceptionHandler` |
 | Actuator on port 8081 only: `health`, `info`, `prometheus` | `application.yml`, `ActuatorTest` |
-| Images run as non-root, with no shell for the API | distroless `nonroot`, `nginx-unprivileged` |
+| Images run as non-root, with no shell for the API | distroless `nonroot` |
+| The web app's image runs as non-root too | `nginx-unprivileged` <!-- client:web --> |
 
-A chunked body without `Content-Length` escapes the API's own size check; nginx bounds it for the web app, and the ingress will have to bound it for direct API calls (issue #17).
+A chunked body without `Content-Length` escapes the API's own size check: the ingress will have to bound it for direct API calls (issue #17).
+nginx bounds it for the web app. <!-- client:web -->
 
 ## Supply chain
 

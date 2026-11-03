@@ -6,10 +6,17 @@ import {
   provenancePage,
   transformPath,
   transformText,
+  pruneNavigation,
   transformTree,
 } from '../src/transform.js';
 
-const answers = { name: 'demo-app', owner: 'example', packageName: 'dev.example.demo', clientId: 'demo-app-web' };
+const answers = {
+  name: 'demo-app',
+  owner: 'example',
+  packageName: 'dev.example.demo',
+  clientId: 'demo-app-web',
+  clients: new Set(/** @type {const} */ (['web', 'cli', 'mobile'])),
+};
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -149,5 +156,29 @@ describe('provenancePage', () => {
   it('names the template version, under the excluded template section', () => {
     expect(isExcluded(PROVENANCE_PATH)).toBe(true);
     expect(provenancePage('v0.2.0')).toContain('generated from [skeleton-apps](https://github.com/ylepalud/skeleton-apps) at `v0.2.0`');
+  });
+});
+
+describe('pruneNavigation', () => {
+  it('drops the pages the project does not have, titled or not, and keeps the rest', () => {
+    const nav = ['nav:', '  - Template:', '      - template/README.md', '      - template/start-a-new-project.md', '      - API reference: product/api-reference.html', '      - Use it: product/use-the-cli.md  # client:cli'].join('\n');
+    const pages = new Set(['template/README.md']);
+    expect(pruneNavigation(nav, (page) => pages.has(page))).toBe(
+      ['nav:', '  - Template:', '      - template/README.md', '      - API reference: product/api-reference.html'].join('\n'),
+    );
+  });
+});
+
+describe('a template-only line', () => {
+  it('leaves the generated project, a table row included', () => {
+    const text = '| a | b |\n| 0031 | installer <!-- template-only --> |\n| c | d |\n';
+    expect(transformText('docs/architecture/decisions.md', text, answers)).toBe('| a | b |\n| c | d |\n');
+  });
+});
+
+describe('a removed client block', () => {
+  it('leaves one blank line where it was, and one newline at the end', () => {
+    const text = 'Intro.\n\n<!-- client:mobile:start -->\nMobile.\n<!-- client:mobile:end -->\n\nNext.\n\n<!-- client:cli:start -->\nCLI.\n<!-- client:cli:end -->\n';
+    expect(transformText('README.md', text, { ...answers, clients: new Set(/** @type {const} */ (['web'])) })).toBe('Intro.\n\nNext.\n');
   });
 });

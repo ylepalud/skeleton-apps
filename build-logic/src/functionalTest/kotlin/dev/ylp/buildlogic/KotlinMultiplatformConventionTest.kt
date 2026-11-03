@@ -62,6 +62,7 @@ class KotlinMultiplatformConventionTest {
         assertThat(result.output).contains("warnings found and -Werror specified")
     }
 
+    // client:cli:start
     // Linking is left to the CLI job on Linux: here, the task must exist there, and skip elsewhere.
     @Test
     fun `the Linux binaries link on a Linux host only`() {
@@ -73,6 +74,7 @@ class KotlinMultiplatformConventionTest {
             assertThat(fixture.build("linkDebugTestLinuxX64").task(":linkDebugTestLinuxX64")?.outcome).isEqualTo(TaskOutcome.SKIPPED)
         }
     }
+    // client:cli:end
 
     private fun greeterTest(both: Boolean): String =
         """

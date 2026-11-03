@@ -1,7 +1,10 @@
 # Local stack, the same images as in the cluster.
 #   ./gradlew startLocalStack   builds the images, starts everything (profile "app")
 #   ./gradlew :apps:services:api:bootRun   starts only postgres and the identity provider
-# Web app and API: http://localhost:8088 · identity provider: http://localhost:8090
+# API: http://localhost:8088/api/v1 · identity provider: http://localhost:8090
+# client:web:start
+# Web app: http://localhost:8088, which proxies /api/ to the API
+# client:web:end
 name: skeleton-apps
 
 services:
@@ -56,11 +59,16 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8090/default
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://mock-oauth2-server:8080/default/jwks
     ports:
-      # Management port only (probes, metrics): the API itself is reached through the web app.
+      # The management port (probes, metrics). The API itself is reached on 8088: through the web
+      # app when the project has one, published here otherwise.
+      # client:!web:start
+      # - "8088:8080"
+      # client:!web:end
       - "8091:8081"
     labels:
       org.springframework.boot.ignore: "true"
 
+  # client:web:start
   web:
     profiles: [app]
     image: skeleton-apps/api-app:local
@@ -75,6 +83,7 @@ services:
       - "8088:8080"
     labels:
       org.springframework.boot.ignore: "true"
+  # client:web:end
 
 volumes:
   postgres-data:

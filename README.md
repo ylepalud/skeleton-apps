@@ -4,13 +4,21 @@
 [![Publish](https://github.com/ylepalud/skeleton-apps/actions/workflows/publish.yml/badge.svg?branch=develop)](https://github.com/ylepalud/skeleton-apps/actions/workflows/publish.yml)
 [![Nightly](https://github.com/ylepalud/skeleton-apps/actions/workflows/nightly.yml/badge.svg)](https://github.com/ylepalud/skeleton-apps/actions/workflows/nightly.yml)
 
-A starting point for new projects, built to production standards from the first commit: a Spring Boot API organised as a Spring Modulith, an Angular web app, an OpenAPI contract both are generated from, and a delivery pipeline that publishes scanned and signed container images.
+A starting point for new projects, built to production standards from the first commit: a Spring Boot API organised as a Spring Modulith, its clients, an OpenAPI contract they are all generated from, and a delivery pipeline that publishes scanned and signed container images. The clients:
 
-It ships one small but complete feature, personal **notes**, so that every convention is visible in working code: contract, hexagonal module, persistence, security, web screen, tests, API collection, images. Infrastructure is out of scope: this repository builds images, a separate repository deploys them.
+- an Angular web app <!-- client:web -->
+- Android and iOS apps, on a shared Kotlin Multiplatform library <!-- client:mobile -->
+- a command-line client for macOS and Linux, on the same library <!-- client:cli -->
+
+It ships one small but complete feature, personal **notes**, so that every convention is visible in working code: contract, hexagonal module, persistence, security, the clients' screens, tests, API collection, images. Infrastructure is out of scope: this repository builds images, a separate repository deploys them.
 
 ## Quick start
 
-You need Docker with Compose v2 and the Android SDK (`ANDROID_HOME` set; the command-line tools are enough). Gradle downloads its own JDK (Temurin 25) and the Node version the web app needs; a local Node is only required for the web app's development server. Building and testing for iOS needs macOS with Xcode and XcodeGen; elsewhere those tasks are skipped.
+You need Docker with Compose v2.
+The Android SDK is needed too (`ANDROID_HOME` set; the command-line tools are enough). <!-- client:mobile -->
+Gradle downloads its own JDK (Temurin 25).
+It also downloads the Node version the web app needs; a local Node is only required for the web app's development server. <!-- client:web -->
+Building and testing for iOS needs macOS with Xcode and XcodeGen; elsewhere those tasks are skipped. <!-- client:mobile -->
 
 ```bash
 ./gradlew check            # build and verify everything
@@ -18,8 +26,11 @@ You need Docker with Compose v2 and the Android SDK (`ANDROID_HOME` set; the com
 ./gradlew docsServe        # preview the documentation site on http://localhost:8000
 ```
 
-Then open <http://localhost:8088> and sign in with any username: locally, a mock identity provider accepts everyone. `./gradlew stopLocalStack` stops the stack.
+The API then answers on <http://localhost:8088/api/v1>, and every client signs in with any username: locally, a mock identity provider accepts everyone.
+Open <http://localhost:8088> for the web app. <!-- client:web -->
+`./gradlew stopLocalStack` stops the stack.
 
+<!-- client:mobile:start -->
 To run the Android app against that stack, start an emulator, then:
 
 ```bash
@@ -36,7 +47,9 @@ To run the iOS app on the simulator, on a Mac with Xcode and XcodeGen (`brew ins
 ```
 
 It signs in the same way; the simulator reaches the stack on `localhost` directly. Opening it in Xcode: [Run the iOS app](docs/contributor/how-to/run-the-ios-app.md).
+<!-- client:mobile:end -->
 
+<!-- client:cli:start -->
 To use the command-line client against that stack, build it, then sign in in the browser it opens:
 
 ```bash
@@ -45,6 +58,7 @@ apps/clients/cli/build/bin/macosArm64/releaseExecutable/notes.kexe login
 ```
 
 Commands and settings: [Run the CLI](docs/contributor/how-to/run-the-cli.md).
+<!-- client:cli:end -->
 
 <!-- template-only:start -->
 ## Start a new project
@@ -53,7 +67,7 @@ Commands and settings: [Run the CLI](docs/contributor/how-to/run-the-cli.md).
 npx github:ylepalud/skeleton-apps my-idea
 ```
 
-The installer renames the project, the package and the images, and writes `my-idea.zip`: a ready Git repository with one `Init` commit. See [Start a new project](docs/template/start-a-new-project.md).
+The installer asks which clients to keep (web, CLI, mobile), renames the project, the package and the images, and writes `my-idea.zip`: a ready Git repository with one `Init` commit, holding only the chosen clients. See [Start a new project](docs/template/start-a-new-project.md).
 
 <!-- template-only:end -->
 
@@ -62,28 +76,28 @@ The installer renames the project, the package and the images, and writes `my-id
 | Path | Content |
 | --- | --- |
 | `apps/services/api` | Spring Boot API, one Spring Modulith application with the `notes` module |
-| `apps/services/api-app` | Angular web app, served by nginx in its image |
+| `apps/services/api-app` | Angular web app, served by nginx in its image <!-- client:web --> |
 | `apps/contracts/api` | OpenAPI contract, and the server interfaces generated from it |
-| `apps/clients/android` | Android app on the shared library: Compose screens, Custom Tabs sign-in, Keystore session |
-| `apps/clients/ios` | iOS app on the shared library: SwiftUI screens, Xcode project generated by XcodeGen from Gradle, Keychain session |
-| `apps/clients/cli` | Command-line client on the shared library: a Kotlin/Native binary for macOS and Linux, device flow or browser sign-in, Keychain or libsecret session |
-| `apps/clients/shared` | Kotlin Multiplatform library of the native clients: generated API client, sign-in, use cases, offline store and sync |
+| `apps/clients/android` | Android app on the shared library: Compose screens, Custom Tabs sign-in, Keystore session <!-- client:mobile --> |
+| `apps/clients/ios` | iOS app on the shared library: SwiftUI screens, Xcode project generated by XcodeGen from Gradle, Keychain session <!-- client:mobile --> |
+| `apps/clients/cli` | Command-line client on the shared library: a Kotlin/Native binary for macOS and Linux, device flow or browser sign-in, Keychain or libsecret session <!-- client:cli --> |
+| `apps/clients/shared` | Kotlin Multiplatform library of the native clients: generated API client, sign-in, use cases, offline store and sync <!-- client:native --> |
 | `apps/bruno` | API collection generated from the contract |
 | `build-logic` | Gradle convention plugins shared by every project |
-| `compose.yaml` | Local stack: Postgres, a mock identity provider, the API and the web app |
+| `compose.yaml` | Local stack: Postgres, a mock identity provider, the API, and the web app in front of it when the project has one |
 | `.github` | CI, image publication, nightly mutation testing, releases |
 
 Details: [Repository layout](docs/contributor/reference/repository-layout.md).
 
 ## How it works
 
-**Contract first.** The OpenAPI contract in `apps/contracts/api` is the source of truth. The API implements interfaces generated from it, so the build breaks when code and contract disagree; the web app's client and the Bruno collection are generated from the same contract. [Why](docs/architecture/contract-first.md).
+**Contract first.** The OpenAPI contract in `apps/contracts/api` is the source of truth. The API implements interfaces generated from it, so the build breaks when code and contract disagree; the clients' API clients and the Bruno collection are generated from the same contract. [Why](docs/architecture/contract-first.md).
 
 **Modules, hexagonal inside.** The API is a Spring Modulith: each business module is a top-level package with its own database schema. Inside a module, the domain and the use cases depend on no framework; adapters plug them into HTTP and PostgreSQL. Both rules are checked by tests. [Architecture](docs/architecture/overview.md).
 
-**Secure by default.** Every API route requires a token from an OpenID Connect provider; each note belongs to the token's subject, and someone else's note does not exist for you. The web app signs in with Authorization Code and PKCE, and shares its origin with the API. [Security](docs/architecture/security.md).
+**Secure by default.** Every API route requires a token from an OpenID Connect provider; each note belongs to the token's subject, and someone else's note does not exist for you. Every client signs in with Authorization Code and PKCE, or the device flow. [Security](docs/architecture/security.md).
 
-**Tested at every level.** The domain is tested without Spring, adapters against a real PostgreSQL, the whole chain end to end with real tokens, the web app with Vitest and Playwright, and even the build conventions with Gradle TestKit. [Testing strategy](docs/architecture/testing-strategy.md).
+**Tested at every level.** The domain is tested without Spring, adapters against a real PostgreSQL, the whole chain end to end with real tokens, each client in its own way, and even the build conventions with Gradle TestKit. [Testing strategy](docs/architecture/testing-strategy.md).
 
 **Delivered as signed images.** A push to `develop` publishes the changed images to GitHub Container Registry, scanned, with an attested SBOM, and signed with cosign. A release adds its version tag to those exact images. [Supply chain](docs/architecture/supply-chain.md).
 
@@ -93,7 +107,7 @@ One section per reader; [docs/README.md](docs/README.md) lists them. The same pa
 
 | Section | For |
 | --- | --- |
-| [Product](docs/product/README.md) | using the web app and the API: sign-in, notes, errors |
+| [Product](docs/product/README.md) | using the clients and the API: sign-in, notes, errors |
 | [Template](docs/template/README.md) | the template this code base comes from<!-- template-only:start -->, and how to start a new project from it<!-- template-only:end --> |
 | [Contributor](docs/contributor/README.md) | changing the code: [Add your first feature](docs/contributor/tutorials/first-feature.md), how-to guides, reference |
 | [Operations](docs/operations/README.md) | keeping it delivering: CI/CD, releases, dependencies, a red build |

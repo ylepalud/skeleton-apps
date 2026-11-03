@@ -32,7 +32,9 @@ jobs:
     timeout-minutes: 5
     outputs:
       api: ${{ steps.filter.outputs.api == 'true' || inputs.all == true }}
+      # client:web:start
       web: ${{ steps.filter.outputs.web == 'true' || inputs.all == true }}
+      # client:web:end
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: filter
@@ -46,11 +48,13 @@ jobs:
               - gradle/**
               - gradle.properties
               - settings.gradle.kts
+            # client:web:start
             web:
               - apps/services/api-app/**
               - apps/contracts/**
               - build-logic/src/main/kotlin/frontend-convention.gradle.kts
               - gradle.properties
+            # client:web:end
 
   api-image:
     needs: [ci, changes]
@@ -93,6 +97,7 @@ jobs:
           image: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
           name: api
 
+  # client:web:start
   web-image:
     needs: [ci, changes]
     if: needs.changes.outputs.web == 'true'
@@ -131,3 +136,4 @@ jobs:
         with:
           image: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
           name: api-app
+  # client:web:end

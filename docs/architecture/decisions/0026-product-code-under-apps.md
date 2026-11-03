@@ -18,7 +18,9 @@ The repository root mixed the product code (`services/`, `clients/`, `contracts/
 
 Chosen: one `apps/` folder, an implicit Gradle parent project in the same build, keeping the `services`, `clients` and `contracts` levels. `:services:api` becomes `:apps:services:api`.
 
-`apps/` holds all product code, and Gradle builds everything it can. The iOS app (`apps/clients/ios`) is the only folder that is not a Gradle project; a Gradle task still drives its build. `build-logic`, the root `build.gradle.kts` tasks, `compose.yaml`, `docs/` and `scripts/` stay at the root.
+`apps/` holds all product code, and Gradle builds everything it can.
+The iOS app (`apps/clients/ios`) is the only folder that is not a Gradle project; a Gradle task still drives its build. <!-- client:mobile -->
+`build-logic`, the root `build.gradle.kts` tasks, `compose.yaml`, `docs/` and `scripts/` stay at the root.
 
 ## Consequences
 
