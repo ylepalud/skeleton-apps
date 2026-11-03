@@ -9,7 +9,13 @@ import {
   transformTree,
 } from '../src/transform.js';
 
-const answers = { name: 'demo-app', owner: 'example', packageName: 'dev.example.demo', clientId: 'demo-app-web' };
+const answers = {
+  name: 'demo-app',
+  owner: 'example',
+  packageName: 'dev.example.demo',
+  clientId: 'demo-app-web',
+  clients: new Set(/** @type {const} */ (['web', 'cli', 'mobile'])),
+};
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 

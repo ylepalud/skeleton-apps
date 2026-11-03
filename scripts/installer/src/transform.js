@@ -1,5 +1,6 @@
-// Turns the template's file tree into a new project: exclusions, then renames.
-// Pure functions over paths and contents, so every rule is unit-tested.
+// Turns the template's file tree into a new project: exclusions, the clients it does not keep,
+// then renames. Pure functions over paths and contents, so every rule is unit-tested.
+import { isLeftOut, stripClientBlocks } from './clients.js';
 
 /** The template's own identity, replaced in every generated project. */
 export const TEMPLATE = {
@@ -15,6 +16,7 @@ export const TEMPLATE = {
  * @property {string} packageName base Java package, e.g. dev.example.demo
  * @property {string} clientId    OIDC client id of the web app
  * @property {string} owner       GitHub owner of the new repository
+ * @property {ReadonlySet<import('./clients.js').Client>} clients the clients the project keeps
  */
 
 /** Paths that belong to the template, never to a generated project. */
@@ -95,7 +97,7 @@ export function transformText(path, text, answers) {
   if (path === '.release-please-manifest.json') {
     return '{\n  ".": "0.0.0"\n}\n';
   }
-  let result = text;
+  let result = stripClientBlocks(text, answers.clients, path);
   if (path.endsWith('.md')) {
     const stripped = TEMPLATE_ONLY.reduce((current, pattern) => current.replace(pattern, ''), result);
     // A removed block leaves the blank lines around it: keep one.
@@ -132,7 +134,7 @@ export function transformTree(files, answers) {
   /** @type {Map<string, F>} */
   const result = new Map();
   for (const [path, file] of files) {
-    if (isExcluded(path)) {
+    if (isExcluded(path) || isLeftOut(path, answers.clients)) {
       continue;
     }
     const target = transformPath(path, answers);

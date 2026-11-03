@@ -17,6 +17,7 @@ import {
   validatePackage,
 } from './answers.js';
 import { createArchive, initRepository } from './archive.js';
+import { CLIENTS, parseClients, validateClients } from './clients.js';
 import { readTree, writeTree } from './files.js';
 import { checkPrerequisites } from './prerequisites.js';
 import { TEMPLATE_REPOSITORY, fetchTemplate, resolveRef } from './template.js';
@@ -98,6 +99,7 @@ const { values, positionals } = parseArgs({
   options: {
     name: { type: 'string' },
     package: { type: 'string' },
+    clients: { type: 'string', default: CLIENTS.join(',') },
     'client-id': { type: 'string' },
     owner: { type: 'string' },
     dest: { type: 'string', default: '.' },
@@ -115,6 +117,7 @@ if (values.help) {
 Options:
   --name <name>          project name, kebab-case (or the first argument)
   --package <package>    base Java package (default dev.<owner>.<name>)
+  --clients <list>       clients to keep, among web, cli and mobile (default all of them)
   --client-id <id>       OIDC client id of the web app (default <name>-web)
   --owner <owner>        GitHub owner of the new repository, lower case
   --dest <folder>        where to write <name>.zip (default .)
@@ -183,7 +186,32 @@ async function main() {
     validateOwner,
   );
   const packageName = await ask('Base Java package', values.package, defaultPackage(owner, name), validatePackage);
-  const clientId = await ask('OIDC client id of the web app', values['client-id'], defaultClientId(name), validateClientId);
+  const given = parseClients(values.clients);
+  const givenError = validateClients(given);
+  if (givenError) {
+    throw new Stop(`--clients "${values.clients}": ${givenError}`);
+  }
+  /** @type {Set<import('./clients.js').Client>} */
+  const clients = interactive
+    ? new Set(
+        answered(
+          await p.multiselect({
+            message: 'Clients of the API (the API is always there)',
+            options: /** @type {{ value: import('./clients.js').Client, label: string, hint: string }[]} */ ([
+              { value: 'web', label: 'web', hint: 'Angular app, served by nginx' },
+              { value: 'cli', label: 'cli', hint: 'command line for macOS and Linux' },
+              { value: 'mobile', label: 'mobile', hint: 'Android and iOS apps' },
+            ]),
+            initialValues: [...given],
+            required: true,
+          }),
+        ),
+      )
+    : given;
+  // The client id is the web app's: without it, the default stays, unused.
+  const clientId = clients.has('web')
+    ? await ask('OIDC client id of the web app', values['client-id'], defaultClientId(name), validateClientId)
+    : defaultClientId(name);
   const destination = resolve(
     await ask('Folder for the zip', values.dest, '.', (value) => (existsSync(value) ? undefined : 'This folder does not exist.')),
   );
@@ -215,13 +243,13 @@ async function main() {
 
     // 4. Generate
     start(3);
-    const answers = { name, owner, packageName, clientId };
+    const answers = { name, owner, packageName, clientId, clients };
     const template = readTree(templateDir);
     const generated = transformTree(template, answers);
     generated.set(PROVENANCE_PATH, { content: new TextEncoder().encode(provenancePage(ref)), mode: 0o644 });
     const projectDir = join(workspace, name);
     writeTree(projectDir, generated);
-    p.log.success(`${generated.size} files generated (${template.size - generated.size} template-only files left out)`);
+    p.log.success(`${generated.size} files generated (${template.size - generated.size} template-only or unused client files left out)`);
     finish(3);
 
     // 5. Verify
@@ -248,7 +276,8 @@ async function main() {
         `Project          ${name}`,
         `GitHub           ${owner}/${name}`,
         `Base package     ${packageName}`,
-        `OIDC client id   ${clientId}`,
+        `Clients          ${[...clients].join(', ')}`,
+        ...(clients.has('web') ? [`OIDC client id   ${clientId}`] : []),
         `Template         ${ref}`,
         `Files            ${generated.size}`,
         `Build check      ${verified}`,
