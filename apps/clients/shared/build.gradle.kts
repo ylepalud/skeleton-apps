@@ -26,9 +26,11 @@ kotlin {
         }
         // The common tests run on an in-memory database: JDBC SQLite on the JVM and the Android
         // host, the native driver on iOS, macOS and Linux.
+        jvmMain.dependencies {
+            implementation(libs.sqldelight.sqlite.driver)
+        }
         jvmTest.dependencies {
             implementation(libs.konsist)
-            implementation(libs.sqldelight.sqlite.driver)
         }
         getByName("androidHostTest").dependencies {
             implementation(libs.sqldelight.sqlite.driver)
