@@ -21,11 +21,11 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.sqldelight.android.driver)
         }
-        iosMain.dependencies {
+        nativeMain.dependencies {
             implementation(libs.sqldelight.native.driver)
         }
         // The common tests run on an in-memory database: JDBC SQLite on the JVM and the Android
-        // host, the native driver on iOS.
+        // host, the native driver on iOS, macOS and Linux.
         jvmTest.dependencies {
             implementation(libs.konsist)
             implementation(libs.sqldelight.sqlite.driver)

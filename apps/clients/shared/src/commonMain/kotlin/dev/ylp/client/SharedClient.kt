@@ -4,6 +4,7 @@ import dev.ylp.client.auth.adapter.out.memory.InMemoryTokenStore
 import dev.ylp.client.auth.adapter.out.oidc.KtorIdentityProvider
 import dev.ylp.client.auth.application.CurrentSession
 import dev.ylp.client.auth.application.SignIn
+import dev.ylp.client.auth.application.SignInOnDevice
 import dev.ylp.client.auth.application.SignOut
 import dev.ylp.client.auth.domain.AuthConfig
 import dev.ylp.client.auth.domain.AuthenticationException
@@ -110,6 +111,7 @@ class SharedClient internal constructor(
     val syncChanges = SyncChanges(sync)
     val countPendingChanges = CountPendingChanges(pendingChanges)
     val signIn = SignIn(identityProvider, browser, tokenStore, deviceData, auth.redirectUri)
+    val signInOnDevice = SignInOnDevice(identityProvider, tokenStore, deviceData)
     val signOut = SignOut(tokenStore, deviceData)
     val currentSession = CurrentSession(tokenStore)
 

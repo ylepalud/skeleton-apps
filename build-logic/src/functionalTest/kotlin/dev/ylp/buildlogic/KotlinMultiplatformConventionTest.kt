@@ -62,6 +62,16 @@ class KotlinMultiplatformConventionTest {
         assertThat(result.output).contains("warnings found and -Werror specified")
     }
 
+    @Test
+    fun `the Linux binaries link on a Linux host only`() {
+        fixture.file("src/commonTest/kotlin/dev/ylp/sample/GreeterTest.kt", greeterTest(both = true))
+
+        val result = fixture.build("linkDebugTestLinuxX64")
+
+        val expected = if (System.getProperty("os.name").startsWith("Linux")) TaskOutcome.SUCCESS else TaskOutcome.SKIPPED
+        assertThat(result.task(":linkDebugTestLinuxX64")?.outcome).isEqualTo(expected)
+    }
+
     private fun greeterTest(both: Boolean): String =
         """
         package dev.ylp.sample

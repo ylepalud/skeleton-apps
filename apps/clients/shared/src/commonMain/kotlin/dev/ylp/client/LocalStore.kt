@@ -12,3 +12,6 @@ class LocalStore internal constructor(
 ) {
     internal val database = ClientDatabase(driver)
 }
+
+/** The file name of the local store when the platform does not pick another. */
+const val DEFAULT_STORE_NAME = "client.db"

@@ -4,6 +4,8 @@ import dev.ylp.client.auth.domain.AuthenticationException
 import dev.ylp.client.auth.domain.Authorization
 import dev.ylp.client.auth.domain.AuthorizationBrowser
 import dev.ylp.client.auth.domain.AuthorizationRequest
+import dev.ylp.client.auth.domain.DeviceAuthorization
+import dev.ylp.client.auth.domain.DevicePoll
 import dev.ylp.client.auth.domain.IdentityProvider
 import dev.ylp.client.auth.domain.Tokens
 
@@ -22,11 +24,18 @@ class FakeBrowser(
     }
 }
 
-/** A provider that issues [TOKENS] to [subject], or refuses with [failure] when it is set. */
+/**
+ * A provider that issues [TOKENS] to [subject], or refuses with [failure] when it is set. Its
+ * device flow answers [polls] in turn, or is missing when [polls] is null.
+ */
 class FakeIdentityProvider(
     private val failure: String? = null,
     private val subject: String? = "alice",
+    polls: List<DevicePoll>? = null,
 ) : IdentityProvider {
+    private val polls = polls?.toMutableList()
+    var pollCount = 0
+
     override suspend fun startAuthorization() = AuthorizationRequest("https://idp/authorize", "state", "verifier")
 
     override suspend fun completeAuthorization(
@@ -36,8 +45,16 @@ class FakeIdentityProvider(
 
     override suspend fun refresh(refreshToken: String): Tokens = TOKENS
 
+    override suspend fun startDeviceAuthorization(): DeviceAuthorization? = polls?.let { DEVICE }
+
+    override suspend fun pollDeviceToken(authorization: DeviceAuthorization): DevicePoll {
+        pollCount++
+        return polls!!.removeAt(0)
+    }
+
     companion object {
         val TOKENS = Tokens("access", "refresh", null)
+        val DEVICE = DeviceAuthorization("device-secret", "WDJB-MJHT", "https://idp/device", null, intervalSeconds = 5)
     }
 }
 
