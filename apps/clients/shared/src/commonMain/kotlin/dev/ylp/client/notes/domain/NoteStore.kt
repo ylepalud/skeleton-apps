@@ -3,8 +3,9 @@ package dev.ylp.client.notes.domain
 import kotlin.time.Instant
 
 /**
- * A note in the local store. [id] is the id the screens use; [serverId] is null until the API has
- * stored a note created on this device. A note deleted here stays, [deleted], until the API
+ * A note in the local store. [id] is its key on this device: the API's id for a note read from the
+ * API, a local one for a note written here. [serverId] is null until the API has stored a note
+ * written here. A note deleted here stays, [deleted], until the API
  * deletes it too.
  */
 internal data class LocalNote(
@@ -18,7 +19,8 @@ internal data class LocalNote(
     val sync: SyncState,
     val deleted: Boolean = false,
 ) {
-    fun toNote() = Note(id, title, content, createdAt, updatedAt, version, sync)
+    /** The note as the screens show it: under its API id once the API has it. */
+    fun toNote() = Note(serverId ?: id, title, content, createdAt, updatedAt, version, sync)
 
     /** Deleted here, deletion not in conflict: the user no longer sees it. */
     val hidden: Boolean get() = deleted && sync != SyncState.CONFLICTING
