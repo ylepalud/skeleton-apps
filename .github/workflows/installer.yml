@@ -116,6 +116,17 @@ jobs:
       - name: Build the generated project and its documentation
         working-directory: ${{ runner.temp }}/out/demo-app
         run: ./gradlew check docsDomainModel docsLint docsBuild
+      # The stack must start whichever clients are kept: with the web app or
+      # without it, the API answers on 8088.
+      - name: Start the stack and replay the API collection
+        working-directory: ${{ runner.temp }}/out/demo-app
+        run: |
+          ./gradlew startLocalStack :apps:bruno:npmInstall
+          (cd apps/bruno && npm run smoke)
+      - name: Show the stack logs
+        if: failure()
+        working-directory: ${{ runner.temp }}/out/demo-app
+        run: docker compose --profile app logs --no-color
 
   # The required check: the matrix jobs report under names that follow the
   # combinations. This one always reports, and fails if anything before failed.

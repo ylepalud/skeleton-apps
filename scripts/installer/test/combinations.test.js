@@ -89,6 +89,11 @@ describe.each(combinations.map((clients) => [clients.join(','), clients]))('the 
     expect(missing).toEqual([]);
   });
 
+  it('publishes port 8088 once, from the web app or from the API itself', () => {
+    const compose = texts.find(([path]) => path === 'compose.yaml')?.[1] ?? '';
+    expect(compose.match(/^\s*- "8088:/gm)).toHaveLength(1);
+  });
+
   it('includes only the Gradle projects it has', () => {
     const settings = texts.find(([path]) => path === 'settings.gradle.kts')?.[1] ?? '';
     const missing = [...settings.matchAll(/include\("([^"]+)"\)/g)]
