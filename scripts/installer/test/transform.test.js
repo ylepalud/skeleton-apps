@@ -175,3 +175,10 @@ describe('a template-only line', () => {
     expect(transformText('docs/architecture/decisions.md', text, answers)).toBe('| a | b |\n| c | d |\n');
   });
 });
+
+describe('a removed client block', () => {
+  it('leaves one blank line where it was, and one newline at the end', () => {
+    const text = 'Intro.\n\n<!-- client:mobile:start -->\nMobile.\n<!-- client:mobile:end -->\n\nNext.\n\n<!-- client:cli:start -->\nCLI.\n<!-- client:cli:end -->\n';
+    expect(transformText('README.md', text, { ...answers, clients: new Set(/** @type {const} */ (['web'])) })).toBe('Intro.\n\nNext.\n');
+  });
+});
