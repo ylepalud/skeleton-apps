@@ -69,10 +69,13 @@ class KotlinNativeCliConventionTest {
 
     @Test
     fun `an executable is built for macOS and Linux, the Linux one on a Linux host only`() {
-        val result = fixture.build("linkDebugExecutableLinuxX64", "tasks", "--all")
+        val tasks = fixture.build("tasks", "--all").output
+        assertThat(tasks).contains("linkReleaseExecutableMacosArm64", "linkReleaseExecutableLinuxX64")
 
-        assertThat(result.output).contains("linkReleaseExecutableMacosArm64", "linkReleaseExecutableLinuxX64")
-        val expected = if (System.getProperty("os.name").startsWith("Linux")) TaskOutcome.SUCCESS else TaskOutcome.SKIPPED
-        assertThat(result.task(":linkDebugExecutableLinuxX64")?.outcome).isEqualTo(expected)
+        // Linking is left to the CLI job on Linux: here, the task must skip elsewhere.
+        if (!System.getProperty("os.name").startsWith("Linux")) {
+            assertThat(fixture.build("linkDebugExecutableLinuxX64").task(":linkDebugExecutableLinuxX64")?.outcome)
+                .isEqualTo(TaskOutcome.SKIPPED)
+        }
     }
 }
