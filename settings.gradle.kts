@@ -53,8 +53,16 @@ rootProject.name = "skeleton-apps"
 
 include("apps:services:api")
 include("apps:contracts:api")
+// client:web:start
 include("apps:services:api-app")
+// client:web:end
 include("apps:bruno")
+// client:native:start
 include("apps:clients:shared")
+// client:native:end
+// client:mobile:start
 include("apps:clients:android")
+// client:mobile:end
+// client:cli:start
 include("apps:clients:cli")
+// client:cli:end

@@ -9,7 +9,9 @@
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("org.jetbrains.kotlin.plugin.serialization")
+    // client:mobile:start
     id("com.android.kotlin.multiplatform.library")
+    // client:mobile:end
     id("org.jetbrains.kotlinx.kover")
     id("com.diffplug.spotless")
 }
@@ -23,6 +25,7 @@ fun library(alias: String) = libs.findLibrary(alias).get()
 kotlin {
     jvmToolchain(providers.gradleProperty("javaToolchainVersion").get().toInt())
 
+    // client:mobile:start
     android {
         namespace = "dev.ylp.${project.name}"
         compileSdk = providers.gradleProperty("androidCompileSdk").get().toInt()
@@ -32,9 +35,12 @@ kotlin {
     }
     iosArm64()
     iosSimulatorArm64()
+    // client:mobile:end
+    // client:cli:start
     // The command-line client.
     macosArm64()
     linuxX64()
+    // client:cli:end
     jvm()
 
     compilerOptions {

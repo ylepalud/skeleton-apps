@@ -77,7 +77,11 @@ jobs:
         run: |
           # The release commit sits on main above the merge of develop: walk back to the
           # newest commit that has a published image, and give that image the release tag.
-          for image in api api-app; do
+          images=(api)
+          # client:web:start
+          images+=(api-app)
+          # client:web:end
+          for image in "${images[@]}"; do
             found=""
             for sha in $(git rev-list --max-count=50 "$TAG"); do
               if docker buildx imagetools inspect "$REPOSITORY/$image:$sha" > /dev/null 2>&1; then
