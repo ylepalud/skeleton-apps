@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Gradle monorepo: a Spring Boot API organised as a Spring Modulith (`apps/services/api`), an Angular web app (`apps/services/api-app`) and a Kotlin Multiplatform library for the native clients (`apps/clients/shared`), all generated from one OpenAPI contract (`apps/contracts/api`), delivered as signed images. Overview: [README.md](README.md).
+Gradle monorepo: a Spring Boot API organised as a Spring Modulith (`apps/services/api`), an Angular web app (`apps/services/api-app`), a Kotlin Multiplatform library for the native clients (`apps/clients/shared`) and the Android, iOS and command-line clients built on it, all generated from one OpenAPI contract (`apps/contracts/api`), delivered as signed images. Overview: [README.md](README.md).
 
 ## Rules
 
@@ -27,6 +27,7 @@ Gradle monorepo: a Spring Boot API organised as a Spring Modulith (`apps/service
 | touch the native clients (`apps/clients/`) | [docs/architecture/clients.md](docs/architecture/clients.md) |
 | run the Android app | [docs/contributor/how-to/run-the-android-app.md](docs/contributor/how-to/run-the-android-app.md) |
 | run the iOS app | [docs/contributor/how-to/run-the-ios-app.md](docs/contributor/how-to/run-the-ios-app.md) |
+| run the CLI | [docs/contributor/how-to/run-the-cli.md](docs/contributor/how-to/run-the-cli.md) |
 | touch security, tokens or limits | [docs/architecture/security.md](docs/architecture/security.md) |
 | change a convention plugin or the build | [docs/contributor/reference/gradle-conventions.md](docs/contributor/reference/gradle-conventions.md) |
 | change CI, images or releases | [docs/operations/ci-cd.md](docs/operations/ci-cd.md) |
