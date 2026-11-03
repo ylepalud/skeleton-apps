@@ -1,3 +1,5 @@
+import dev.ylp.buildlogic.linkSystemSqlite
+
 // The command-line client: Clikt commands on the shared module, one native binary per platform.
 plugins {
     id("kotlin-native-cli-convention")
@@ -10,7 +12,7 @@ kotlin {
             entryPoint = "dev.ylp.notes.cli.main"
         }
         // The local store of the shared module runs on the system's SQLite: the CLI and its tests link it.
-        binaries.configureEach { linkerOpts("-lsqlite3") }
+        linkSystemSqlite()
     }
     sourceSets {
         commonMain.dependencies {

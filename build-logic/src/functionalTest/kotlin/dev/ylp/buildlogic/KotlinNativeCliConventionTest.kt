@@ -25,9 +25,9 @@ class KotlinNativeCliConventionTest {
             """.trimIndent() + "\n",
         )
         fixture.file(
-            "src/nativeMain/kotlin/dev/ylp/sample/Main.kt",
+            "src/nativeMain/kotlin/Main.kt",
             """
-            package dev.ylp.sample
+            import dev.ylp.sample.greet
 
             fun main(args: Array<String>) = println(greet(args.firstOrNull().orEmpty()))
             """.trimIndent() + "\n",

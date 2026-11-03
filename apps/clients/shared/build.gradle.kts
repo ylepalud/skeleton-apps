@@ -1,3 +1,5 @@
+import dev.ylp.buildlogic.linkSystemSqlite
+
 // The logic of the native clients: API client, sign-in and use cases. The apps implement the UI
 // and the platform adapters only.
 plugins {
@@ -40,11 +42,17 @@ kotlin {
 
 // The local store of the offline mode: notes and the queue of changes to replay (ADR 0029).
 sqldelight {
+    // Its -lsqlite3 does not reach Linux's system folder: linkSystemSqlite below links instead.
+    linkSqlite = false
     databases {
         create("ClientDatabase") {
             packageName = "dev.ylp.client.store.db"
         }
     }
+}
+
+kotlin {
+    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach { linkSystemSqlite() }
 }
 
 // SQLDelight writes public declarations, generic ones among them. The store is an adapter: its
