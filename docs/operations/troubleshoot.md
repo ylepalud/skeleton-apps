@@ -46,13 +46,9 @@ Xcode builds the Kotlin code through `embedSwiftExportForXcode`. If the app's Sw
 
 The local store of `apps/clients/shared` uses the system's SQLite, which Swift export does not link by itself. `apps/clients/ios/project.yml` passes `-lsqlite3` in the `Notes` target's `OTHER_LDFLAGS`; an Xcode project made by hand, or a target added to `project.yml`, needs the same flag.
 
-## A Linux binary does not link: "unable to find library -lsqlite3"
+## A Linux binary does not link: "unable to find library"
 
-The CLI and the shared module's Linux tests link against the system's SQLite. Install its development package, then build again; on a Mac, the Linux binaries are skipped.
-
-```bash
-sudo apt-get install libsqlite3-dev
-```
+The CLI and the shared module's Linux tests link against the runtime library of the system's SQLite, `libsqlite3.so.0`, from `/usr/lib/x86_64-linux-gnu` or `/usr/lib64`. Install it if the system lacks it (`sudo apt-get install libsqlite3-0` on Debian and Ubuntu), then build again; on a Mac, the Linux binaries are skipped.
 
 ## notes login waits forever, or says the port is in use
 

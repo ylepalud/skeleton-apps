@@ -36,7 +36,7 @@ The build is a Kotlin DSL monorepo. Every project applies one or more convention
 - **Configuration cache is on.** A task action must not capture the build script: copy what it needs into local values first. TestKit tests run with the configuration cache, so they catch this.
 - **Docker is resolved from the caller's `PATH`** (`dev.ylp.buildlogic.dockerExecutable`): a long-lived Gradle daemon may have a minimal `PATH`.
 - **The Android SDK is a prerequisite** of every build: the Android Gradle Plugin configures `apps/clients/shared` even when only the API is built. Set `ANDROID_HOME`.
-- **Linux binaries link on Linux only.** Code that uses the local store links against the system's SQLite (`-lsqlite3`), which a Mac does not have for Linux: the Linux binaries and their tests are skipped elsewhere, and need `libsqlite3-dev` on Linux.
+- **Linux binaries link on Linux only.** Code that uses the local store links against the system's SQLite through `linkSystemSqlite()` (`build-logic`); on Linux that is the runtime library `libsqlite3.so.0` from `/usr/lib/x86_64-linux-gnu`, which a Mac does not have: the Linux binaries and their tests are skipped elsewhere.
 - **iOS needs macOS with Xcode.** Elsewhere, Kotlin skips the iOS targets and the `ios*` tasks are skipped. The iOS app also needs XcodeGen (`brew install xcodegen`).
 - **`apps/clients/shared` also applies SQLDelight** in its own build: the local store's schema lives in `src/commonMain/sqldelight`, and the build makes the generated queries `internal`, like the API client, so Swift export never publishes them.
 - **A change to a convention plugin comes with a TestKit test.**

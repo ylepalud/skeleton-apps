@@ -1,7 +1,7 @@
 # The command-line client on Linux and macOS: the shared module's common tests
 # and the CLI's own on each platform, its JVM tests and coverage gate, then the
 # release binary as an artifact. Called by ci.yml when a pull request can affect
-# the CLI.
+# the CLI. The binaries link against the system's SQLite, which both runners have.
 name: CLI
 
 on:
@@ -27,10 +27,6 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # The local store links against the system's SQLite; macOS has it.
-      - name: SQLite headers and library
-        if: runner.os == 'Linux'
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq libsqlite3-dev
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin

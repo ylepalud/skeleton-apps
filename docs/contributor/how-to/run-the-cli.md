@@ -6,7 +6,7 @@ The command-line client in `apps/clients/cli` talks to the local stack from the 
 
 ```bash
 ./gradlew :apps:clients:cli:linkReleaseExecutableMacosArm64   # on a Mac
-./gradlew :apps:clients:cli:linkReleaseExecutableLinuxX64     # on Linux, with libsqlite3-dev installed
+./gradlew :apps:clients:cli:linkReleaseExecutableLinuxX64     # on Linux
 ```
 
 The binary is `apps/clients/cli/build/bin/<target>/releaseExecutable/notes.kexe`; copy it as `notes` somewhere on your `PATH`. A Linux binary links against the system's SQLite, so it builds on a Linux host only; CI keeps both binaries of each pull request as artifacts.

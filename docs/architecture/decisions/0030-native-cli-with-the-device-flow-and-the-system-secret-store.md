@@ -36,7 +36,7 @@ Chosen: the device flow with a loopback fallback, `secret-tool` or a private fil
 ## Consequences
 
 - `shared` gains the `macosArm64` and `linuxX64` targets, Ktor's Darwin and Curl engines, and `SignInOnDevice`; its common tests run on macOS and, in CI, on Linux.
-- Binaries that use the local store link against the system's SQLite (`-lsqlite3`): the Linux ones link on a Linux host only, with `libsqlite3-dev`.
+- Binaries that use the local store link against the system's SQLite (`linkSystemSqlite` in `build-logic`): on Linux, the runtime library `libsqlite3.so.0` from the system's folder, so no development package is needed; the Linux binaries link on a Linux host only.
 - The CLI's client of the identity provider must allow the device grant, or the loopback redirect `http://127.0.0.1:8770/callback` (`NOTES_OIDC_REDIRECT_PORT` changes the port).
 - `cli.yml` builds and tests both binaries when a change can affect them; the required `mobile` check reports for the CLI too.
 
