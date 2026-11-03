@@ -50,6 +50,7 @@ nav:
   - Template:
       - template/README.md
       - template/start-a-new-project.md
+      - template/mark-a-clients-passage.md
   - Contributor:
       - contributor/README.md
       - Tutorials:

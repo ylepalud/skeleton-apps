@@ -15,7 +15,7 @@ All workflows live in `.github/workflows`. Actions are pinned by commit SHA (Ren
 | `release.yml` | push to `main`, or manual with `tag=vX.Y.Z` to promote an existing release's images again | release-please, then the release tag added to the published images |
 
 <!-- template-only:start -->
-The template also runs `installer.yml` on pull requests to `develop` or `main`: its `installer` job runs the installer's tests, generates a project from the pull request and runs `./gradlew check` on it.
+The template also runs `installer.yml` on pull requests to `develop` or `main`: the installer's tests (every combination of clients, in memory), then three projects generated from the pull request (all the clients, the web app alone, the native clients alone), each linted with actionlint and built with `./gradlew check` and the documentation build. Every Monday, and on demand, it builds all seven combinations. Its `installer` job reports for all of them and is the required check ([ADR 0031](../architecture/decisions/0031-installer-clients-as-marked-blocks.md)).
 
 <!-- template-only:end -->
 

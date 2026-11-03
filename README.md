@@ -67,7 +67,7 @@ Commands and settings: [Run the CLI](docs/contributor/how-to/run-the-cli.md).
 npx github:ylepalud/skeleton-apps my-idea
 ```
 
-The installer renames the project, the package and the images, and writes `my-idea.zip`: a ready Git repository with one `Init` commit. See [Start a new project](docs/template/start-a-new-project.md).
+The installer asks which clients to keep (web, CLI, mobile), renames the project, the package and the images, and writes `my-idea.zip`: a ready Git repository with one `Init` commit, holding only the chosen clients. See [Start a new project](docs/template/start-a-new-project.md).
 
 <!-- template-only:end -->
 
