@@ -71,6 +71,8 @@ nav:
           - contributor/reference/gradle-conventions.md
           - contributor/reference/configuration.md
           - contributor/reference/local-stack.md
+  - Acceptance:
+      - acceptance/README.md
   - Operations:
       - operations/README.md
       - operations/ci-cd.md

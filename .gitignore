@@ -22,3 +22,7 @@ bin/
 # ...except the agent CLI at the root.
 !/bin/
 .DS_Store
+
+# Rendering the acceptance test books (docs/acceptance).
+__pycache__/
+.venv/

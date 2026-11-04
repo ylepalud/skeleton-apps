@@ -74,7 +74,7 @@ describe.each(combinations.map((clients) => [clients.join(','), clients]))('the 
       .filter(([path]) => path.endsWith('.md') && !path.startsWith('.github/'))
       .flatMap(([path, text]) =>
         [...text.matchAll(/\]\((?!https?:|#|mailto:)([^)\s#]+)/g)]
-          .map((match) => normalize(join(dirname(path), match[1])))
+          .map((match) => normalize(join(dirname(path), match[1])).replace(/\/$/, ''))
           .filter((target) => !generated.has(target) && !project.has(target) && ![...project.keys()].some((key) => key.startsWith(`${target}/`)))
           .map((target) => `${path} -> ${target}`),
       );
