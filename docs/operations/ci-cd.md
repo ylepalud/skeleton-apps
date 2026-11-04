@@ -6,14 +6,16 @@ All workflows live in `.github/workflows`. Actions are pinned by commit SHA (Ren
 
 | Workflow | Trigger | Jobs |
 | --- | --- | --- |
-| `ci.yml` | pull requests to `develop` or `main`, push to `main`, called by `publish.yml` | `check` (`./gradlew check`, the Android app aside), `android`, `ios` and `mobile` (see [Mobile apps](#mobile-apps)), `e2e` (local stack, Playwright, Bruno smoke run, Trivy scan of the two images the stack runs), `trivy-fs` (dependencies including development ones, secrets and configuration; findings in the Security tab), `docs` (no em dash, `./gradlew docsLint docsBuild`: Markdown lint and a strict build of the site, which fails on a broken link or anchor) |
+| `ci.yml` | pull requests to `develop` or `main`, push to `main`, called by `publish.yml` | `check` (`./gradlew check`, apart from what the client jobs check), `e2e` (local stack, the web app's browser tests if it has one, Bruno smoke run, Trivy scan of the images the stack runs), `trivy-fs` (dependencies including development ones, secrets and configuration; findings in the Security tab), `docs` (no em dash, `./gradlew docsLint docsBuild`: Markdown lint and a strict build of the site, which fails on a broken link or anchor) |
+| `ci.yml`, native clients | the same | the client jobs and `mobile` (see [Mobile apps](#mobile-apps)) <!-- client:native --> |
 | `docs.yml` | push to `main`, or manual; only when the variable `DOCS_PAGES` is `true` | builds the documentation site and deploys it to GitHub Pages (see [Documentation site](#documentation-site)) |
 | `publish.yml` | push to `develop`, or manual with `all=true` | `ci.yml`, then one image job per image whose code changed: build and push, scan, SBOM, signature |
-| `nightly.yml` | every day at 03:00 UTC, or manual | `./gradlew pitest` on `develop`, and the whole iOS run (`ios.yml` with the shared module's simulator tests; see [Mobile apps](#mobile-apps)) |
+| `nightly.yml` | every day at 03:00 UTC, or manual | `./gradlew pitest` on `develop` |
+| `nightly.yml`, mobile | the same run | the whole iOS run (`ios.yml` with the shared module's simulator tests; see [Mobile apps](#mobile-apps)) <!-- client:mobile --> |
 | `release.yml` | push to `main`, or manual with `tag=vX.Y.Z` to promote an existing release's images again | release-please, then the release tag added to the published images |
 
 <!-- template-only:start -->
-The template also runs `installer.yml` on pull requests to `develop` or `main`: its `installer` job runs the installer's tests, generates a project from the pull request and runs `./gradlew check` on it.
+The template also runs `installer.yml` on pull requests to `develop` or `main`: the installer's tests (every combination of clients, in memory), then three projects generated from the pull request (all the clients, the web app alone, the native clients alone), each linted with actionlint and built with `./gradlew check` and the documentation build. Every Monday, and on demand, it builds all seven combinations. Its `installer` job reports for all of them and is the required check ([ADR 0031](../architecture/decisions/0031-installer-clients-as-marked-blocks.md)).
 
 <!-- template-only:end -->
 
@@ -22,9 +24,11 @@ The template also runs `installer.yml` on pull requests to `develop` or `main`: 
 | Image | Built by | Name |
 | --- | --- | --- |
 | API | Jib | `ghcr.io/ylepalud/skeleton-apps/api:<commit sha>` |
-| Web app | `docker buildx` | `ghcr.io/ylepalud/skeleton-apps/api-app:<commit sha>` |
+| Web app | `docker buildx` | `ghcr.io/ylepalud/skeleton-apps/api-app:<commit sha>` <!-- client:web --> |
 
-Path filters decide which images a push to `develop` publishes: the API for `apps/services/api`, `apps/contracts`, `build-logic` and the Gradle files; the web app for `apps/services/api-app`, `apps/contracts` and its convention. Tags are immutable commit SHAs; a release adds `vX.Y.Z` to the same image. There is no `latest`.
+Path filters decide which images a push to `develop` publishes: the API for `apps/services/api`, `apps/contracts`, `build-logic` and the Gradle files.
+The web app for `apps/services/api-app`, `apps/contracts` and its convention. <!-- client:web -->
+Tags are immutable commit SHAs; a release adds `vX.Y.Z` to the same image. There is no `latest`.
 
 The `.github/actions/secure-image` action runs for each image:
 
@@ -42,18 +46,25 @@ cosign verify ghcr.io/ylepalud/skeleton-apps/api@<digest> \
 
 `cosign verify-attestation --type spdxjson` with the same options checks the SBOM.
 
+<!-- client:native:start -->
 ## Mobile apps
 
-`ci.yml` checks the native apps through one workflow per platform, `android.yml` and `ios.yml`, which a `changes` job starts only when a change can affect them; a skipped job costs nothing. The `mobile` job then reports for both, and is the required check: it passes when each app job passed or was skipped.
+`ci.yml` checks the native clients through one workflow each, which a `changes` job starts only when a change can affect them; a skipped job costs nothing. The `mobile` job then reports for all of them, and is the required check: it passes when each client job passed or was skipped. It kept its name when the CLI joined, so the rulesets did not change.
 
 | Job | Runner | Starts when a change touches | Runs | Keeps |
 | --- | --- | --- | --- | --- |
-| `android` (`android.yml`) | `ubuntu-26.04` (Android SDK preinstalled), about 4 min | `apps/clients/android`, `apps/clients/shared`, the contract, `ci.yml`, `android.yml`, or the build (`build-logic`, `gradle/`, the root Gradle files) | `:apps:clients:android:check` (lint, Robolectric UI tests, Kover) and `assembleDebug` | `android-debug-apk`: the debug APK, 7 days; `android-reports` on failure |
-| `ios` (`ios.yml`) | `macos-26` (Xcode, simulators), about 10 to 15 min with warm caches | `apps/clients/ios`, `apps/clients/shared`, the contract, `ci.yml`, `ios.yml`, or the conventions it builds with (`xcode-app`, `kotlin-multiplatform-convention`, `openapi-kotlin-client`) | `iosLint`, `iosTest` and `iosVerifyCoverage` on the `iPhone 17` simulator of the newest installed runtime, picked by UDID and booted while Gradle starts | `ios-simulator-app`: the simulator build, 7 days; `ios-test-results` (the `.xcresult`) on failure |
+| `android` (`android.yml`) | `ubuntu-26.04` (Android SDK preinstalled), about 4 min | `apps/clients/android`, `apps/clients/shared`, the contract, `ci.yml`, `android.yml`, or the build (`build-logic`, `gradle/`, the root Gradle files) | `:apps:clients:android:check` (lint, Robolectric UI tests, Kover) and `assembleDebug` | `android-debug-apk`: the debug APK, 7 days; `android-reports` on failure <!-- client:mobile --> |
+| `ios` (`ios.yml`) | `macos-26` (Xcode, simulators), about 10 to 15 min with warm caches | `apps/clients/ios`, `apps/clients/shared`, the contract, `ci.yml`, `ios.yml`, or the conventions it builds with (`xcode-app`, `kotlin-multiplatform-convention`, `openapi-kotlin-client`) | `iosLint`, `iosTest` and `iosVerifyCoverage` on the `iPhone 17` simulator of the newest installed runtime, picked by UDID and booted while Gradle starts | `ios-simulator-app`: the simulator build, 7 days; `ios-test-results` (the `.xcresult`) on failure <!-- client:mobile --> |
+| `cli` (`cli.yml`) | `ubuntu-26.04` and `macos-26`, one job each | `apps/clients/cli`, `apps/clients/shared`, the contract, `ci.yml`, `cli.yml`, the version catalog, or the conventions it builds with (`kotlin-native-cli-convention`, `kotlin-multiplatform-convention`, `openapi-kotlin-client`) | on each: the shared module's tests on that platform, `:apps:clients:cli:check` (the commands on the JVM with Kover, and on that platform), then the release binary | `notes-linux-x64` and `notes-macos-arm64`: the unsigned binaries, 7 days; `cli-reports-<target>` on failure <!-- client:cli --> |
 
+<!-- client:mobile:start -->
 The `ios` job is the slow one, so it follows fewer paths: a dependency upgrade or another convention does not start it. `nightly.yml` runs it every night on `develop` with the shared module's tests on the simulator too, and catches within a day what a pull request let through, such as a Kotlin upgrade that changes Swift export. Those nightly runs also fill the caches pull requests start from: the Gradle cache that `setup-gradle` writes from `develop` only, and `~/.konan`, the Kotlin/Native toolchain, kept by Kotlin version even when a run fails.
+<!-- client:mobile:end -->
 
-Neither job signs anything: the APK is a debug build and the iOS build runs on the simulator only. Store releases are #74.
+No client job signs anything.
+The APK is a debug build, and the iOS build runs on the simulator only; store releases are #74. <!-- client:mobile -->
+The CLI binaries are unsigned. <!-- client:cli -->
+<!-- client:native:end -->
 
 ## Branches and rulesets
 

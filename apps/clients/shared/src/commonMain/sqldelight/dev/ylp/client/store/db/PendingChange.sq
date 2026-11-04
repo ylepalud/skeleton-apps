@@ -1,0 +1,36 @@
+-- The changes made on this device that the API has not stored yet, whatever the entity. One row
+-- per entity: a new change of the same entity is merged into it, so the queue never replays a
+-- state the user already replaced. Rows replay in [seq] order, the order of their first change.
+-- [operation] is CREATE, UPDATE or DELETE; [state] is QUEUED or CONFLICTING.
+CREATE TABLE pending_change (
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    operation TEXT NOT NULL,
+    state TEXT NOT NULL,
+    UNIQUE (entity, entity_id)
+);
+
+find:
+SELECT * FROM pending_change WHERE entity = ? AND entity_id = ?;
+
+queued:
+SELECT * FROM pending_change WHERE state = 'QUEUED' ORDER BY seq;
+
+countAll:
+SELECT count(*) FROM pending_change;
+
+insert:
+INSERT INTO pending_change(entity, entity_id, operation, state) VALUES (?, ?, ?, ?);
+
+setOperation:
+UPDATE pending_change SET operation = ? WHERE seq = ?;
+
+setState:
+UPDATE pending_change SET state = ? WHERE seq = ?;
+
+remove:
+DELETE FROM pending_change WHERE seq = ?;
+
+clear:
+DELETE FROM pending_change;

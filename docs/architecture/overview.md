@@ -4,17 +4,21 @@
 
 ```mermaid
 flowchart LR
+  %% client:web:start
   browser[Browser] -->|/ and /api/v1| web[web: nginx<br/>Angular bundle]
-  native[Android, iOS, CLI<br/>apps/clients/shared] -->|/api/v1| web
   web -->|/api/| api[api: Spring Boot]
-  api --> db[(PostgreSQL<br/>one schema per module)]
   browser -.->|sign-in, PKCE| idp[OpenID Connect provider]
-  native -.->|sign-in, PKCE| idp
+  %% client:web:end
+  %% client:native:start
+  native[native clients<br/>apps/clients/shared] -->|/api/v1| api[api: Spring Boot]
+  native -.->|sign-in| idp[OpenID Connect provider]
+  %% client:native:end
+  api --> db[(PostgreSQL<br/>one schema per module)]
   api -.->|signing keys| idp
   probes[Kubelet, Prometheus] -->|8081| api
 ```
 
-The web app and the API share one origin: nginx serves the bundle and proxies `/api/` to the API, so the browser needs no CORS. The API listens on 8080 for the application and on 8081 for Actuator, a port no ingress routes.
+The web app and the API share one origin: nginx serves the bundle and proxies `/api/` to the API, so the browser needs no CORS. The API listens on 8080 for the application and on 8081 for Actuator, a port no ingress routes. <!-- client:web -->
 
 ## One deployable, several modules
 
@@ -67,22 +71,27 @@ A resource users change from several places carries a **version**, so that a cha
 | REST adapter | `ETags.of(version)` writes the ETag; `ETags.expected(ifMatch)` reads `If-Match` into an `ExpectedVersion` (`*` means any version); a missing `If-Match` becomes a 428 | `dev.ylp.shared.concurrency` |
 | Use case | Takes the `ExpectedVersion` in its command, calls the aggregate's `requireVersion` before changing anything, and states its **conflict policy** in its Javadoc | `UpdateNoteUseCase`, `DeleteNoteUseCase` |
 | Persistence | A `version` column and a JPA `@Version`: the adapter updates the stored row in place and flushes, so a change committed between the read and the write still fails | `PostgresNoteRepository` |
-| Clients | Keep the version of what they show, send it back, and apply the screen's policy on 412 | web store, `NoteFailure.Changed` in the native clients |
+| Clients | Keep the version of what they show, send it back, and apply the screen's policy on 412 | the store of each client |
 
 The conflict policy is a decision for each use case, not for the mechanism:
 
 | Policy | When | Example |
 | --- | --- | --- |
-| Refuse, show the latest version | The user edits content another device may also edit; nothing may be lost silently | notes: update and delete |
+| Refuse, show the latest version | The user edits content another device may also edit; nothing may be lost silently | notes: update and delete, on the web <!-- client:web --> |
+| Refuse, keep both sides, let the user choose | The change was made offline, or can be redone only with effort: it waits next to the API's state | notes: update and delete, in the native clients ([ADR 0029](decisions/0029-offline-native-clients-with-a-queue-and-a-conflict-strategy-per-entity.md)) <!-- client:native --> |
 | Last write wins (`If-Match: *`) | The change does not depend on the current state, such as an append-only record or a reset | none yet |
-| Merge | Both changes can be combined field by field | none yet; offline use (#71) may need it |
+| Merge | Both changes can be combined field by field | none yet |
 
 A new write use case states which one it applies and tests it; [ADR 0028](decisions/0028-optimistic-concurrency-with-a-policy-per-use-case.md) records why.
 
+<!-- client:web:start -->
 ## The web app
 
 Angular, zoneless, organised by feature (`src/app/notes`, `src/app/auth`). A feature has a store built on signals, a thin client over the generated API client (the seam tests replace), and its components. Configuration that varies by environment is read at runtime from `/config.json`.
+<!-- client:web:end -->
 
+<!-- client:native:start -->
 ## The native clients
 
-The Android, iOS and command-line clients share a Kotlin Multiplatform library, `apps/clients/shared`, organised as a hexagon like an API module: the API client generated from the contract, the OpenID Connect sign-in and the use cases live there, and each app implements its UI and a few platform adapters. See [Native clients](clients.md).
+The native clients share a Kotlin Multiplatform library, `apps/clients/shared`, organised as a hexagon like an API module: the API client generated from the contract, the OpenID Connect sign-in and the use cases live there, and each app implements its UI and a few platform adapters. See [Native clients](clients.md).
+<!-- client:native:end -->

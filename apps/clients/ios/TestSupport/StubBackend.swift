@@ -20,6 +20,7 @@ nonisolated final class StubBackend: @unchecked Sendable {
     private var validToken = "valid-token"
     private var refuseRefresh = false
     private var failure: Int?
+    private var unreachable = false
 
     init() throws {
         let parameters = NWParameters.tcp
@@ -85,6 +86,12 @@ nonisolated final class StubBackend: @unchecked Sendable {
 
     /// The API answers this status once, then behaves again.
     func failNext(with status: Int) { withLock { failure = status } }
+
+    /// While true, the API cannot be reached: every call answers 503, as a proxy in front of it would.
+    var offline: Bool {
+        get { withLock { unreachable } }
+        set { withLock { unreachable = newValue } }
+    }
 
     // MARK: HTTP
 
@@ -174,6 +181,7 @@ nonisolated final class StubBackend: @unchecked Sendable {
             break
         }
         if request.headers["authorization"] != "Bearer \(validToken)" { return Response(status: 401) }
+        if unreachable { return Response(status: 503) }
         if let status = failure {
             failure = nil
             return Response(status: status)

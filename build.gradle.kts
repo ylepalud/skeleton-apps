@@ -6,9 +6,12 @@ import java.time.Duration
 
 plugins {
     base
+    // client:mobile:start
     id("xcode-app")
+    // client:mobile:end
 }
 
+// client:mobile:start
 // The iOS app is not a Gradle project: the root build drives Xcode for it.
 xcodeApp {
     projectDir = layout.projectDirectory.dir("apps/clients/ios")
@@ -23,6 +26,7 @@ xcodeApp {
         ).mapNotNull { (setting, property) -> providers.gradleProperty(property).orNull?.let { setting to it } }.toMap(),
     )
 }
+// client:mobile:end
 
 // The convention plugins are a product of this repository: their functional
 // tests run with every root `check`.
@@ -103,13 +107,16 @@ val docker: String =
 val composeUp =
     tasks.register<Exec>("composeUp") {
         description = "Starts the compose stack with the application images."
-        dependsOn(":apps:services:api:jibDockerBuild", ":apps:services:api-app:dockerBuild")
+        dependsOn(":apps:services:api:jibDockerBuild")
+        // client:web:start
+        dependsOn(":apps:services:api-app:dockerBuild")
+        // client:web:end
         commandLine(docker, "compose", "--profile", "app", "up", "--detach", "--wait")
     }
 
 tasks.register<WaitForReadiness>("startLocalStack") {
     group = "local-dev"
-    description = "Builds the images and starts the whole stack: web app and API on http://localhost:8088."
+    description = "Builds the images and starts the whole stack, reached on http://localhost:8088."
     dependsOn(composeUp)
     url = "http://localhost:8091/actuator/health/readiness"
     maxWait = Duration.ofMinutes(2)

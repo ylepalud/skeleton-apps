@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.gradle.android)
     implementation(libs.gradle.kover)
     implementation(libs.gradle.compose.compiler)
+    implementation(libs.gradle.sqldelight)
 }
 
 // Functional tests run every convention plugin against throwaway projects,

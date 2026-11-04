@@ -1,6 +1,6 @@
 # Add your first feature
 
-In this tutorial you let users **pin** a note so that it stays at the top of their list. The change is small but crosses every layer, in the order the repository expects: contract, collection, domain, use cases, persistence, REST adapter, web app, tests. Expect about an hour.
+In this tutorial you let users **pin** a note so that it stays at the top of their list. The change is small but crosses every layer, in the order the repository expects: contract, collection, domain, use cases, persistence, REST adapter, the clients, tests. Expect about an hour.
 
 You need the repository building (`./gradlew check` passes) and Docker running. Work on a branch:
 
@@ -159,6 +159,7 @@ The compiler lists every test that builds a note or a command; add the new argum
 ./gradlew :apps:services:api:check
 ```
 
+<!-- client:web:start -->
 ## 8. The web app
 
 The TypeScript client is regenerated on every build, so `Note` now has `pinned` and `NoteRequest` an optional `pinned`.
@@ -191,6 +192,7 @@ The in-memory `FakeNotesClient` (`notes-client.fake.ts`) used by the tests must 
 ```bash
 ./gradlew :apps:services:api-app:check
 ```
+<!-- client:web:end -->
 
 ## 9. See it work
 
@@ -199,10 +201,11 @@ The in-memory `FakeNotesClient` (`notes-client.fake.ts`) used by the tests must 
 ./gradlew startLocalStack
 ```
 
-Open <http://localhost:8088>, write two notes, pin the older one: it moves to the top. Then run the end-to-end tests and replay the collection:
+Open <http://localhost:8088>, write two notes, pin the older one: it moves to the top. <!-- client:web -->
+Then run the end-to-end tests and replay the collection:
 
 ```bash
-E2E_BASE_URL=http://localhost:8088 ./gradlew :apps:services:api-app:npmRunE2e -PrunE2e=true
+E2E_BASE_URL=http://localhost:8088 ./gradlew :apps:services:api-app:npmRunE2e -PrunE2e=true  # client:web
 cd apps/bruno && npm ci && npm run smoke
 ```
 

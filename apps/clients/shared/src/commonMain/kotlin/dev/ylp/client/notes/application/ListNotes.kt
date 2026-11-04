@@ -4,10 +4,17 @@ import dev.ylp.client.notes.domain.NoteFailure
 import dev.ylp.client.notes.domain.NoteGateway
 import dev.ylp.client.notes.domain.NotePageResult
 import dev.ylp.client.notes.domain.Violation
+import dev.ylp.client.sync.application.SyncEngine
+import dev.ylp.client.sync.domain.SyncResult
 
-/** Lists the user's notes, most recently updated first. */
+/**
+ * Lists the user's notes, most recently updated first. The changes of this device are sent first;
+ * when the API cannot be reached, the page comes from this device and says so.
+ */
 class ListNotes internal constructor(
-    private val notes: NoteGateway,
+    private val notes: LocalNotes,
+    private val remote: NoteGateway,
+    private val sync: SyncEngine,
 ) {
     suspend fun execute(
         page: Int = 0,
@@ -19,7 +26,16 @@ class ListNotes internal constructor(
                 if (size !in 1..MAX_PAGE_SIZE) add(Violation("size", "must be between 1 and $MAX_PAGE_SIZE"))
             }
         if (violations.isNotEmpty()) return NotePageResult.Failed(NoteFailure.Invalid(violations))
-        return notes.list(page, size)
+        when (sync.sync()) {
+            SyncResult.SIGNED_OUT -> return NotePageResult.Failed(NoteFailure.SignedOut)
+            SyncResult.OFFLINE -> return NotePageResult.Success(notes.cachedPage(page, size))
+            SyncResult.SYNCED -> Unit
+        }
+        return when (val result = remote.list(page, size)) {
+            is NotePageResult.Success -> NotePageResult.Success(notes.keep(result.page))
+            is NotePageResult.Failed if result.failure is NoteFailure.Unavailable -> NotePageResult.Success(notes.cachedPage(page, size))
+            is NotePageResult.Failed -> result
+        }
     }
 
     companion object {

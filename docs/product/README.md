@@ -4,9 +4,10 @@ What the people who use the product need: how to reach it, sign in, and what the
 
 | Page | Content |
 | --- | --- |
-| [Use the web app](use-the-web-app.md) | sign in, manage notes, sign out |
-| [Use the Android app](use-the-android-app.md) | the same, on Android |
-| [Use the iOS app](use-the-ios-app.md) | the same, on iPhone |
+| [Use the web app](use-the-web-app.md) | sign in, manage notes, sign out <!-- client:web --> |
+| [Use the Android app](use-the-android-app.md) | the same, on Android <!-- client:mobile --> |
+| [Use the iOS app](use-the-ios-app.md) | the same, on iPhone <!-- client:mobile --> |
+| [Use the CLI](use-the-cli.md) | the same, from a terminal on macOS or Linux <!-- client:cli --> |
 | [API errors](api-errors.md) | the shape of every error, statuses and error codes |
 
 On the documentation site, an API reference rendered from `apps/contracts/api/openapi.yaml` completes this section.

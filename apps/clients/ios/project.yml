@@ -41,6 +41,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.ylp.notes
+        # The local store of the shared module runs on the system's SQLite, which Swift export
+        # does not link by itself.
+        OTHER_LDFLAGS: ["$(inherited)", "-lsqlite3"]
         # The script below runs Gradle, which reads and writes outside the sandbox Xcode allows.
         ENABLE_USER_SCRIPT_SANDBOXING: "NO"
     preBuildScripts:

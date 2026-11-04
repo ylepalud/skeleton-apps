@@ -45,4 +45,6 @@ The provider must accept the redirect URI `dev.ylp.notes://callback` for that cl
 
 ## Tests
 
-`./gradlew :apps:clients:android:check` runs lint, the tests and the coverage gate on the JVM: Robolectric renders the real screens, and a mock server stands in for the API and the identity provider. No emulator is needed.
+`./gradlew :apps:clients:android:check` runs lint, the tests and the coverage gate on the JVM: Robolectric renders the real screens, a mock server stands in for the API and the identity provider, and the local store lives in memory. The mock server can go offline (`backend.offline`), to test the queue and the conflicts. No emulator is needed.
+
+To try the offline mode on the emulator, stop the local stack (`./gradlew stopLocalStack`) or turn on airplane mode, change some notes, then bring the network back. To start from an empty device, clear the app's storage in its settings, or `adb shell pm clear dev.ylp.notes`.

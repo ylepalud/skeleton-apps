@@ -1,7 +1,10 @@
 # What is too slow for every pull request, run nightly on develop: mutation
 # testing, which fails below an 80% mutation score on the domain and application
-# layers, and the whole iOS run, which pull requests start only when they touch
-# the app, and without the shared module's simulator tests.
+# layers.
+# client:mobile:start
+# Also the whole iOS run, which pull requests start only when they touch the app,
+# and without the shared module's simulator tests.
+# client:mobile:end
 name: Nightly
 
 on:
@@ -40,8 +43,10 @@ jobs:
           path: "**/build/reports/pitest/"
           retention-days: 14
 
+  # client:mobile:start
   ios:
     name: ios
     uses: ./.github/workflows/ios.yml
     with:
       shared-tests: true
+  # client:mobile:end

@@ -94,9 +94,17 @@ kotlin {
             }
         }
         // One HTTP engine per platform, found by Ktor at runtime.
+        // client:mobile:start
         androidMain.dependencies { implementation(library("ktor-client-okhttp")) }
+        // client:mobile:end
         jvmMain.dependencies { implementation(library("ktor-client-okhttp")) }
+        // client:mobile:start
         iosMain.dependencies { implementation(library("ktor-client-darwin")) }
+        // client:mobile:end
+        // client:cli:start
+        macosMain.dependencies { implementation(library("ktor-client-darwin")) }
+        linuxMain.dependencies { implementation(library("ktor-client-curl")) }
+        // client:cli:end
         commonTest.dependencies { implementation(library("ktor-client-mock")) }
     }
 }

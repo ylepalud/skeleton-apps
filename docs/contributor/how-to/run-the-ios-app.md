@@ -43,4 +43,6 @@ The provider must accept the redirect URI `dev.ylp.notes://callback` for that cl
 
 ## Tests
 
-`./gradlew iosTest` runs the unit and UI tests on the simulator: a stub server in the test runner stands in for the API and the identity provider, and the sign-in page is answered without showing it. `./gradlew iosVerifyCoverage` then requires 80% of the app's lines, and `./gradlew iosLint` runs swift-format. `./gradlew check` includes all three on a Mac with Xcode; CI runs them in the `ios` job when a change can affect the app, and every night on `develop`.
+`./gradlew iosTest` runs the unit and UI tests on the simulator: a stub server in the test runner stands in for the API and the identity provider, and the sign-in page is answered without showing it. Each test starts from an empty local store, and the stub can go offline (`backend.offline`), to test the queue and the conflicts. `./gradlew iosVerifyCoverage` then requires 80% of the app's lines, and `./gradlew iosLint` runs swift-format. `./gradlew check` includes all three on a Mac with Xcode; CI runs them in the `ios` job when a change can affect the app, and every night on `develop`.
+
+To try the offline mode on the simulator, stop the local stack (`./gradlew stopLocalStack`), change some notes, then start it again: the changes leave when the network comes back, or on **Retry**. Deleting the app from the simulator starts from an empty device.

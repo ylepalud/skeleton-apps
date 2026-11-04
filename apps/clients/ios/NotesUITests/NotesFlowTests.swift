@@ -8,6 +8,7 @@ final class NotesFlowTests: XCTestCase {
     nonisolated(unsafe) private var backend: StubBackend!
     private let app = XCUIApplication()
     private static let timeout: TimeInterval = 10
+    private static let offline = "Offline: these are the notes kept on this device."
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -80,27 +81,69 @@ final class NotesFlowTests: XCTestCase {
         XCTAssertEqual(backend.notes, [.init(title: "Weekend groceries", content: "Milk")])
     }
 
-    func testANoteChangedElsewhereIsReloadedInsteadOfOverwritten() {
-        let id = backend.add("Groceries", content: "Milk")
-        signIn()
-        waitFor("Groceries").tap()
-        waitFor("Edit note")
-        let title = app.textFields["Title"]
-        expectation(for: NSPredicate(format: "value == %@", "Groceries"), evaluatedWith: title)
-        waitForExpectations(timeout: Self.timeout)
-        backend.changeElsewhere(id, title: "From the browser", content: "Eggs")
+    func testANoteChangedElsewhereIsKeptAsMine() {
+        changeOnBothSides()
 
-        title.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
-        title.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "Groceries".count) + "From the phone")
-        app.buttons["Save"].tap()
+        app.buttons["Keep mine"].tap()
 
-        waitFor("This note was changed elsewhere. It now shows the latest version.")
-        expectation(for: NSPredicate(format: "value == %@", "From the browser"), evaluatedWith: title)
-        waitForExpectations(timeout: Self.timeout)
-        XCTAssertEqual(backend.notes, [.init(title: "From the browser", content: "Eggs")])
-
-        app.buttons["Save"].tap()
         waitFor("Your notes (1)")
+        XCTAssertEqual(backend.notes, [.init(title: "From the phone", content: "Milk")])
+    }
+
+    func testANoteChangedElsewhereIsKeptAsTheirs() {
+        changeOnBothSides()
+
+        app.buttons["Keep theirs"].tap()
+
+        waitFor("Your notes (1)")
+        XCTAssertEqual(backend.notes, [.init(title: "From the browser", content: "Eggs")])
+    }
+
+    func testANoteChangedElsewhereIsKeptOnBothSides() {
+        changeOnBothSides()
+
+        app.buttons["Keep both"].tap()
+
+        waitFor("Your notes (2)")
+        XCTAssertEqual(Set(backend.notes.map(\.title)), ["From the phone", "From the browser"])
+    }
+
+    func testANoteWrittenOfflineIsListedThenSentWhenTheApiIsBack() {
+        backend.add("Groceries")
+        signIn()
+        waitFor("Groceries")
+        backend.offline = true
+
+        app.buttons["New note"].tap()
+        type("Books", into: "Title")
+        app.buttons["Add note"].tap()
+
+        waitFor(Self.offline)
+        waitFor("Not synced")
+        backend.offline = false
+        app.buttons["Retry"].tap()
+
+        waitFor("Your notes (2)")
+        XCTAssertEqual(Set(backend.notes.map(\.title)), ["Groceries", "Books"])
+    }
+
+    func testSigningOutWithChangesNotSyncedAsksFirst() {
+        signIn()
+        waitFor("No notes yet.")
+        backend.offline = true
+        app.buttons["New note"].tap()
+        type("Books", into: "Title")
+        app.buttons["Add note"].tap()
+        waitFor("Not synced")
+
+        app.buttons["Sign out"].tap()
+        XCTAssertTrue(app.alerts.buttons["Stay"].waitForExistence(timeout: Self.timeout))
+        app.alerts.buttons["Stay"].tap()
+        app.buttons["Sign out"].tap()
+        XCTAssertTrue(app.alerts.buttons["Sign out anyway"].waitForExistence(timeout: Self.timeout))
+        app.alerts.buttons["Sign out anyway"].tap()
+
+        XCTAssertTrue(app.buttons["Sign in"].waitForExistence(timeout: Self.timeout))
     }
 
     func testANoteIsDeletedOnlyOnceConfirmed() {
@@ -150,7 +193,7 @@ final class NotesFlowTests: XCTestCase {
         backend.failNext(with: 503)
         signIn()
 
-        waitFor("The service cannot be reached. Try again.")
+        waitFor(Self.offline)
         app.buttons["Retry"].tap()
 
         waitFor("Groceries")
@@ -192,6 +235,26 @@ final class NotesFlowTests: XCTestCase {
     }
 
     // MARK: Helpers
+
+    /// A note opened here, changed elsewhere, then saved here: the editor shows the conflict.
+    private func changeOnBothSides() {
+        let id = backend.add("Groceries", content: "Milk")
+        signIn()
+        waitFor("Groceries").tap()
+        waitFor("Edit note")
+        let title = app.textFields["Title"]
+        expectation(for: NSPredicate(format: "value == %@", "Groceries"), evaluatedWith: title)
+        waitForExpectations(timeout: Self.timeout)
+        backend.changeElsewhere(id, title: "From the browser", content: "Eggs")
+
+        title.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        title.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "Groceries".count) + "From the phone")
+        app.buttons["Save"].tap()
+
+        waitFor("This note was changed elsewhere.")
+        waitFor("From the browser")
+        XCTAssertEqual(backend.notes, [.init(title: "From the browser", content: "Eggs")])
+    }
 
     private func launch(signIn: String = "redirect", resetsSession: Bool = true) {
         app.terminate()

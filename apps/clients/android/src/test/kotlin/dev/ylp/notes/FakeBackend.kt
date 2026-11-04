@@ -25,6 +25,9 @@ class FakeBackend : Dispatcher() {
     /** When set, the API answers this status to every call once, then behaves again. */
     var failNextWith: Int? = null
 
+    /** While true, the API cannot be reached: every call answers 503, as a proxy in front of it would. */
+    var offline = false
+
     fun start() {
         server.dispatcher = this
         server.start()
@@ -65,6 +68,8 @@ class FakeBackend : Dispatcher() {
                 }
 
             request.headers["Authorization"] != "Bearer $VALID_TOKEN" -> MockResponse.Builder().code(401).build()
+
+            offline -> MockResponse.Builder().code(503).build()
 
             failNextWith != null -> MockResponse.Builder().code(failNextWith!!).build().also { failNextWith = null }
 

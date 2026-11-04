@@ -1,0 +1,15 @@
+-- Whose data this device holds: the subject of the signed-in user. Another user signing in
+-- starts from an empty store, so nobody reads, or replays, someone else's notes.
+CREATE TABLE owner (
+    singleton INTEGER NOT NULL PRIMARY KEY CHECK (singleton = 1),
+    subject TEXT NOT NULL
+);
+
+current:
+SELECT subject FROM owner WHERE singleton = 1;
+
+set:
+INSERT OR REPLACE INTO owner(singleton, subject) VALUES (1, ?);
+
+clear:
+DELETE FROM owner;

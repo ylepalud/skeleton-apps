@@ -21,7 +21,7 @@ interface AuthorizationBrowser {
     ): String?
 }
 
-/** The OpenID Connect provider: Authorization Code with PKCE, and refresh. */
+/** The OpenID Connect provider: Authorization Code with PKCE, the device flow, and refresh. */
 interface IdentityProvider {
     suspend fun startAuthorization(): AuthorizationRequest
 
@@ -29,7 +29,18 @@ interface IdentityProvider {
     suspend fun completeAuthorization(
         request: AuthorizationRequest,
         redirectUrl: String,
-    ): Tokens
+    ): Authorization
 
     suspend fun refresh(refreshToken: String): Tokens
+
+    /** Starts a device authorization (RFC 8628); null when the provider does not offer it. */
+    suspend fun startDeviceAuthorization(): DeviceAuthorization?
+
+    suspend fun pollDeviceToken(authorization: DeviceAuthorization): DevicePoll
 }
+
+/** The outcome of a sign-in: the tokens, and the subject of the user when the provider names it. */
+data class Authorization(
+    val tokens: Tokens,
+    val subject: String?,
+)

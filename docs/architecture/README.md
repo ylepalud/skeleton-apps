@@ -4,9 +4,9 @@ How the system is built and why.
 
 | Page | Content |
 | --- | --- |
-| [Overview](overview.md) | runtime, modules, hexagonal layers, domain modelling, the web app |
+| [Overview](overview.md) | runtime, modules, hexagonal layers, domain modelling, the clients |
 | [Contract first](contract-first.md) | the OpenAPI contract and what is generated from it |
-| [Native clients](clients.md) | the Kotlin Multiplatform library behind the Android, iOS and command-line clients |
+| [Native clients](clients.md) | the Kotlin Multiplatform library behind the native clients <!-- client:native --> |
 | [Security](security.md) | identity, authorization, attack surface |
 | [Testing strategy](testing-strategy.md) | which test answers which question, and the gates |
 | [Supply chain](supply-chain.md) | from a pull request to a signed, released image |
