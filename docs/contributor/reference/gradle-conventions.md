@@ -30,6 +30,7 @@ The build is a Kotlin DSL monorepo. Every project applies one or more convention
 | `android-app-convention` | `apps/clients/android` | Android application with Compose (AGP 9, built-in Kotlin), SDK levels from `gradle.properties`, lint warnings as errors in `check`, JVM tests on the JUnit platform (Jupiter, and Vintage for the JUnit 4 API Robolectric needs) on the debug variant only, Kover at 80% <!-- client:mobile --> |
 | `xcode-app` | the root build, for `apps/clients/ios` | Drives an Xcode app that is not a Gradle project (`xcodeApp { projectDir; scheme; bundleId }`): XcodeGen generates the project from `project.yml`, `iosLint` runs swift-format, `iosTest` runs xcodebuild on a simulator (`-PiosSimulator`, a name or a UDID, default `iPhone 17`), `iosVerifyCoverage` requires 80% of the app's lines, `iosRun` launches it; lint and coverage in `check`, every task skipped without Xcode <!-- client:mobile --> |
 | `bruno-collection` | `apps/bruno` | Regenerates the requests from the contract (`updateCollection`) and fails `check` when they drift (`verifyCollection`) |
+| `agent-cli-check` | the root build | Runs the agent CLI's unit tests and selftest (`agentCliTest`, on the pinned Node toolchain) in `check`, whichever clients the project keeps; see [Agent CLI](agent-cli.md) |
 
 ## Rules worth knowing
 

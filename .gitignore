@@ -19,4 +19,6 @@ node_modules/
 .vscode/
 # Eclipse JDT output, written by the VS Code Java extension.
 bin/
+# ...except the agent CLI at the root.
+!/bin/
 .DS_Store

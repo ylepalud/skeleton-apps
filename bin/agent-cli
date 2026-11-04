@@ -1,0 +1,3 @@
+#!/bin/sh
+# Entry point of the agent CLI (bin/agent-cli.mjs); `bin/agent-cli help` lists its commands.
+exec node "$(dirname "$0")/agent-cli.mjs" "$@"

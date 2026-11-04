@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v node >/dev/null 2>&1 && node \"$CLAUDE_PROJECT_DIR/bin/agent-cli.mjs\" hook || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

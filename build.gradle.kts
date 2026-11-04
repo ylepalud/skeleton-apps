@@ -6,6 +6,7 @@ import java.time.Duration
 
 plugins {
     base
+    id("agent-cli-check")
     // client:mobile:start
     id("xcode-app")
     // client:mobile:end

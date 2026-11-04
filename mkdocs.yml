@@ -66,6 +66,7 @@ nav:
           - contributor/how-to/track-an-epic.md
       - Reference:
           - contributor/reference/commands.md
+          - contributor/reference/agent-cli.md
           - contributor/reference/repository-layout.md
           - contributor/reference/gradle-conventions.md
           - contributor/reference/configuration.md
