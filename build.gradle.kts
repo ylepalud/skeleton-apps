@@ -6,6 +6,7 @@ import java.time.Duration
 
 plugins {
     base
+    id("agent-cli-check")
     // client:mobile:start
     id("xcode-app")
     // client:mobile:end
@@ -33,31 +34,6 @@ xcodeApp {
 tasks.named("check") {
     dependsOn(gradle.includedBuild("build-logic").task(":check"))
 }
-
-/*
- * The agent CLI (bin/agent-cli): its unit tests, then its selftest against the
- * repository, so that a change moving a file the CLI reads fails in its own
- * pull request. Never up to date: the selftest reads files no input declares.
- */
-// On the classpath through build-logic, so applied without a version.
-apply(plugin = "com.github.node-gradle.node")
-
-configure<com.github.gradle.node.NodeExtension> {
-    version = providers.gradleProperty("nodeToolchainVersion")
-    download = true
-    workDir = layout.buildDirectory.dir("node")
-}
-
-val agentCliTest =
-    tasks.register<com.github.gradle.node.task.NodeTask>("agentCliTest") {
-        group = "verification"
-        description = "Runs the agent CLI's unit tests and its selftest (bin/agent-cli.test.mjs)."
-        options = listOf("--test")
-        script = file("bin/agent-cli.test.mjs")
-        outputs.upToDateWhen { false }
-    }
-
-tasks.named("check") { dependsOn(agentCliTest) }
 
 /*
  * Local stack (compose.yaml, profile "app"): the images that go to the cluster,
