@@ -30,6 +30,8 @@ const EXCLUDED = [
   /^CHANGELOG\.md$/,
   /^docs\/template\//,
   /^docs\/architecture\/decisions\/0031-installer-clients-as-marked-blocks\.md$/,
+  // The rendered acceptance test books describe every client: a project renders its own from content.py.
+  /^docs\/acceptance\/.*\.pdf$/,
 ];
 
 /** Where a generated project records the template it came from, in place of the template's own guide. */
