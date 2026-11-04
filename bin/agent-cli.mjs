@@ -1087,7 +1087,7 @@ export const REGISTRY = [
     name: 'check',
     summary: 'runs Gradle tasks with the full log in build/agent-cli/check.log and prints the result, failed tasks and first errors',
     usage: 'check [docs | <module> | <task>...] [-- <gradle args>] [--json]',
-    options: [['docs', 'docsLint and docsBuild'], ['<module>', "a module's short name, e.g. api or shared: its check task"], ['<task>', 'any Gradle task, passed as is'], JSON_OPTION],
+    options: [['docs', 'docsLint and docsBuild'], ['<module>', "a module's short name, e.g. api or bruno: its check task"], ['<task>', 'any Gradle task, passed as is'], JSON_OPTION],
     sources: ['gradlew', 'settings.gradle.kts'],
     replaces: ['./gradlew check > log; tail log', './gradlew docsLint docsBuild 2>&1 | grep error'],
     match: /^\.\/gradlew\b.*\b(check|test|docsLint|docsBuild|integrationTest|functionalTest)\b/,

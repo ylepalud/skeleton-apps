@@ -223,7 +223,7 @@ Runs Gradle tasks with the full log in build/agent-cli/check.log and prints the 
 ```text
 bin/agent-cli check [docs | <module> | <task>...] [-- <gradle args>] [--json]
   docs             docsLint and docsBuild
-  <module>         a module's short name, e.g. api or shared: its check task
+  <module>         a module's short name, e.g. api or bruno: its check task
   <task>           any Gradle task, passed as is
   --json           machine-readable output
 ```

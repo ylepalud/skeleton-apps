@@ -1,4 +1,4 @@
-# 0029. An agent CLI that reads every answer at run time, checked by the build
+# 0032. An agent CLI that reads every answer at run time, checked by the build
 
 - Status: accepted
 - Date: 2026-11-02

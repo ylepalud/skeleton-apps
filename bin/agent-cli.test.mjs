@@ -51,11 +51,11 @@ test('parseAgentsTable reads the rows of the Before you table only', () => {
     '| …do this | read |',
     '| --- | --- |',
     '| build or test | [docs/commands.md](docs/commands.md) |',
-    '| touch `apps/` | [docs/clients.md](docs/clients.md) |',
+    '| touch `apps/` | [docs/layout.md](docs/layout.md) |',
   ].join('\n');
   assert.deepEqual(parseAgentsTable(agents), [
     { when: 'build or test', path: 'docs/commands.md' },
-    { when: 'touch `apps/`', path: 'docs/clients.md' },
+    { when: 'touch `apps/`', path: 'docs/layout.md' },
   ]);
 });
 
@@ -133,11 +133,11 @@ test('checkTasks maps docs, module short names and raw tasks', () => {
   const modules = [
     { path: ':apps:services:api', dir: 'apps/services/api', check: ':apps:services:api:check' },
     { path: ':apps:contracts:api', dir: 'apps/contracts/api', check: ':apps:contracts:api:check' },
-    { path: ':apps:clients:shared', dir: 'apps/clients/shared', check: ':apps:clients:shared:check' },
+    { path: ':apps:tools:sample', dir: 'apps/tools/sample', check: ':apps:tools:sample:check' },
   ];
   assert.deepEqual(checkTasks([], modules), ['check']);
   assert.deepEqual(checkTasks(['docs'], modules), ['docsLint', 'docsBuild']);
-  assert.deepEqual(checkTasks(['shared'], modules), [':apps:clients:shared:check']);
+  assert.deepEqual(checkTasks(['sample'], modules), [':apps:tools:sample:check']);
   assert.deepEqual(checkTasks(['services/api'], modules), [':apps:services:api:check']);
   assert.deepEqual(checkTasks(['spotlessApply', ':x:test'], modules), ['spotlessApply', ':x:test']);
   assert.throws(() => checkTasks(['api'], modules), /ambiguous/);
